@@ -1,0 +1,74 @@
+{
+  "name": "clipboard",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc && vite build && electron-builder",
+    "preview": "vite preview",
+    "rebuild": "electron-rebuild -f -w better-sqlite3"
+  },
+  "dependencies": {
+    "ant-design-vue": "^4.2.6",
+    "better-sqlite3": "^11.8.1",
+    "vue": "^3.4.21"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.4",
+    "electron": "^30.0.1",
+    "electron-builder": "^24.13.3",
+    "electron-rebuild": "^3.2.9",
+    "prebuild-install": "^7.1.3",
+    "typescript": "^5.2.2",
+    "vite": "^5.1.6",
+    "vite-plugin-electron": "^0.28.6",
+    "vite-plugin-electron-renderer": "^0.14.5",
+    "vue-tsc": "^2.0.26"
+  },
+  "main": "dist-electron/main.js",
+  "build": {
+    "appId": "com.lin.clipboard",
+    "productName": "剪贴板工具",
+    "asar": true,
+    "directories": {
+      "output": "build"
+    },
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "icon": "public/favicon.ico"
+    },
+    "dmg": {
+      "background": "build/background.tiff or build/background.png",
+      "title": "剪贴板工具",
+      "icon": "public/favicon.ico"
+    },
+    "win": {
+      "icon": "public/favicon.ico",
+      "target": [
+        "nsis",
+        "zip"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "public/favicon.ico",
+      "uninstallerIcon": "public/favicon.ico",
+      "installerHeaderIcon": "public/favicon.ico",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "license": "LICENSE.txt"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "dist-electron/**/*"
+    ]
+  }
+}

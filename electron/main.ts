@@ -1,5 +1,5 @@
-import {app, BrowserWindow} from 'electron'
-import {fileURLToPath} from 'node:url'
+import { app, BrowserWindow } from 'electron'
+import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -28,6 +28,8 @@ function createWindow() {
     win = new BrowserWindow({
         icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
         webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: true,
             preload: path.join(__dirname, 'preload.mjs'),
         },
     })
@@ -43,6 +45,9 @@ function createWindow() {
         // win.loadFile('dist/index.html')
         win.loadFile(path.join(RENDERER_DIST, 'index.html'))
     }
+
+    // 打开调试工具，设置为单独窗口
+    win.webContents.openDevTools({ mode: 'detach' });
 }
 
 // Quit when all windows are closed, except on macOS. There, it's common
@@ -55,12 +60,22 @@ app.on('window-all-closed', () => {
     }
 })
 
-app.on('activate', () => {
-    // On OS X it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) {
-        createWindow()
-    }
+app.whenReady().then(() => {
+    createWindow()
+    // 仅 macOS 支持
+    app.on('activate', () => {
+        // On OS X it's common to re-create a window in the app when the
+        // dock icon is clicked and there are no other windows open.
+        if (BrowserWindow.getAllWindows().length === 0) {
+            createWindow()
+        }
+    })
 })
 
-app.whenReady().then(createWindow)
+app.on('window-all-closed', () => {
+    // 对于 Mac 系统， 关闭窗口时并不会直接退出应用， 此时需要我们来手动处理
+    if (process.platform === 'darwin') {
+        console.log('close')
+        app.quit()
+    }
+})

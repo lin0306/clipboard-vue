@@ -66,6 +66,13 @@
       "createStartMenuShortcut": true,
       "license": "LICENSE.txt"
     },
+    "extraResources": [
+      {
+        "from": "config",
+        "to": "config",
+        "filter": ["**/*"]
+      }
+    ],
     "files": [
       "dist/**/*",
       "electron/**/*",

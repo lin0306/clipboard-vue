@@ -11,6 +11,24 @@ export default defineConfig({
       main: {
         // Shortcut of `build.lib.entry`.
         entry: 'electron/main.ts',
+        vite: {
+          build: {
+            rollupOptions: {
+              external: ['better-sqlite3'],
+              plugins: [
+                {
+                  name: 'native-modules',
+                  resolveId(source) {
+                    if (source === 'better-sqlite3') {
+                      return { id: 'better-sqlite3', external: true }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      
       },
       preload: {
         // Shortcut of `build.rollupOptions.input`.

@@ -73,27 +73,51 @@ class ClipboardDB {
     }
 
     addItem(content: string, type = 'text', filePath = null) {
-        this.db.transaction(() => {
+        log.info("[数据库进程] 剪贴板内容添加开始", [content, type, filePath]);
+
+        try {
+            let copyTime = Date.now();
+            log.info("[数据库进程] 设置初始复制时间:", copyTime);
+
+            // 将事务包装在单独的try-catch中
             try {
-                let copyTime = Date.now();
+                this.db.transaction(() => {
+                    log.info("[数据库进程] 事务开始");
 
-                // 删除相同内容的旧记录
-                if (type === 'text') {
-                    this.db.prepare('DELETE FROM clipboard_items WHERE content = ? AND type = ?').run(content, type);
-                } else if (type === 'image' && filePath) {
-                    const row = this.db.prepare('SELECT copy_time FROM clipboard_items WHERE type = ? AND file_path = ?').get('image', filePath) as { copy_time: number } | undefined;
+                    // 删除相同内容的旧记录
+                    if (type === 'text') {
+                        log.info("[数据库进程] 删除相同文本内容的旧记录");
+                        this.db.prepare('DELETE FROM clipboard_items WHERE content = ? AND type = ?').run(content, type);
+                    } else if (type === 'image' && filePath) {
+                        log.info("[数据库进程] 查询相同图片路径的记录");
+                        const row = this.db.prepare('SELECT copy_time FROM clipboard_items WHERE type = ? AND file_path = ?').get('image', filePath) as { copy_time: number } | undefined;
 
-                    if (row) {
-                        copyTime = row.copy_time;
+                        if (row) {
+                            copyTime = row.copy_time;
+                            log.info("[数据库进程] 找到相同图片路径记录，使用原复制时间:", copyTime);
+                        }
+
+                        log.info("[数据库进程] 删除相同图片路径的旧记录");
+                        this.db.prepare('DELETE FROM clipboard_items WHERE type = ? AND file_path = ?').run('image', filePath);
                     }
-                    this.db.prepare('DELETE FROM clipboard_items WHERE type = ? AND file_path = ?').run('image', filePath);
-                }
 
-                this.db.prepare('INSERT INTO clipboard_items (content, copy_time, type, file_path) VALUES (?, ?, ?, ?)').run(content, copyTime, type, filePath);
-            } catch (err) {
-                throw err;
+                    log.info("[数据库进程] 准备插入新的剪贴板记录");
+                    this.db.prepare('INSERT INTO clipboard_items (content, copy_time, type, file_path) VALUES (?, ?, ?, ?)').run(content, copyTime, type, filePath);
+                    log.info("[数据库进程] 事务执行完成");
+                })();
+                log.info("[数据库进程] 事务提交成功");
+            } catch (txError) {
+                log.error("[数据库进程] 事务执行失败", txError);
+                throw txError;
             }
-        });
+
+            log.info("[数据库进程] 剪贴板内容添加成功");
+        } catch (err) {
+            log.error("[数据库进程] 剪贴板内容添加失败", err);
+            throw err;
+        } finally {
+            log.info("[数据库进程] 剪贴板内容添加完成");
+        }
     }
 
     getAllItems() {
@@ -188,22 +212,30 @@ class ClipboardDB {
         this.db.prepare('UPDATE clipboard_items SET is_topped = ?, top_time = ? WHERE id = ?').run(isTopped ? 1 : 0, isTopped ? Date.now() : null, id);
     }
 
-    searchItems(query: string, tagName = null) {
+    /**
+     * 搜索剪贴板内容
+     * @param content 复制内容 
+     * @param tagId 标签id
+     * @returns 剪贴板内容列表
+     */
+    searchItems(content: string, tagId: number) {
+        log.info('[数据库进程] 搜索剪贴板内容', [content, tagId]);
         let sql = 'SELECT DISTINCT ci.* FROM clipboard_items ci';
         const params = [];
 
-        if (tagName) {
+        if (tagId && tagId !== null) {
             sql += ' INNER JOIN item_tags it ON ci.id = it.item_id'
                 + ' INNER JOIN tags t ON it.tag_id = t.id'
-                + ' WHERE t.name = ? AND ci.content LIKE ?';
-            params.push(tagName, `%${query}%`);
-        } else {
+                + ' WHERE t.id = ? AND ci.content LIKE ?';
+            params.push(`%${tagId}%`);
+        }
+        if (content && content !== null && content !== '') {
             sql += ' WHERE content LIKE ?';
-            params.push(`%${query}%`);
+            params.push(`%${content}%`);
         }
 
         sql += ' ORDER BY ci.is_topped DESC, CASE WHEN ci.is_topped = 1 THEN ci.top_time ELSE ci.copy_time END DESC';
-
+        log.info('[数据库进程] 搜索SQL:', sql);
         return this.db.prepare(sql).all(params);
     }
 

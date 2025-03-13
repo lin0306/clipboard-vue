@@ -86,18 +86,18 @@ function createMainWindow() {
         }
     });
 }
-
-// 设置IPC通信
-ipcMain.handle('get-clipboard-history', async () => {
-    const db = ClipboardDB.getInstance()
-    return db.getAllItems();
-})
-
-ipcMain.handle('clear-clipboard-history', async () => {
+// 监听清空剪贴板
+ipcMain.handle('clear-items', async () => {
     const db = ClipboardDB.getInstance()
     db.clearAll()
     return true
 })
+// 监听剪贴板列表搜索
+ipcMain.handle('search-items', async (_event, query, tagId) => {
+    log.info('[主进程] 搜索剪贴板列表', query, tagId);
+    const db = ClipboardDB.getInstance()
+    return db.searchItems(query, tagId);
+});
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
@@ -117,7 +117,6 @@ if (!gotTheLock) {
     // 当 Electron 完成初始化并准备创建浏览器窗口时调用此方法
     app.whenReady().then(() => {
         createMainWindow()
-        watchClipboard() // 启动剪贴板监听
 
         // 仅 macOS 支持
         app.on('activate', () => {
@@ -284,7 +283,7 @@ function watchClipboard() {
         log.error('[主进程] 检查剪贴板时出错:', error);
     }
 
-    clipboardTimer = setTimeout(watchClipboard, 1000); // 每100毫秒检查一次
+    clipboardTimer = setTimeout(watchClipboard, 100); // 每100毫秒检查一次
 }
 
 function getConfig() {

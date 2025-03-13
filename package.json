@@ -15,6 +15,7 @@
   "dependencies": {
     "ant-design-vue": "^4.2.6",
     "better-sqlite3": "^11.8.1",
+    "electron-log": "^5.3.2",
     "vue": "^3.4.21"
   },
   "devDependencies": {

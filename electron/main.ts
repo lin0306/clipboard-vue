@@ -2,9 +2,11 @@ import { app, BrowserWindow, clipboard, ipcMain } from 'electron'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import fs from 'node:fs'
-import ClipboardDB from './db/index.js'
+import ClipboardDB from './db.js'
+import log from './log.js'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
+let __dirname = path.dirname(fileURLToPath(import.meta.url))
+log.info("[主进程] 程序文件夹位置", __dirname);
 
 // The built directory structure
 //
@@ -25,6 +27,10 @@ export const RENDERER_DIST = path.join(process.env.APP_ROOT, 'dist')
 process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 'public') : RENDERER_DIST
 
 const env = process.env.NODE_ENV;
+log.info("[主进程] 运行环境：", process.env.NODE_ENV)
+if (env !== 'development') {
+    __dirname = __dirname.replace("\\app.asar\\dist-electron", "");
+}
 
 let win: BrowserWindow | null
 // let isOpenWindow = false;
@@ -34,7 +40,7 @@ let win: BrowserWindow | null
 
 const config = getConfig();
 
-function createWindow() {
+function createMainWindow() {
     win = new BrowserWindow({
         icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
         webPreferences: {
@@ -43,10 +49,9 @@ function createWindow() {
             preload: path.join(path.dirname(fileURLToPath(import.meta.url)), 'preload.mjs'),
         },
     })
-    console.log("运行环境：", process.env.NODE_ENV)
 
     const savedTheme = config.theme || 'light';
-    console.log('读取到的主题配置:', savedTheme);
+    log.info('[主进程] 读取到的主题配置:', savedTheme);
 
     // Test active push message to Renderer-process.
     // win.webContents.on('did-finish-load', () => {
@@ -56,10 +61,10 @@ function createWindow() {
     // 在页面加载完成后发送主题设置
     win.webContents.on('did-finish-load', () => {
         win?.webContents.send('main-process-message', (new Date).toLocaleString())
-        console.log('[主进程] 发送主题设置到渲染进程');
+        log.info('[主进程] 发送主题设置到渲染进程');
         win?.webContents.send('change-theme', savedTheme);
         // 启动剪贴板监听
-        console.log('[主进程] 窗口加载完成，开始监听剪贴板');
+        log.info('[主进程] 窗口加载完成，开始监听剪贴板');
         watchClipboard();
     });
 
@@ -104,24 +109,31 @@ app.on('window-all-closed', () => {
     }
 })
 
-app.whenReady().then(() => {
-    createWindow()
-    watchClipboard() // 启动剪贴板监听
+// 限制只能同时存在启动一个程序
+const gotTheLock = app.requestSingleInstanceLock()
+if (!gotTheLock) {
+    app.quit()
+} else {
+    // 当 Electron 完成初始化并准备创建浏览器窗口时调用此方法
+    app.whenReady().then(() => {
+        createMainWindow()
+        watchClipboard() // 启动剪贴板监听
 
-    // 仅 macOS 支持
-    app.on('activate', () => {
-        // On OS X it's common to re-create a window in the app when the
-        // dock icon is clicked and there are no other windows open.
-        if (BrowserWindow.getAllWindows().length === 0) {
-            createWindow()
-        }
+        // 仅 macOS 支持
+        app.on('activate', () => {
+            // On OS X it's common to re-create a window in the app when the
+            // dock icon is clicked and there are no other windows open.
+            if (BrowserWindow.getAllWindows().length === 0) {
+                createMainWindow()
+            }
+        })
     })
-})
+}
 
 app.on('window-all-closed', () => {
     // 对于 Mac 系统， 关闭窗口时并不会直接退出应用， 此时需要我们来手动处理
     if (process.platform === 'darwin') {
-        console.log('close')
+        log.info('[主进程] 关闭程序')
         app.quit()
     }
 })
@@ -135,7 +147,7 @@ let clipboardTimer: string | number | NodeJS.Timeout | null | undefined = null;
 function watchClipboard() {
     // 首先检查窗口和渲染进程状态
     if (!win || win.isDestroyed() || !win.webContents || win.webContents.isDestroyed()) {
-        console.log('[主进程] 窗口或渲染进程不可用，跳过剪贴板检查');
+        log.info('[主进程] 窗口或渲染进程不可用，跳过剪贴板检查');
         return;
     }
 
@@ -144,14 +156,14 @@ function watchClipboard() {
         const currentFiles = clipboard.readBuffer('FileNameW');
         const currentImage = clipboard.readImage();
 
-        // 检查图片变化
+        // 检查图片变化 
         if (!currentImage.isEmpty()) {
             const currentImageBuffer = currentImage.toPNG();
             const isImageChanged = lastImage !== null && Buffer.compare(currentImageBuffer, lastImage) !== 0;
 
             if (isImageChanged) {
-                console.log('[主进程] 检测到剪贴板中有图片');
-                console.log('[主进程] 检测到新的图片内容');
+                log.info('[主进程] 检测到剪贴板中有图片');
+                log.info('[主进程] 检测到新的图片内容');
                 lastImage = currentImageBuffer;
                 const timestamp = Date.now();
                 const tempDir = path.join(config.tempPath || path.join(__dirname, 'temp'));
@@ -178,12 +190,12 @@ function watchClipboard() {
                 if (existingImagePath) {
                     // 使用已存在的图片文件
                     imagePath = existingImagePath;
-                    console.log('[主进程] 找到相同内容的图片文件:', imagePath);
+                    log.info('[主进程] 找到相同内容的图片文件:', imagePath);
                 } else {
                     // 创建新的图片文件
                     imagePath = path.join(tempDir, `clipboard_${timestamp}.png`);
                     fs.writeFileSync(imagePath, currentImageBuffer);
-                    console.log('[主进程] 图片已保存到临时目录:', imagePath);
+                    log.info('[主进程] 图片已保存到临时目录:', imagePath);
                 }
 
                 // 添加更严格的渲染进程状态检查
@@ -193,21 +205,21 @@ function watchClipboard() {
                         // 确保渲染进程已完全加载
                         if (webContents.getProcessId() && !webContents.isLoading()) {
                             try {
-                                console.log('[主进程] 准备发送图片信息到渲染进程');
+                                log.info('[主进程] 准备发送图片信息到渲染进程');
                                 win.webContents.send('clipboard-file', {
                                     name: path.basename(imagePath),
                                     path: imagePath,
                                     type: 'image',
                                     isNewImage: !existingImagePath // 标记是否为新图片
                                 });
-                                console.log('[主进程] 图片信息已发送到渲染进程');
+                                log.info('[主进程] 图片信息已发送到渲染进程');
                             } catch (error) {
-                                console.error('[主进程] 发送图片信息到渲染进程时出错:', error);
+                                log.error('[主进程] 发送图片信息到渲染进程时出错:', error);
                                 if (!existingImagePath) {
                                     try {
                                         fs.unlinkSync(imagePath);
                                     } catch (unlinkError) {
-                                        console.error('[主进程] 清理临时文件时出错:', unlinkError);
+                                        log.error('[主进程] 清理临时文件时出错:', unlinkError);
                                     }
                                 }
                             }
@@ -216,7 +228,7 @@ function watchClipboard() {
                         try {
                             fs.unlinkSync(imagePath);
                         } catch (unlinkError) {
-                            console.error('[主进程] 清理临时文件时出错:', unlinkError);
+                            log.error('[主进程] 清理临时文件时出错:', unlinkError);
                         }
                     }
                 }
@@ -224,7 +236,6 @@ function watchClipboard() {
         }
 
         // 检查文本变化
-        console.log("监听文本变化", currentText, lastText);
         if (currentText && currentText !== lastText) {
             lastText = currentText;
             // 复制的数据添加到数据库
@@ -237,7 +248,7 @@ function watchClipboard() {
                         webContents.send('clipboard-updated', currentText);
                     }
                 } catch (error) {
-                    console.error('[主进程] 发送文本消息时出错:', error);
+                    log.error('[主进程] 发送文本消息时出错:', error);
                 }
             }
         }
@@ -266,11 +277,11 @@ function watchClipboard() {
                 }
                 // }
             } catch (error) {
-                console.error('处理剪贴板文件时出错:', error);
+                log.error('[主进程] 处理剪贴板文件时出错:', error);
             }
         }
     } catch (error) {
-        console.error('[主进程] 检查剪贴板时出错:', error);
+        log.error('[主进程] 检查剪贴板时出错:', error);
     }
 
     clipboardTimer = setTimeout(watchClipboard, 1000); // 每100毫秒检查一次
@@ -281,12 +292,12 @@ function getConfig() {
     if (env === 'development') {
         configDir = path.join(__dirname, '../config');
     } else {
-        configDir = path.join(__dirname, './resources/config');
+        configDir = path.join(__dirname, './config');
     }
-    console.log('配置文件目录:', configDir);
+    log.info('[主进程] 配置文件目录:', configDir);
     const configPath = path.join(configDir, 'settings.conf');
-    console.log('配置文件路径:', configPath);
+    log.info('[主进程] 配置文件路径:', configPath);
     const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-    console.log('读取到的配置:', config);
+    log.info('[主进程] 读取到的配置:', config);
     return config;
 }

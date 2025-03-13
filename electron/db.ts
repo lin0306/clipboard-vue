@@ -2,9 +2,13 @@ import Database from 'better-sqlite3';
 import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import log from './log.js'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+let __dirname = path.dirname(fileURLToPath(import.meta.url));
 const env = process.env.NODE_ENV;
+if (env !== 'development') {
+    __dirname = __dirname.replace("\\app.asar\\dist-electron", "");
+}
 
 class ClipboardDB {
     private static instance: ClipboardDB;
@@ -12,11 +16,12 @@ class ClipboardDB {
 
     private constructor() {
         const dbFolder = path.join(__dirname, '../data');
+        log.info("[数据库进程] 数据文件存储文件夹位置：", dbFolder);
         if (!fs.existsSync(dbFolder)) {
             fs.mkdirSync(dbFolder);
         }
         const dbPath = path.join(dbFolder, 'clipboard.db');
-        console.log("数据文件存储位置：", dbPath);
+        log.info("[数据库进程] 数据文件存储位置：", dbPath);
         this.db = new Database(dbPath);
         this.initTables();
     }
@@ -133,47 +138,47 @@ class ClipboardDB {
                 if (env === 'development') {
                     configDir = path.join(__dirname, '../config');
                 } else {
-                    configDir = path.join(__dirname, './resources/config');
+                    configDir = path.join(__dirname, './config');
                 }
-                console.log('配置文件目录:', configDir);
+                log.info('[数据库进程] 配置文件目录:', configDir);
                 const configPath = path.join(configDir, 'settings.conf');
-                console.log('配置文件路径:', configPath);
+                log.info('[数据库进程] 配置文件路径:', configPath);
                 const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-                console.log('读取到的配置:', config);
+                log.info('[数据库进程] 读取到的配置:', config);
                 const tempDir = config.tempPath;
 
                 // 先获取所有图片类型的记录
-                console.log('[clearAll] 正在获取所有图片记录...');
+                log.info('[数据库进程] 正在获取所有图片记录...');
                 const rows = this.db.prepare('SELECT type, file_path FROM clipboard_items WHERE type = ?').all('image') as { type: string, file_path: string }[];
 
                 // 删除所有图片文件
-                console.log('[clearAll] 开始删除图片文件...');
+                log.info('[数据库进程] 开始删除图片文件...');
                 for (const row of rows) {
                     if (row.file_path) {
                         try {
                             fs.unlinkSync(row.file_path);
-                            console.log(`[clearAll] 成功删除图片文件: ${row.file_path}`);
+                            log.info(`[数据库进程] 成功删除图片文件: ${row.file_path}`);
                         } catch (unlinkError) {
-                            console.error(`[clearAll] 删除图片文件失败: ${row.file_path}`, unlinkError);
+                            console.error(`[数据库进程] 删除图片文件失败: ${row.file_path}`, unlinkError);
                         }
                     }
                 }
 
                 // 清空数据库记录
-                console.log('[clearAll] 正在清空数据库记录...');
+                log.info('[数据库进程] 正在清空数据库记录...');
                 this.db.prepare('DELETE FROM clipboard_items').run();
 
                 // 确保temp目录存在
                 if (!fs.existsSync(tempDir)) {
-                    console.log('[clearAll] 正在创建临时目录...');
+                    log.info('[数据库进程] 正在创建临时目录...');
                     fs.mkdirSync(tempDir, { recursive: true, mode: 0o777 });
-                    console.log('[clearAll] 临时目录创建成功');
+                    log.info('[数据库进程] 临时目录创建成功');
                 }
 
-                console.log('[clearAll] 剪贴板内容和临时文件清理完成');
+                log.info('[数据库进程] 剪贴板内容和临时文件清理完成');
                 resolve();
             } catch (err) {
-                console.error('[clearAll] 清空剪贴板时发生错误:', err);
+                console.error('[数据库进程] 清空剪贴板时发生错误:', err);
                 reject(err);
             }
         });
@@ -239,7 +244,7 @@ class ClipboardDB {
         // 检查标签是否已经绑定
         const bindInfo = this.db.prepare('SELECT * FROM item_tags WHERE item_id = ? AND tag_id = ?').get(itemId, tag.id);
         if (bindInfo) {
-            console.log('标签已绑定');
+            log.info('[数据库进程] 标签已绑定');
             return;
         }
         // 标签未绑定，执行绑定操作

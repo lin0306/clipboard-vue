@@ -1,10 +1,6 @@
 <script setup lang="ts">
 import { inject, ref, onMounted } from 'vue'
-import { ElectronManager } from '../utils/ElectronUtil'
 const msg: any = inject('message')
-
-// 在 setup 中初始化
-ElectronManager.getInstance(msg);
 
 // 剪贴板历史记录
 const clipboardHistory = ref<any[]>([])
@@ -31,7 +27,7 @@ async function clearHistory() {
 }
 
 // 监听剪贴板更新
-window.ipcRenderer.on('clipboard-updated', (event, content) => {
+window.ipcRenderer.on('clipboard-updated', () => {
   getClipboardHistory()
 })
 

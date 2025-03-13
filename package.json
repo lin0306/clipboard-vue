@@ -2,11 +2,15 @@
   "name": "clipboard",
   "private": true,
   "version": "0.0.0",
+  "description": "剪贴板工具",
+  "author": "lin",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc && vite build && electron-builder",
     "preview": "vite preview",
-    "rebuild": "electron-rebuild -f -w better-sqlite3"
+    "rebuild": "electron-rebuild -f -w better-sqlite3",
+    "postinstall": "electron-builder install-app-deps",
+    "clean": "rimraf build"
   },
   "dependencies": {
     "ant-design-vue": "^4.2.6",
@@ -22,6 +26,7 @@
     "electron-builder": "^24.13.3",
     "electron-rebuild": "^3.2.9",
     "prebuild-install": "^7.1.3",
+    "rimraf": "^6.0.1",
     "typescript": "^5.2.2",
     "vite": "^5.1.6",
     "vite-plugin-electron": "^0.28.6",
@@ -78,7 +83,6 @@
     ],
     "files": [
       "dist/**/*",
-      "electron/**/*",
       "dist-electron/**/*"
     ]
   }

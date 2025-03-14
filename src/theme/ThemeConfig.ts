@@ -1,6 +1,7 @@
 // 主题配置文件
 
 export interface ThemeConfig {
+[x: string]: any;
   id: string;
   name: string;
   colors: {

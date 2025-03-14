@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { inject, ref, onMounted, computed } from 'vue'
+import { inject, ref, onMounted } from 'vue'
 import TitleBar from './TitleBar.vue';
 import CustomNavBar from './CustomNavBar.vue';
-import ThemeSelector from './ThemeSelector.vue';
 import { useTheme } from '../theme/ThemeContext';
-import { themes } from '../theme';
+import { themes } from '../theme/ThemeConfig';
+import {NavBarItem} from "../types/menus/NavBarItem.ts";
 
 const msg: any = inject('message')
 
 // 获取主题上下文
-const { currentTheme, setTheme } = useTheme();
+const { currentTheme, setTheme, themeColors } = useTheme();
 
 // 剪贴板历史记录
 const itemList = ref<any[]>([])
@@ -17,11 +17,8 @@ let listLoading = ref(false)
 let searchText = ''
 let selectedTagId: any = undefined
 
-// 显示主题选择器
-const showThemeSelector = ref(false);
-
 // 将MenuItems改为计算属性，这样当currentTheme变化时会自动更新
-const MenuItems = computed(() => [
+const MenuItems: NavBarItem[] = [
   {
     key: '程序',
     label: '程序',
@@ -108,12 +105,24 @@ const MenuItems = computed(() => [
     children: themes.map(theme => ({
       key: `theme-${theme.id}`,
       label: theme.name,
+      type: 'theme',
       onClick: () => {
         console.log('切换主题:', theme);
         setTheme(theme.id);
+        MenuItems.forEach(topMenu => {
+          if(topMenu.key === '主题') {
+            topMenu.children?.forEach(subMenu => {
+              if (subMenu.key === `theme-${theme.id}`) {
+                subMenu.isCurrentTheme = true;
+              } else {
+                subMenu.isCurrentTheme = false;
+              }
+            });
+          }
+        });
       },
       // 将getter函数改为直接比较，确保响应式更新
-      isCurrentTheme: computed(() => currentTheme.id === theme.id)
+      isCurrentTheme: currentTheme.value.id === theme.id
     })),
   },
   {
@@ -138,8 +147,8 @@ const MenuItems = computed(() => [
       },
     ],
   },
-]);
-let selectMenuKey: any = null;
+];
+console.log("导航栏列表：", MenuItems);
 
 /**
  * 根据搜索文本过滤剪贴板列表
@@ -171,22 +180,17 @@ onMounted(() => {
 </script>
 
 <template>
-  <TitleBar color="" />
-  <CustomNavBar :menuItems="MenuItems" :selectedKey="selectMenuKey" />
+  <TitleBar />
+  <CustomNavBar :menuItems="MenuItems" />
   <div style="width: 100%;height: 50px;"></div>
-  
-  <!-- 主题选择器 -->
-  <div v-if="showThemeSelector" class="theme-selector-container">
-    <ThemeSelector />
-  </div>
-  
+
   <a-list class="clipboard-container" :data-source="itemList" :loading="listLoading">
     <template #renderItem="{ item }">
       <a-list-item>
         <a-card style="width: 100%">
           <template #title>{{ new Date(item.copy_time).toLocaleString() }}</template>
           <template #extra>
-            <a-tag color="blue">{{ item.type }}</a-tag>
+            <a-tag :color="themeColors.primary">{{ item.type }}</a-tag>
           </template>
           <p>{{ item.content }}</p>
         </a-card>

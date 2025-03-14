@@ -2,19 +2,25 @@
   <nav class="custom-navbar">
     <ul class="navbar-menu">
       <li v-for="item in menuItems" :key="item.key" class="navbar-item" :class="{ 'has-submenu': item.children }">
-        <a @click="handleMenuClick(item)" class="navbar-link" :class="{ 'active': selectedKey === item.key }">
+        <a @click="handleMenuClick(item)" class="navbar-link">
           {{ item.label }}
         </a>
         <div v-if="item.children && openSubmenu === item.key" class="submenu">
           <ul>
-            <template v-for="(subItem, _index) in item.children" :key="subItem.key || index">
-              <li v-if="subItem.type !== 'divider'" class="submenu-item">
+            <template v-for="(subItem, _index) in item.children" :key="subItem.key">
+              <li v-if="subItem.type === 'divider'" class="divider"></li>
+              <li v-if="subItem.type === 'theme'" class="submenu-item">
                 <a @click="handleSubMenuClick(subItem)" class="submenu-link">
-                  <HookIcon v-if="subItem.isCurrentTheme" :color="themeColors.primary" class="check-icon" />
+                  <HookIcon v-if="subItem.isCurrentTheme" :color="themeColors.primary" class="checked-icon" />
+                  <div v-else class="unchecked-icon"></div>
                   {{ subItem.label }}
                 </a>
               </li>
-              <li v-else class="divider"></li>
+              <li v-else class="submenu-item">
+                <a @click="handleSubMenuClick(subItem)" class="submenu-link">
+                  {{ subItem.label }}
+                </a>
+              </li>
             </template>
           </ul>
         </div>
@@ -24,31 +30,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, defineProps, onMounted, onUnmounted, computed } from 'vue'
+import { ref, defineProps, onMounted, onUnmounted } from 'vue'
 import HookIcon from '../assets/HookIcon.vue';
 import { useTheme } from '../theme/ThemeContext';
-
-interface MenuItem {
-  key: string;
-  label: string;
-  children?: MenuItem[];
-  type?: string;
-  onClick?: () => void; // 添加可选的onClick方法
-  isCurrentTheme?: boolean; // 修改为布尔值类型，因为computed返回的是布尔值
-}
+import {NavBarItem} from "../types/menus/NavBarItem.ts";
 
 defineProps<{
-  menuItems: MenuItem[];
-  selectedKey?: string | null;
+  menuItems: NavBarItem[];
 }>();
 
-const openSubmenu = ref<string | null>(null);
+const openSubmenu: any = ref<string | null>(null);
 
 // 获取主题颜色
 const { themeColors } = useTheme();
 
 // 处理主菜单点击
-function handleMenuClick(item: MenuItem) {
+function handleMenuClick(item: NavBarItem) {
   if (item.children && item.children.length > 0) {
     // 如果已经打开，则关闭；否则打开
     openSubmenu.value = openSubmenu.value === item.key ? null : item.key;
@@ -62,7 +59,7 @@ function handleMenuClick(item: MenuItem) {
 }
 
 // 处理子菜单点击
-function handleSubMenuClick(item: MenuItem) {
+function handleSubMenuClick(item: NavBarItem) {
   // 如果存在onClike方法，则调用
   if (item.onClick) {
     item.onClick();
@@ -134,13 +131,15 @@ onUnmounted(() => {
   position: absolute;
   top: 100%;
   left: 0;
-  min-width: 80px;
+  min-width: 100px;
+  max-width: 250px;
   max-height: calc(100vh - 100px);
   background-color: var(--theme-cardBackground);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   border-radius: 4px;
   overflow: hidden;
   z-index: 1050;
+  white-space: nowrap;
 }
 
 .submenu ul {
@@ -154,7 +153,15 @@ onUnmounted(() => {
   margin: 0;
 }
 
-.check-icon {
+.checked-icon {
+  width: 14px;
+  height: 14px;
+  margin-right: 5px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.unchecked-icon {
   width: 14px;
   height: 14px;
   margin-right: 5px;
@@ -169,6 +176,9 @@ onUnmounted(() => {
   color: var(--theme-text);
   text-decoration: none;
   transition: background-color 0.3s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .submenu-link:hover {

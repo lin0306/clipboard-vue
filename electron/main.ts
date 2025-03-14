@@ -4,6 +4,7 @@ import path from 'node:path'
 import fs from 'node:fs'
 import ClipboardDB from './db.js'
 import log from './log.js'
+import { getConfig, updateConfig } from './settingsFile.js'
 
 let __dirname = path.dirname(fileURLToPath(import.meta.url))
 log.info("[主进程] 程序文件夹位置", __dirname);
@@ -97,6 +98,13 @@ ipcMain.handle('search-items', async (_event, query, tagId) => {
     log.info('[主进程] 搜索剪贴板列表', query, tagId);
     const db = ClipboardDB.getInstance()
     return db.searchItems(query, tagId);
+});
+// 更新主题配置
+ipcMain.handle('update-theme', async (_event, theme) => {
+    log.info('[主进程] 更新主题', theme);
+    config.theme = theme;
+    updateConfig(config);
+    return true;
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common
@@ -284,19 +292,4 @@ function watchClipboard() {
     }
 
     clipboardTimer = setTimeout(watchClipboard, 100); // 每100毫秒检查一次
-}
-
-function getConfig() {
-    let configDir;
-    if (env === 'development') {
-        configDir = path.join(__dirname, '../config');
-    } else {
-        configDir = path.join(__dirname, './config');
-    }
-    log.info('[主进程] 配置文件目录:', configDir);
-    const configPath = path.join(configDir, 'settings.conf');
-    log.info('[主进程] 配置文件路径:', configPath);
-    const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-    log.info('[主进程] 读取到的配置:', config);
-    return config;
 }

@@ -6,7 +6,7 @@ import { ConfigProvider } from 'ant-design-vue';
 import { theme } from 'ant-design-vue';
 
 // 创建主题上下文
-const { currentTheme, setTheme } = createThemeContext();
+const { currentTheme } = createThemeContext();
 
 // 计算Ant Design Vue的主题配置
 const antdTheme = computed(() => {

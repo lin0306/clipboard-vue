@@ -1,5 +1,5 @@
 <template>
-    <icon :style="{ color: 'hotpink' }">
+    <icon :style="{ color: color }">
         <template #component>
             <svg t="1740575816045" class="icon" viewBox="0 0 1024 1024" version="1.1"
                 xmlns="http://www.w3.org/2000/svg" p-id="5037" xmlns:xlink="http://www.w3.org/1999/xlink" width="200"
@@ -13,11 +13,18 @@
 </template>
 <script lang="ts" setup>
 import Icon from '@ant-design/icons-vue';
+import { useTheme } from '../theme/ThemeContext';
 
 interface DefineProp {
-    color: string
+    color?: string
 }
-defineProps<DefineProp>()
+
+const props = withDefaults(defineProps<DefineProp>(), {
+    color: ''
+});
+
+// 获取主题颜色
+const { themeColors } = useTheme();
 </script>
 <style>
 svg {

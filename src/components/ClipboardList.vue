@@ -1,15 +1,27 @@
 <script setup lang="ts">
-import { inject, ref, onMounted } from 'vue'
+import { inject, ref, onMounted, computed } from 'vue'
 import TitleBar from './TitleBar.vue';
 import CustomNavBar from './CustomNavBar.vue';
+import ThemeSelector from './ThemeSelector.vue';
+import { useTheme } from '../theme/ThemeContext';
+import { themes } from '../theme';
+
 const msg: any = inject('message')
+
+// 获取主题上下文
+const { currentTheme, setTheme } = useTheme();
 
 // 剪贴板历史记录
 const itemList = ref<any[]>([])
 let listLoading = ref(false)
 let searchText = ''
 let selectedTagId: any = undefined
-const MenuItems = ref<any[]>([
+
+// 显示主题选择器
+const showThemeSelector = ref(false);
+
+// 将MenuItems改为计算属性，这样当currentTheme变化时会自动更新
+const MenuItems = computed(() => [
   {
     key: '程序',
     label: '程序',
@@ -93,6 +105,16 @@ const MenuItems = ref<any[]>([
   {
     key: '主题',
     label: '主题',
+    children: themes.map(theme => ({
+      key: `theme-${theme.id}`,
+      label: theme.name,
+      onClick: () => {
+        console.log('切换主题:', theme);
+        setTheme(theme.id);
+      },
+      // 将getter函数改为直接比较，确保响应式更新
+      isCurrentTheme: computed(() => currentTheme.id === theme.id)
+    })),
   },
   {
     key: '帮助',
@@ -152,6 +174,12 @@ onMounted(() => {
   <TitleBar color="" />
   <CustomNavBar :menuItems="MenuItems" :selectedKey="selectMenuKey" />
   <div style="width: 100%;height: 50px;"></div>
+  
+  <!-- 主题选择器 -->
+  <div v-if="showThemeSelector" class="theme-selector-container">
+    <ThemeSelector />
+  </div>
+  
   <a-list class="clipboard-container" :data-source="itemList" :loading="listLoading">
     <template #renderItem="{ item }">
       <a-list-item>
@@ -203,9 +231,15 @@ onMounted(() => {
   background-color: rgba(144, 147, 153, 0.5);
 }
 
-/* 定义CSS变量 */
-:root {
-  --scrollbar-color: rgba(144, 147, 153, 0.3);
-  --scrollbar-color-hover: rgba(144, 147, 153, 0.5);
+/* 主题选择器容器 */
+.theme-selector-container {
+  position: fixed;
+  top: 55px;
+  right: 10px;
+  width: 200px;
+  background-color: var(--theme-cardBackground);
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
 }
 </style>

@@ -10,6 +10,7 @@
             <template v-for="(subItem, _index) in item.children" :key="subItem.key || index">
               <li v-if="subItem.type !== 'divider'" class="submenu-item">
                 <a @click="handleSubMenuClick(subItem)" class="submenu-link">
+                  <HookIcon v-if="subItem.isCurrentTheme" :color="themeColors.primary" class="check-icon" />
                   {{ subItem.label }}
                 </a>
               </li>
@@ -23,7 +24,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, defineProps, onMounted, onUnmounted } from 'vue'
+import { ref, defineProps, onMounted, onUnmounted, computed } from 'vue'
+import HookIcon from '../assets/HookIcon.vue';
+import { useTheme } from '../theme/ThemeContext';
 
 interface MenuItem {
   key: string;
@@ -31,6 +34,7 @@ interface MenuItem {
   children?: MenuItem[];
   type?: string;
   onClick?: () => void; // 添加可选的onClick方法
+  isCurrentTheme?: boolean; // 修改为布尔值类型，因为computed返回的是布尔值
 }
 
 defineProps<{
@@ -39,6 +43,9 @@ defineProps<{
 }>();
 
 const openSubmenu = ref<string | null>(null);
+
+// 获取主题颜色
+const { themeColors } = useTheme();
 
 // 处理主菜单点击
 function handleMenuClick(item: MenuItem) {
@@ -87,8 +94,8 @@ onUnmounted(() => {
   top: 25px;
   width: 100%;
   z-index: 1000;
-  background-color: #fff;
-  border-bottom: 1px solid rgba(5, 5, 5, 0.06);
+  background-color: var(--theme-navBackground);
+  border-bottom: 1px solid var(--theme-border);
 }
 
 .navbar-menu {
@@ -110,17 +117,17 @@ onUnmounted(() => {
 
 .navbar-link {
   display: block;
-  color: #333;
+  color: var(--theme-text);
   text-decoration: none;
   transition: color 0.3s;
 }
 
 .navbar-link:hover {
-  color: #1890ff;
+  color: var(--theme-primary);
 }
 
 .navbar-link.active {
-  color: #1890ff;
+  color: var(--theme-primary);
 }
 
 .submenu {
@@ -129,7 +136,7 @@ onUnmounted(() => {
   left: 0;
   min-width: 80px;
   max-height: calc(100vh - 100px);
-  background-color: #fff;
+  background-color: var(--theme-cardBackground);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   border-radius: 4px;
   overflow: hidden;
@@ -147,21 +154,30 @@ onUnmounted(() => {
   margin: 0;
 }
 
+.check-icon {
+  width: 14px;
+  height: 14px;
+  margin-right: 5px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
 .submenu-link {
-  display: block;
+  display: flex;
+  align-items: center;
   padding: 0 12px;
-  color: #333;
+  color: var(--theme-text);
   text-decoration: none;
   transition: background-color 0.3s;
 }
 
 .submenu-link:hover {
-  background-color: #f5f5f5;
+  background-color: var(--theme-hoverBackground);
 }
 
 .divider {
   height: 1px;
   margin: 4px 0;
-  background-color: #f0f0f0;
+  background-color: var(--theme-divider);
 }
 </style>

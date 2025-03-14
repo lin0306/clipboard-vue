@@ -3,13 +3,13 @@
         <div class="window-title">剪贴板</div>
         <div class="window-controls">
             <div class="control-button fixation-button">
-                <FixedIcon :color="color" class="program-btn" id="fixation-button-img" />
+                <FixedIcon :color="color || themeColors.text" class="program-btn" id="fixation-button-img" />
             </div>
             <div class="control-button unfixation-button">
-                <UnFixedIcon :color="color" class="program-btn" id="unfixation-button-img" />
+                <UnFixedIcon :color="color || themeColors.text" class="program-btn" id="unfixation-button-img" />
             </div>
             <div class="control-button close-button">
-                <CloseIcon :color="color" class="program-btn" id="close-button-img" />
+                <CloseIcon :color="color || themeColors.text" class="program-btn" id="close-button-img" />
             </div>
         </div>
     </div>
@@ -18,11 +18,15 @@
 import FixedIcon from '../assets/FixedIcon.vue'
 import UnFixedIcon from '../assets/UnFixedIcon.vue'
 import CloseIcon from '../assets/CloseIcon.vue'
+import { useTheme } from '../theme/ThemeContext'
 
 interface DefineProp {
     color: string | '#b1b1b1'
 }
 defineProps<DefineProp>()
+
+// 获取主题颜色
+const { themeColors } = useTheme()
 </script>
 <style>
 /* 标题栏样式 */
@@ -40,6 +44,8 @@ defineProps<DefineProp>()
     z-index: 1000;
     position: fixed;
     top: 0;
+    background-color: var(--theme-navBackground);
+    color: var(--theme-text);
 }
 
 #title-bar.fixed {

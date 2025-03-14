@@ -18,7 +18,7 @@
 import FixedIcon from '../assets/FixedIcon.vue'
 import UnFixedIcon from '../assets/UnFixedIcon.vue'
 import CloseIcon from '../assets/CloseIcon.vue'
-import { useTheme } from '../theme/ThemeContext'
+import { useTheme } from '../themes/ThemeContext'
 
 // 获取主题颜色
 const { themeColors } = useTheme()

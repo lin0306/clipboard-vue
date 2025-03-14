@@ -12,7 +12,7 @@
 </template>
 <script lang="ts" setup>
 import Icon from '@ant-design/icons-vue';
-import { useTheme } from '../theme/ThemeContext';
+import { useTheme } from '../themes/ThemeContext';
 // 获取主题颜色
 const { themeColors } = useTheme();
 </script>

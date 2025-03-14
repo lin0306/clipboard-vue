@@ -2,8 +2,8 @@
 import { inject, ref, onMounted } from 'vue'
 import TitleBar from './TitleBar.vue';
 import CustomNavBar from './CustomNavBar.vue';
-import { useTheme } from '../theme/ThemeContext';
-import { themes } from '../theme/ThemeConfig';
+import { useTheme } from '../themes/ThemeContext';
+import { themes } from '../themes/ThemeConfig';
 import {NavBarItem} from "../types/menus/NavBarItem.ts";
 
 const msg: any = inject('message')
@@ -122,7 +122,7 @@ const MenuItems: NavBarItem[] = [
         });
       },
       // 将getter函数改为直接比较，确保响应式更新
-      isCurrentTheme: currentTheme.value.id === theme.id
+      isCurrentTheme: currentTheme.id === theme.id
     })),
   },
   {

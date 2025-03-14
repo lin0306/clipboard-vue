@@ -63,7 +63,7 @@ function createMainWindow() {
     win.webContents.on('did-finish-load', () => {
         win?.webContents.send('main-process-message', (new Date).toLocaleString())
         log.info('[主进程] 发送主题设置到渲染进程');
-        win?.webContents.send('change-theme', savedTheme);
+        win?.webContents.send('change-themes', savedTheme);
         // 启动剪贴板监听
         log.info('[主进程] 窗口加载完成，开始监听剪贴板');
         watchClipboard();
@@ -100,7 +100,7 @@ ipcMain.handle('search-items', async (_event, query, tagId) => {
     return db.searchItems(query, tagId);
 });
 // 更新主题配置
-ipcMain.handle('update-theme', async (_event, theme) => {
+ipcMain.handle('update-themes', async (_event, theme) => {
     log.info('[主进程] 更新主题', theme);
     config.theme = theme;
     updateConfig(config);

@@ -15,6 +15,7 @@ class ClipboardDB {
     private db: Database.Database;
 
     private constructor() {
+        log.info("[数据库进程] 数据库进程初始化");
         const dbFolder = path.join(__dirname, '../data');
         log.info("[数据库进程] 数据文件存储文件夹位置：", dbFolder);
         if (!fs.existsSync(dbFolder)) {
@@ -34,6 +35,7 @@ class ClipboardDB {
     }
 
     private initTables() {
+        log.info("[数据库进程] 初始化数据库表开始");
         // 创建剪贴板条目表
         this.db.exec(`
                     CREATE TABLE IF NOT EXISTS clipboard_items (
@@ -66,6 +68,8 @@ class ClipboardDB {
                         PRIMARY KEY (item_id, tag_id)
                     )
                 `);
+
+        log.info("[数据库进程] 初始化数据库表完成");
     }
 
     close() {

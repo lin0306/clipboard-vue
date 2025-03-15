@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, ref, onMounted } from 'vue'
+import { inject, ref, onMounted, computed } from 'vue'
 import TitleBar from './TitleBar.vue';
 import CustomNavBar from './CustomNavBar.vue';
 import { useTheme } from '../themes/ThemeContext';
@@ -18,7 +18,7 @@ let searchText = ''
 let selectedTagId: any = undefined
 
 // 将MenuItems改为计算属性，这样当currentTheme变化时会自动更新
-const MenuItems: NavBarItem[] = [
+const MenuItems = computed((): NavBarItem[] => [
   {
     key: '程序',
     label: '程序',
@@ -109,20 +109,11 @@ const MenuItems: NavBarItem[] = [
       onClick: () => {
         console.log('切换主题:', theme);
         setTheme(theme.id);
-        MenuItems.forEach(topMenu => {
-          if(topMenu.key === '主题') {
-            topMenu.children?.forEach(subMenu => {
-              if (subMenu.key === `theme-${theme.id}`) {
-                subMenu.isCurrentTheme = true;
-              } else {
-                subMenu.isCurrentTheme = false;
-              }
-            });
-          }
-        });
       },
-      // 将getter函数改为直接比较，确保响应式更新
-      isCurrentTheme: currentTheme.id === theme.id
+      // 使用函数返回值，确保每次访问时都重新计算
+      get isCurrentTheme() {
+        return currentTheme.value.id === theme.id;
+      }
     })),
   },
   {
@@ -147,7 +138,7 @@ const MenuItems: NavBarItem[] = [
       },
     ],
   },
-];
+]);
 console.log("导航栏列表：", MenuItems);
 
 /**
@@ -190,7 +181,7 @@ onMounted(() => {
         <a-card style="width: 100%">
           <template #title>{{ new Date(item.copy_time).toLocaleString() }}</template>
           <template #extra>
-            <a-tag :color="themeColors.primary">{{ item.type }}</a-tag>
+            <a-tag :color="themeColors.tagColor">{{ item.type }}</a-tag>
           </template>
           <p>{{ item.content }}</p>
         </a-card>

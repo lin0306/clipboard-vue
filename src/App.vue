@@ -8,16 +8,18 @@ import { theme } from 'ant-design-vue';
 // 创建主题上下文
 const { currentTheme } = createThemeContext();
 
+
+
 // 计算Ant Design Vue的主题配置
 const antdTheme = computed(() => {
-  console.log('app.vue currentTheme', currentTheme)
-  const isDark = currentTheme.id === 'dark';
+  console.log('app.vue currentTheme', currentTheme.value)
+  const isDark = currentTheme.value.id === 'dark';
   return {
     token: {
-      colorPrimary: currentTheme.colors.primary,
-      colorSuccess: currentTheme.colors.secondary,
-      colorBgBase: currentTheme.colors.background,
-      colorTextBase: currentTheme.colors.text,
+      colorPrimary: currentTheme.value.colors.primary,
+      colorSuccess: currentTheme.value.colors.secondary,
+      colorBgBase: currentTheme.value.colors.background,
+      colorTextBase: currentTheme.value.colors.text,
       borderRadius: 4,
     },
     algorithm: isDark ? theme.darkAlgorithm : theme.defaultAlgorithm,

@@ -63,7 +63,7 @@ function createMainWindow() {
     win.webContents.on('did-finish-load', () => {
         win?.webContents.send('main-process-message', (new Date).toLocaleString())
         log.info('[主进程] 发送主题设置到渲染进程');
-        win?.webContents.send('change-themes', savedTheme);
+        win?.webContents.send('init-themes', savedTheme);
         // 启动剪贴板监听
         log.info('[主进程] 窗口加载完成，开始监听剪贴板');
         watchClipboard();

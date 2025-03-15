@@ -4,10 +4,10 @@ import log from './log.js'
 import { fileURLToPath } from 'node:url'
 
 let __dirname = path.dirname(fileURLToPath(import.meta.url))
-log.info("[主进程] 程序文件夹位置", __dirname);
+log.info("[配置文件] 程序文件夹位置", __dirname);
 
 const env = process.env.NODE_ENV;
-log.info("[主进程] 运行环境：", process.env.NODE_ENV)
+log.info("[配置文件] 运行环境：", process.env.NODE_ENV)
 if (env !== 'development') {
     __dirname = __dirname.replace("\\app.asar\\dist-electron", "");
 }
@@ -16,7 +16,7 @@ if (env !== 'development') {
 export function getConfig() {
     const configPath = getConfigPath();
     const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-    log.info('[主进程] 读取到的配置:', config);
+    log.info('[配置文件] 读取到的配置:', config);
     return config;
 }
 
@@ -34,8 +34,8 @@ function getConfigPath() {
     } else {
         configDir = path.join(__dirname, './config');
     }
-    log.info('[主进程] 配置文件目录:', configDir);
+    log.info('[配置文件] 配置文件目录:', configDir);
     const configPath = path.join(configDir, 'settings.conf');
-    console.log('[主进程] 配置文件路径:', configPath);
+    console.log('[配置文件] 配置文件路径:', configPath);
     return configPath;
 }

@@ -31,7 +31,7 @@
 
 <script setup lang="ts">
 import { ref, defineProps, onMounted, onUnmounted } from 'vue'
-import HookIcon from '../assets/HookIcon.vue';
+import HookIcon from '../assets/icon/HookIcon.vue';
 import { useTheme } from '../themes/ThemeContext';
 import {NavBarItem} from "../types/menus/NavBarItem.ts";
 

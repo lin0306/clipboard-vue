@@ -141,7 +141,7 @@ class ClipboardDB {
         try {
             // 先获取要删除的项目信息
             const row = this.db.prepare('SELECT type, file_path FROM clipboard_items WHERE id = ?').get(id) as { type: string, file_path: string } | undefined;
-
+            console.log('[数据库进程] 要删除的项目信息:', row);
             // 如果是图片类型，删除对应的临时文件
             if (row && row.type === 'image' && row.file_path) {
                 try {
@@ -152,7 +152,8 @@ class ClipboardDB {
             }
 
             // 删除数据库记录
-            this.db.prepare('SELECT type, file_path FROM clipboard_items WHERE id = ?').run(id);
+            this.db.prepare('DELETE FROM clipboard_items WHERE id = ?').run(id);
+            log.info('[数据库进程] 剪贴板内容删除成功');
         } catch (err) {
             throw err;
         }

@@ -106,6 +106,24 @@ ipcMain.handle('update-themes', async (_event, theme) => {
     updateConfig(config);
     return true;
 });
+// 监听剪贴板列表内容置顶
+ipcMain.handle('top-item', async (_event, id) => {
+    log.info('[主进程] 剪贴板内容置顶', id);
+    const db = ClipboardDB.getInstance()
+    db.toggleTop(id, true);
+});
+// 监听剪贴板列表内容取消置顶
+ipcMain.handle('untop-item', async (_event, id) => {
+    log.info('[主进程] 剪贴板内容取消置顶', id);
+    const db = ClipboardDB.getInstance()
+    db.toggleTop(id, false);
+});
+// 监听剪贴板列表内容删除
+ipcMain.handle('remove-item', async (_event, id) => {
+    log.info('[主进程] 剪贴板内容删除', id);
+    const db = ClipboardDB.getInstance()
+    db.deleteItem(id);
+});
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits

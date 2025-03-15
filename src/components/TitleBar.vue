@@ -15,9 +15,9 @@
     </div>
 </template>
 <script lang="ts" setup>
-import FixedIcon from '../assets/FixedIcon.vue'
-import UnFixedIcon from '../assets/UnFixedIcon.vue'
-import CloseIcon from '../assets/CloseIcon.vue'
+import FixedIcon from '../assets/icon/FixedIcon.vue'
+import UnFixedIcon from '../assets/icon/UnFixedIcon.vue'
+import CloseIcon from '../assets/icon/CloseIcon.vue'
 </script>
 <style>
 /* 标题栏样式 */

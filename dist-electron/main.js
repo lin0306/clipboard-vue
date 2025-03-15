@@ -2103,6 +2103,7 @@ const _ClipboardDB = class _ClipboardDB {
   deleteItem(id) {
     try {
       const row = this.db.prepare("SELECT type, file_path FROM clipboard_items WHERE id = ?").get(id);
+      console.log("[数据库进程] 要删除的项目信息:", row);
       if (row && row.type === "image" && row.file_path) {
         try {
           fs$5.unlinkSync(row.file_path);
@@ -2110,7 +2111,8 @@ const _ClipboardDB = class _ClipboardDB {
           console.error("删除临时图片文件失败:", unlinkError);
         }
       }
-      this.db.prepare("SELECT type, file_path FROM clipboard_items WHERE id = ?").run(id);
+      this.db.prepare("DELETE FROM clipboard_items WHERE id = ?").run(id);
+      log.info("[数据库进程] 剪贴板内容删除成功");
     } catch (err) {
       throw err;
     }
@@ -2309,6 +2311,21 @@ require$$0$5.ipcMain.handle("update-themes", async (_event, theme) => {
   config.theme = theme;
   updateConfig(config);
   return true;
+});
+require$$0$5.ipcMain.handle("top-item", async (_event, id) => {
+  log.info("[主进程] 剪贴板内容置顶", id);
+  const db = ClipboardDB.getInstance();
+  db.toggleTop(id, true);
+});
+require$$0$5.ipcMain.handle("untop-item", async (_event, id) => {
+  log.info("[主进程] 剪贴板内容取消置顶", id);
+  const db = ClipboardDB.getInstance();
+  db.toggleTop(id, false);
+});
+require$$0$5.ipcMain.handle("remove-item", async (_event, id) => {
+  log.info("[主进程] 剪贴板内容删除", id);
+  const db = ClipboardDB.getInstance();
+  db.deleteItem(id);
 });
 require$$0$5.app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {

@@ -1,6 +1,7 @@
 import { createApp } from 'vue'
 import App from './App.vue'
 import  Antd,{ Button, message, Menu } from 'ant-design-vue'
+import './assets/css/scrollbarGlobal.css'
 
 
 const app = createApp(App);

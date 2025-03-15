@@ -20,6 +20,8 @@ export interface ThemeConfigColors {
     hoverBackground: string;
     divider: string;
     tagColor: string;
+    scrollBarColor: string;
+    scrollBarColorHover: string;
 }
 
 // 默认主题 - 灰阶色调
@@ -39,6 +41,8 @@ export const lightTheme: ThemeConfig = {
     hoverBackground: 'rgba(240,240,240,1)',
     divider: 'rgba(230,230,230,1)',
     tagColor: 'rgba(90,90,90,0.3)',
+    scrollBarColor: 'rgba(144, 147, 153, 0.3)',
+    scrollBarColorHover: 'rgba(144, 147, 153, 0.5)',
   },
 };
 
@@ -59,6 +63,8 @@ export const darkTheme: ThemeConfig = {
     hoverBackground: 'rgba(45,45,45,1)',
     divider: 'rgba(55,55,55,1)',
     tagColor: 'rgba(160,160,160,0.2)',
+    scrollBarColor: 'rgba(255, 255, 255, 0.3)',
+    scrollBarColorHover: 'rgba(144, 147, 153, 0.5)',
   },
 };
 
@@ -79,6 +85,8 @@ export const blueTheme: ThemeConfig = {
     hoverBackground: 'rgba(230,240,250,1)',
     divider: 'rgba(200,220,240,1)',
     tagColor: 'rgba(41,98,255,0.36)',
+    scrollBarColor: 'rgba(127, 148, 192, 0.54)',
+    scrollBarColorHover: 'rgba(49, 61, 84, 0.5)',
   },
 };
 
@@ -99,6 +107,8 @@ export const pinkTheme: ThemeConfig = {
     hoverBackground: 'rgba(248,230,240,1)',
     divider: 'rgba(240,210,225,1)',
     tagColor: 'rgba(219,112,147,0.5)',
+    scrollBarColor: 'rgba(214, 157, 206, 0.38)',
+    scrollBarColorHover: 'rgba(153, 100, 140, 0.5)',
   },
 };
 

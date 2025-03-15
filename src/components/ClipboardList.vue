@@ -1,10 +1,16 @@
 <script setup lang="ts">
-import { inject, ref, onMounted, computed } from 'vue'
+import { inject, ref, onMounted, onUnmounted, computed, reactive } from 'vue'
 import TitleBar from './TitleBar.vue';
 import CustomNavBar from './CustomNavBar.vue';
 import { useTheme } from '../themes/ThemeContext';
 import { themes } from '../themes/ThemeConfig';
-import {NavBarItem} from "../types/menus/NavBarItem.ts";
+import { NavBarItem } from "../types/menus/NavBarItem.ts";
+import TopIcon from '../assets/icon/TopIcon.vue';
+import UntopIcon from '../assets/icon/UntopIcon.vue';
+import TrashIcon from '../assets/icon/TrashIcon.vue';
+import MoreIcon from '../assets/icon/MoreIcon.vue';
+import DragIcon from '../assets/icon/DragIcon.vue';
+import convertType from '../utils/convert.ts';
 
 const msg: any = inject('message')
 
@@ -16,6 +22,28 @@ const itemList = ref<any[]>([])
 let listLoading = ref(false)
 let searchText = ''
 let selectedTagId: any = undefined
+
+// 下拉菜单状态
+const dropdownState = reactive({
+  visible: false,
+  currentItemId: -1
+});
+
+// 显示/隐藏下拉菜单
+function toggleDropdown(id: number) {
+  if (dropdownState.currentItemId === id && dropdownState.visible) {
+    dropdownState.visible = false;
+  } else {
+    dropdownState.visible = true;
+    dropdownState.currentItemId = id;
+  }
+}
+
+// 绑定标签
+async function bindTag(id: number) {
+  msg.info('绑定标签功能待实现', id);
+  dropdownState.visible = false;
+}
 
 // 将MenuItems改为计算属性，这样当currentTheme变化时会自动更新
 const MenuItems = computed((): NavBarItem[] => [
@@ -139,7 +167,6 @@ const MenuItems = computed((): NavBarItem[] => [
     ],
   },
 ]);
-console.log("导航栏列表：", MenuItems);
 
 /**
  * 根据搜索文本过滤剪贴板列表
@@ -153,10 +180,38 @@ async function filterClipboardItems() {
     console.log(items);
     itemList.value = items;
   } finally {
+    // setTimeout(() => {
     listLoading = ref(false);
+    // }, 1000);
   }
 }
 
+/**
+ * 剪贴板内容置顶
+ * @param {number} id - 内容id 
+ */
+async function onTop(id: number) {
+  await window.ipcRenderer.invoke('top-item', id);
+  filterClipboardItems();
+}
+
+/**
+ * 取消剪贴板内容置顶
+ * @param {number} id - 内容id
+ */
+async function onUntop(id: number) {
+  await window.ipcRenderer.invoke('untop-item', id);
+  filterClipboardItems();
+}
+
+/**
+ * 删除剪贴板内容
+ * @param {number} id - 内容id
+ */
+async function removeItem(id: number) {
+  await window.ipcRenderer.invoke('remove-item', id);
+  filterClipboardItems();
+}
 
 // 监听剪贴板更新
 window.ipcRenderer.on('clipboard-updated', () => {
@@ -164,77 +219,182 @@ window.ipcRenderer.on('clipboard-updated', () => {
   filterClipboardItems()
 })
 
-// 组件挂载时获取历史记录
+// 点击外部关闭下拉菜单
+function handleClickOutside(event: MouseEvent) {
+  const target = event.target as HTMLElement;
+  // 检查点击是否在下拉菜单或更多按钮之外
+  if (dropdownState.visible &&
+    !target.closest('.dropdown-menu') &&
+    !target.closest('.action-button')) {
+    dropdownState.visible = false;
+  }
+}
+
+// 组件挂载时获取历史记录并添加点击事件监听
 onMounted(() => {
-  filterClipboardItems()
+  filterClipboardItems();
+  document.addEventListener('click', handleClickOutside);
+})
+
+// 组件卸载时移除点击事件监听
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside);
 })
 </script>
 
 <template>
   <TitleBar />
   <CustomNavBar :menuItems="MenuItems" />
-  <div style="width: 100%;height: 50px;"></div>
+  <div style="width: 100%;height: 55px;"></div>
 
-  <a-list class="clipboard-container" :data-source="itemList" :loading="listLoading">
-    <template #renderItem="{ item }">
-      <a-list-item>
-        <a-card style="width: 100%">
-          <template #title>{{ new Date(item.copy_time).toLocaleString() }}</template>
-          <template #extra>
-            <a-tag :color="themeColors.tagColor">{{ item.type }}</a-tag>
-          </template>
+  <div v-if="listLoading" class="loading-indicator">
+    <a-spin />
+  </div>
+  <div v-else class="clipboard-list">
+    <div v-for="item in itemList" :key="item.id" class="clipboard-item">
+      <div class="clipboard-card">
+        <div class="card-header">
+          <div class="card-title">{{ new Date(item.copy_time).toLocaleString() }}</div>
+          <div class="card-actions">
+            <a-tag :color="themeColors.tagColor">{{ convertType(item.type) }}</a-tag>
+            <div class="action-buttons">
+              <!-- 置顶/取消置顶按钮 -->
+              <div class="action-button" @click="item.is_topped ? onUntop(item.id) : onTop(item.id)">
+                <TopIcon v-if="!item.is_topped" />
+                <UntopIcon v-else />
+              </div>
+              <!-- 更多按钮 -->
+              <div class="action-button" @click="toggleDropdown(item.id)">
+                <MoreIcon />
+              </div>
+              <!-- 下拉菜单 -->
+              <div v-if="dropdownState.visible && dropdownState.currentItemId === item.id" class="dropdown-menu">
+                <div class="dropdown-item" @click="removeItem(item.id)">
+                  <TrashIcon class="dropdown-icon" />
+                  <span>删除</span>
+                </div>
+                <div class="dropdown-item" @click="bindTag(item.id)">
+                  <DragIcon class="dropdown-icon" />
+                  <span>绑定标签</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-content">
           <p>{{ item.content }}</p>
-        </a-card>
-      </a-list-item>
-    </template>
-  </a-list>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <style scoped>
+.loading-indicator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
 .clipboard-list {
-  padding: 20px;
-  max-width: 800px;
-  margin: 0 auto;
+  padding: 10px;
+  height: calc(100vh - 80px); /* 减去TitleBar(25px)和NavBar+占位div(55px)的高度 */
+  overflow-y: scroll;
 }
 
-/* 列表容器样式 start */
-.clipboard-container {
-  height: calc(100vh - 50px);
-  width: 100%;
-  overflow-y: auto;
+.clipboard-item {
+  margin-bottom: 16px;
+}
+
+.clipboard-card {
+  background-color: var(--theme-cardBackground);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  transition: box-shadow 0.3s;
+}
+
+.clipboard-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.card-title {
+  font-weight: 500;
+  color: var(--theme-text);
+}
+
+.card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   position: relative;
-  scrollbar-width: thin;
 }
 
-.clipboard-container::-webkit-scrollbar {
-  width: 6px;
-  border-radius: 6px;
+.action-button {
+  cursor: pointer;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s;
 }
 
-.clipboard-container::-webkit-scrollbar-track {
-  background: transparent;
-  border-radius: 6px;
+.action-button:hover {
+  transform: scale(1.1);
 }
 
-.clipboard-container::-webkit-scrollbar-thumb {
-  background-color: rgba(144, 147, 153, 0.3);
-  border-radius: 6px;
-  transition: background-color 0.3s;
-}
-
-.clipboard-container::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(144, 147, 153, 0.5);
-}
-
-/* 主题选择器容器 */
-.theme-selector-container {
-  position: fixed;
-  top: 55px;
-  right: 10px;
-  width: 200px;
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
   background-color: var(--theme-cardBackground);
   border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  z-index: 1000;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+  min-width: 120px;
+  padding: 4px 0;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.dropdown-item:hover {
+  background-color: var(--theme-hoverBackground);
+}
+
+.dropdown-item svg {
+  width: 16px;
+  height: 16px;
+}
+
+.card-content {
+  color: var(--theme-text);
+  word-break: break-all;
+}
+
+.dropdown-icon {
+  width: 20px;
+  height: 20px;
 }
 </style>

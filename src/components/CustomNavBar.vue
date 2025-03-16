@@ -131,8 +131,7 @@ onUnmounted(() => {
   position: absolute;
   top: 100%;
   left: 0;
-  min-width: 100px;
-  max-width: 250px;
+  width: fit-content;
   max-height: calc(100vh - 100px);
   background-color: var(--theme-cardBackground);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
@@ -179,6 +178,7 @@ onUnmounted(() => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-height: 24px;
 }
 
 .submenu-link:hover {
@@ -187,7 +187,6 @@ onUnmounted(() => {
 
 .divider {
   height: 1px;
-  margin: 4px 0;
   background-color: var(--theme-divider);
 }
 </style>

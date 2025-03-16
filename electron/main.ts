@@ -64,6 +64,10 @@ function createMainWindow() {
         win?.webContents.send('main-process-message', (new Date).toLocaleString())
         log.info('[主进程] 发送主题设置到渲染进程');
         win?.webContents.send('init-themes', savedTheme);
+        log.info('[主进程] 发送标签列表到渲染进程');
+        const db = ClipboardDB.getInstance()
+        const tags =  db.getAllTags();
+        win?.webContents.send('load-tag-items', tags);
         // 启动剪贴板监听
         log.info('[主进程] 窗口加载完成，开始监听剪贴板');
         watchClipboard();

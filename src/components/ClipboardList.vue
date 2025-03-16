@@ -11,6 +11,7 @@ import TrashIcon from '../assets/icon/TrashIcon.vue';
 import MoreIcon from '../assets/icon/MoreIcon.vue';
 import DragIcon from '../assets/icon/DragIcon.vue';
 import convertType from '../utils/convert.ts';
+import { getTextColorForBackground } from '../utils/colorUtils.ts';
 
 const msg: any = inject('message')
 
@@ -140,6 +141,30 @@ const MenuItems = computed((): NavBarItem[] => [
   },
 ]);
 
+const TagItems = ref([
+  {
+    id: 1,
+    name: '默认',
+    color: 'rgba(69, 38, 104, 1)',
+  }, {
+    id: 2,
+    name: '标签2',
+    color: 'rgba(255, 0, 0, 1)',
+  }, {
+    id: 3,
+    name: '标签3',
+    color: 'rgba(0, 255, 0, 1)',
+  }, {
+    id: 4,
+    name: '标签4',
+    color: 'rgba(0, 0, 255, 1)',
+  }, {
+    id: 5,
+    name: '标签5',
+    color: 'rgba(59, 129, 74, 1)',
+  }
+]);
+
 // 剪贴板历史记录
 const itemList = ref<any[]>([])
 let listLoading = ref(false)
@@ -215,9 +240,15 @@ async function removeItem(id: number) {
 
 // 监听剪贴板更新
 window.ipcRenderer.on('clipboard-updated', () => {
-  console.log('[渲染进程] 接收到文本复制事件:',);
+  console.log('[渲染进程] 接收到系统复制事件');
   filterClipboardItems()
 })
+
+// 监听标签加载
+window.ipcRenderer.on('load-tag-items', (_event, tags) => {
+  console.log('[渲染进程] 接收到标签列表', tags);
+  TagItems.value = tags;
+});
 
 // 点击外部关闭下拉菜单
 function handleClickOutside(event: MouseEvent) {
@@ -247,8 +278,18 @@ onUnmounted(() => {
   <CustomNavBar :menuItems="MenuItems" />
   <div style="width: 100%;height: 55px;"></div>
 
+  <!-- 标签列表 -->
+  <div class="tag-list">
+    <div v-for="tag in TagItems" :key="tag.id" class="tag-item" :style="{ backgroundColor: tag.color }">
+      <span class="tag-name" :style="{ color: getTextColorForBackground(tag.color) }">{{ tag.name }}</span>
+    </div>
+  </div>
+
   <div v-if="listLoading" class="loading-indicator">
     <a-spin />
+  </div>
+  <div v-else-if="!listLoading && (itemList === null || itemList === undefined || itemList.length <= 0)" class="empty">
+    <a-empty />
   </div>
   <div v-else class="clipboard-list">
     <div v-for="item in itemList" :key="item.id" class="clipboard-item">
@@ -300,6 +341,13 @@ onUnmounted(() => {
   justify-content: center;
   align-items: center;
   height: 100%;
+}
+
+.empty {
+    display: flex;
+    height: calc(100vh - 80px);
+    justify-content: center;
+    align-items: center;
 }
 
 .clipboard-list {
@@ -451,5 +499,58 @@ onUnmounted(() => {
 .drag:active {
   cursor: grabbing;
   cursor: -webkit-grabbing;
+}
+
+/* 标签列表样式 */
+.tag-list {
+  position: fixed;
+  top: 70px;
+  left: -10px;
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+}
+
+.tag-item {
+  width: 24px;
+  height: 40px;
+  border-radius: 4px;
+  margin-bottom: -10px;
+  /* 负margin实现层叠效果 */
+  position: relative;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  /* 确保内容不会溢出 */
+  transform-origin: left center;
+  transition: width 0.3s ease-out, box-shadow 0.2s ease;
+}
+
+.tag-item:hover {
+  width: 100px;
+  /* 固定宽度而不是拉伸 */
+  z-index: 10;
+  /* 悬浮时置于顶层 */
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+  /* 增强阴影效果 */
+}
+
+.tag-name {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.3s ease 0.15s;
+  /* 延迟显示文字，等待展开动画完成一半 */
+  pointer-events: none;
+  width: 70px;
+  overflow: hidden;
+}
+
+.tag-item:hover .tag-name {
+  opacity: 1;
 }
 </style>

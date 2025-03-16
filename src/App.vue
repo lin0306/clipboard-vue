@@ -4,15 +4,13 @@ import { createThemeContext } from './themes/ThemeContext';
 import { computed } from 'vue';
 import { ConfigProvider } from 'ant-design-vue';
 import { theme } from 'ant-design-vue';
+import zhCN from 'ant-design-vue/es/locale/zh_CN';
 
 // 创建主题上下文
 const { currentTheme } = createThemeContext();
 
-
-
 // 计算Ant Design Vue的主题配置
 const antdTheme = computed(() => {
-  console.log('app.vue currentTheme', currentTheme.value)
   const isDark = currentTheme.value.id === 'dark';
   return {
     token: {
@@ -25,10 +23,12 @@ const antdTheme = computed(() => {
     algorithm: isDark ? theme.darkAlgorithm : theme.defaultAlgorithm,
   };
 });
+
+const locale = computed(() => zhCN);
 </script>
 
 <template>
-  <ConfigProvider :theme="antdTheme">
+  <ConfigProvider :theme="antdTheme" :locale="locale">
     <ClipboardList />
   </ConfigProvider>
 </template>

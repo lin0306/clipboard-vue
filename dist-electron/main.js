@@ -2039,6 +2039,7 @@ const _ClipboardDB = class _ClipboardDB {
                     CREATE TABLE IF NOT EXISTS tags (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         name TEXT NOT NULL UNIQUE,
+                        color TEXT,
                         created_at INTEGER NOT NULL
                     )
                 `);
@@ -2280,6 +2281,10 @@ function createMainWindow() {
     win == null ? void 0 : win.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());
     log.info("[主进程] 发送主题设置到渲染进程");
     win == null ? void 0 : win.webContents.send("init-themes", savedTheme);
+    log.info("[主进程] 发送标签列表到渲染进程");
+    const db = ClipboardDB.getInstance();
+    const tags = db.getAllTags();
+    win == null ? void 0 : win.webContents.send("load-tag-items", tags);
     log.info("[主进程] 窗口加载完成，开始监听剪贴板");
     watchClipboard();
   });

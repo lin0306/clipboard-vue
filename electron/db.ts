@@ -54,6 +54,7 @@ class ClipboardDB {
                     CREATE TABLE IF NOT EXISTS tags (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         name TEXT NOT NULL UNIQUE,
+                        color TEXT,
                         created_at INTEGER NOT NULL
                     )
                 `);

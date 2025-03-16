@@ -17,34 +17,6 @@ const msg: any = inject('message')
 // 获取主题上下文
 const { currentTheme, setTheme, themeColors } = useTheme();
 
-// 剪贴板历史记录
-const itemList = ref<any[]>([])
-let listLoading = ref(false)
-let searchText = ''
-let selectedTagId: any = undefined
-
-// 下拉菜单状态
-const dropdownState = reactive({
-  visible: false,
-  currentItemId: -1
-});
-
-// 显示/隐藏下拉菜单
-function toggleDropdown(id: number) {
-  if (dropdownState.currentItemId === id && dropdownState.visible) {
-    dropdownState.visible = false;
-  } else {
-    dropdownState.visible = true;
-    dropdownState.currentItemId = id;
-  }
-}
-
-// 绑定标签
-async function bindTag(id: number) {
-  msg.info('绑定标签功能待实现', id);
-  dropdownState.visible = false;
-}
-
 // 将MenuItems改为计算属性，这样当currentTheme变化时会自动更新
 const MenuItems = computed((): NavBarItem[] => [
   {
@@ -168,6 +140,34 @@ const MenuItems = computed((): NavBarItem[] => [
   },
 ]);
 
+// 剪贴板历史记录
+const itemList = ref<any[]>([])
+let listLoading = ref(false)
+let searchText = ''
+let selectedTagId: any = undefined
+
+// 下拉菜单状态
+const dropdownState = reactive({
+  visible: false,
+  currentItemId: -1
+});
+
+// 显示/隐藏下拉菜单
+function toggleDropdown(id: number) {
+  if (dropdownState.currentItemId === id && dropdownState.visible) {
+    dropdownState.visible = false;
+  } else {
+    dropdownState.visible = true;
+    dropdownState.currentItemId = id;
+  }
+}
+
+// 绑定标签
+async function bindTag(id: number) {
+  msg.info('绑定标签功能待实现', id);
+  dropdownState.visible = false;
+}
+
 /**
  * 根据搜索文本过滤剪贴板列表
  * @param {string} searchText - 搜索关键词
@@ -255,34 +255,39 @@ onUnmounted(() => {
       <div class="clipboard-card">
         <div class="card-header">
           <div class="card-title">{{ new Date(item.copy_time).toLocaleString() }}</div>
-          <div class="card-actions">
-            <a-tag :color="themeColors.tagColor">{{ convertType(item.type) }}</a-tag>
-            <div class="action-buttons">
-              <!-- 置顶/取消置顶按钮 -->
-              <div class="action-button" @click="item.is_topped ? onUntop(item.id) : onTop(item.id)">
-                <TopIcon v-if="!item.is_topped" />
-                <UntopIcon v-else />
-              </div>
-              <!-- 更多按钮 -->
-              <div class="action-button" @click="toggleDropdown(item.id)">
-                <MoreIcon />
-              </div>
-              <!-- 下拉菜单 -->
-              <div v-if="dropdownState.visible && dropdownState.currentItemId === item.id" class="dropdown-menu">
-                <div class="dropdown-item" @click="removeItem(item.id)">
-                  <TrashIcon class="dropdown-icon" />
-                  <span>删除</span>
+          <a-tag :color="themeColors.tagColor">{{ convertType(item.type) }}</a-tag>
+        </div>
+        <div class="card-content">
+          <div class="content-wrapper">
+            <p>{{ item.content }}</p>
+            <div class="card-actions">
+              <div class="action-buttons">
+                <!-- 置顶/取消置顶按钮 -->
+                <div class="action-button" @click="item.is_topped ? onUntop(item.id) : onTop(item.id)">
+                  <TopIcon v-if="!item.is_topped" />
+                  <UntopIcon v-else />
                 </div>
-                <div class="dropdown-item" @click="bindTag(item.id)">
-                  <DragIcon class="dropdown-icon" />
-                  <span>绑定标签</span>
+                <!-- 更多按钮 -->
+                <div class="action-button" @click="toggleDropdown(item.id)">
+                  <MoreIcon />
+                </div>
+                <!-- 下拉菜单 -->
+                <div v-if="dropdownState.visible && dropdownState.currentItemId === item.id" class="dropdown-menu">
+                  <div class="dropdown-item" @click="removeItem(item.id)">
+                    <TrashIcon class="dropdown-icon" />
+                    <span>删除</span>
+                  </div>
+                  <div class="dropdown-item drag" @click="bindTag(item.id)">
+                    <DragIcon class="dropdown-icon" />
+                    <span>绑定标签</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <div class="card-content">
-          <p>{{ item.content }}</p>
+        <div class="card-tags">
+          <!-- 这里可以添加其他标签 -->
         </div>
       </div>
     </div>
@@ -298,20 +303,21 @@ onUnmounted(() => {
 }
 
 .clipboard-list {
-  padding: 10px;
-  height: calc(100vh - 80px); /* 减去TitleBar(25px)和NavBar+占位div(55px)的高度 */
+  padding: 8px;
+  height: calc(100vh - 80px);
+  /* 减去TitleBar(25px)和NavBar+占位div(55px)的高度 */
   overflow-y: scroll;
 }
 
 .clipboard-item {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .clipboard-card {
   background-color: var(--theme-cardBackground);
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  padding: 16px;
+  padding: 12px;
   transition: box-shadow 0.3s;
 }
 
@@ -321,24 +327,28 @@ onUnmounted(() => {
 
 .card-header {
   display: flex;
+  flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .card-title {
   font-weight: 500;
   color: var(--theme-text);
+  font-size: 0.9rem;
 }
 
 .card-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: flex-end;
+  min-width: fit-content;
 }
 
 .action-buttons {
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 8px;
   position: relative;
@@ -346,8 +356,8 @@ onUnmounted(() => {
 
 .action-button {
   cursor: pointer;
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -366,17 +376,18 @@ onUnmounted(() => {
   border-radius: 4px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
   z-index: 10;
-  min-width: 120px;
+  min-width: 110px;
   padding: 4px 0;
 }
 
 .dropdown-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
+  gap: 6px;
+  padding: 6px 10px;
   cursor: pointer;
   transition: background-color 0.2s;
+  font-size: 0.9rem;
 }
 
 .dropdown-item:hover {
@@ -384,17 +395,61 @@ onUnmounted(() => {
 }
 
 .dropdown-item svg {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
 }
 
 .card-content {
   color: var(--theme-text);
   word-break: break-all;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  max-height: 200px;
+}
+
+.content-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.content-wrapper p {
+  flex: 1;
+  margin: 0px 10px 0px 0px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  text-overflow: ellipsis;
+  line-clamp: 3;
+  overflow: hidden;
+  height: 4em;
+  word-wrap: break-word;
+  word-break: break-all;
+  font-size: 14px;
+}
+
+.card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+:deep(.ant-tag) {
+  margin: 0;
 }
 
 .dropdown-icon {
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
+}
+
+.drag {
+  cursor: grab;
+  cursor: -webkit-grab;
+}
+
+.drag:active {
+  cursor: grabbing;
+  cursor: -webkit-grabbing;
 }
 </style>

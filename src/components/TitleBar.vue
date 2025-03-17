@@ -23,7 +23,7 @@ import CloseIcon from '../assets/icon/CloseIcon.vue'
 /* 标题栏样式 */
 #title-bar {
     height: 25px;
-    width: 98%;
+    width: 100%;
     -webkit-app-region: drag;
     display: flex;
     justify-content: space-between;

@@ -1,17 +1,12 @@
 <template>
-    <icon>
-        <template #component>
-            <svg t="1740398382697" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
-                p-id="2067" xmlns:xlink="http://www.w3.org/1999/xlink" width="200" height="200">
-                <path
-                    d="M102.4 409.6C46.08 409.6 0 455.68 0 512s46.08 102.4 102.4 102.4 102.4-46.08 102.4-102.4C204.8 455.68 158.72 409.6 102.4 409.6zM921.6 409.6c-56.32 0-102.4 46.08-102.4 102.4s46.08 102.4 102.4 102.4S1024 568.32 1024 512C1024 455.68 977.92 409.6 921.6 409.6zM512 409.6c-56.32 0-102.4 46.08-102.4 102.4s46.08 102.4 102.4 102.4 102.4-46.08 102.4-102.4C614.4 455.68 568.32 409.6 512 409.6z"
-                    :fill="themeColors.text" p-id="2068"></path>
-            </svg>
-        </template>
-    </icon>
+    <svg t="1740398382697" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
+        p-id="2067" xmlns:xlink="http://www.w3.org/1999/xlink" width="200" height="200">
+        <path
+            d="M102.4 409.6C46.08 409.6 0 455.68 0 512s46.08 102.4 102.4 102.4 102.4-46.08 102.4-102.4C204.8 455.68 158.72 409.6 102.4 409.6zM921.6 409.6c-56.32 0-102.4 46.08-102.4 102.4s46.08 102.4 102.4 102.4S1024 568.32 1024 512C1024 455.68 977.92 409.6 921.6 409.6zM512 409.6c-56.32 0-102.4 46.08-102.4 102.4s46.08 102.4 102.4 102.4 102.4-46.08 102.4-102.4C614.4 455.68 568.32 409.6 512 409.6z"
+            :fill="themeColors.text" p-id="2068"></path>
+    </svg>
 </template>
 <script lang="ts" setup>
-import Icon from '@ant-design/icons-vue';
 import { useTheme } from '../../themes/ThemeContext.ts';
 // 获取主题颜色
 const { themeColors } = useTheme();

@@ -2190,8 +2190,8 @@ const _ClipboardDB = class _ClipboardDB {
     this.db.prepare("UPDATE clipboard_items SET copy_time = ? WHERE id = ?").run(newTime, id);
   }
   // 标签相关的方法
-  addTag(name) {
-    this.db.prepare("INSERT INTO tags (name, created_at) VALUES (?, ?)").run(name, Date.now());
+  addTag(name, color) {
+    this.db.prepare("INSERT INTO tags (name, color, created_at) VALUES (?, ?, ?)").run(name, color, Date.now());
   }
   deleteTag(id) {
     this.db.prepare("DELETE FROM tags WHERE id = ?").run(id);
@@ -2331,6 +2331,13 @@ require$$0$5.ipcMain.handle("remove-item", async (_event, id) => {
   log.info("[主进程] 剪贴板内容删除", id);
   const db = ClipboardDB.getInstance();
   db.deleteItem(id);
+});
+require$$0$5.ipcMain.handle("add-tag", async (_event, name, color) => {
+  log.info("[主进程] 标签添加", name, color);
+  const db = ClipboardDB.getInstance();
+  db.addTag(name, color);
+  const tags = db.getAllTags();
+  win == null ? void 0 : win.webContents.send("load-tag-items", tags);
 });
 require$$0$5.app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {

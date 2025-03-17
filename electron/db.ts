@@ -250,8 +250,8 @@ class ClipboardDB {
     }
 
     // 标签相关的方法
-    addTag(name: string) {
-        this.db.prepare('INSERT INTO tags (name, created_at) VALUES (?, ?)').run(name, Date.now());
+    addTag(name: string, color: string) {
+        this.db.prepare('INSERT INTO tags (name, color, created_at) VALUES (?, ?, ?)').run(name, color, Date.now());
     }
 
     deleteTag(id: number) {

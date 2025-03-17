@@ -15,7 +15,6 @@ const antdTheme = computed(() => {
   return {
     token: {
       colorPrimary: currentTheme.value.colors.primary,
-      colorSuccess: currentTheme.value.colors.secondary,
       colorBgBase: currentTheme.value.colors.background,
       colorTextBase: currentTheme.value.colors.text,
       borderRadius: 4,

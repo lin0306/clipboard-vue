@@ -139,6 +139,16 @@ const MenuItems = computed((): NavBarItem[] => [
       },
     ],
   },
+  {
+    key: '添加标签',
+    label: '添加标签',
+    onClick: () => {
+      // 打开添加标签弹窗
+      tagModalState.visible = true;
+      tagModalState.tagName = '';
+      tagModalState.tagColor = 'rgba(128, 128, 128, 1)';
+    },
+  },
 ]);
 
 const TagItems = ref([
@@ -175,6 +185,13 @@ let selectedTagId: any = undefined
 const dropdownState = reactive({
   visible: false,
   currentItemId: -1
+});
+
+// 添加标签弹窗状态
+const tagModalState = reactive({
+  visible: false,
+  tagName: '',
+  tagColor: 'rgba(128, 128, 128, 1)' // 默认灰色
 });
 
 // 显示/隐藏下拉菜单
@@ -227,6 +244,34 @@ async function onTop(id: number) {
 async function onUntop(id: number) {
   await window.ipcRenderer.invoke('untop-item', id);
   filterClipboardItems();
+}
+
+/**
+ * 添加标签
+ * @param {string} name - 标签名称
+ * @param {string} color - 标签颜色
+ */
+async function addTag(name: string, color: string) {
+  try {
+    await window.ipcRenderer.invoke('add-tag', name, color);
+    msg.success('添加标签成功');
+  } catch (error) {
+    msg.error('添加标签失败');
+    console.error(error);
+  }
+}
+
+/**
+ * 处理添加标签确认
+ */
+async function handleAddTagConfirm() {
+  if (!tagModalState.tagName.trim()) {
+    msg.warning('标签名称不能为空');
+    return;
+  }
+  
+  await addTag(tagModalState.tagName, tagModalState.tagColor);
+  tagModalState.visible = false;
 }
 
 /**
@@ -333,6 +378,22 @@ onUnmounted(() => {
       </div>
     </div>
   </div>
+  
+  <!-- 添加标签弹窗 -->
+  <a-modal v-model:visible="tagModalState.visible" title="添加标签" @ok="handleAddTagConfirm" @cancel="tagModalState.visible = false">
+    <div class="tag-form">
+      <div class="form-item">
+        <label>标签名称</label>
+        <a-input v-model:value="tagModalState.tagName" placeholder="请输入标签名称" />
+      </div>
+      <div class="form-item">
+        <label>标签颜色</label>
+        <div class="color-picker-container">
+          <v-color-picker v-model="tagModalState.tagColor" ></v-color-picker>
+        </div>
+      </div>
+    </div>
+  </a-modal>
 </template>
 
 <style scoped>
@@ -344,10 +405,10 @@ onUnmounted(() => {
 }
 
 .empty {
-    display: flex;
-    height: calc(100vh - 80px);
-    justify-content: center;
-    align-items: center;
+  display: flex;
+  height: calc(100vh - 80px);
+  justify-content: center;
+  align-items: center;
 }
 
 .clipboard-list {
@@ -552,5 +613,36 @@ onUnmounted(() => {
 
 .tag-item:hover .tag-name {
   opacity: 1;
+}
+
+/* 标签表单样式 */
+.tag-form {
+  padding: 10px 0;
+}
+
+.form-item {
+  margin-bottom: 16px;
+}
+
+.form-item label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: var(--theme-text);
+}
+
+.color-picker-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.color-preview {
+  width: 30px;
+  height: 30px;
+  border-radius: 4px;
+  border: 1px solid var(--theme-border);
+  margin-bottom: 5px;
 }
 </style>

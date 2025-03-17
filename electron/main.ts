@@ -128,6 +128,14 @@ ipcMain.handle('remove-item', async (_event, id) => {
     const db = ClipboardDB.getInstance()
     db.deleteItem(id);
 });
+// 监听剪贴板列表内容删除
+ipcMain.handle('add-tag', async (_event, name, color) => {
+    log.info('[主进程] 标签添加', name, color);
+    const db = ClipboardDB.getInstance()
+    db.addTag(name, color);
+    const tags =  db.getAllTags();
+    win?.webContents.send('load-tag-items', tags);
+});
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits

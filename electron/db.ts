@@ -224,7 +224,7 @@ class ClipboardDB {
      * @param tagId 标签id
      * @returns 剪贴板内容列表
      */
-    searchItems(content: string, tagId: number) {
+    searchItems(content: string, tagId: number): any[] {
         log.info('[数据库进程] 搜索剪贴板内容', [content, tagId]);
         let sql = 'SELECT DISTINCT ci.* FROM clipboard_items ci';
         const params = [];
@@ -274,8 +274,8 @@ class ClipboardDB {
         return this.db.prepare('SELECT t.* FROM tags t INNER JOIN item_tags it ON t.id = it.tag_id WHERE it.item_id = ?').all(itemId);
     }
 
-    bindItemToTag(itemId: number, tagName: any) {
-        const tag = this.db.prepare('SELECT id FROM tags WHERE name = ?').get(tagName) as { id: number } | undefined;
+    bindItemToTag(itemId: number, tagId: any) {
+        const tag = this.db.prepare('SELECT id FROM tags WHERE id = ?').get(tagId) as { id: number } | undefined;
         if (!tag) {
             throw new Error('标签不存在');
         }

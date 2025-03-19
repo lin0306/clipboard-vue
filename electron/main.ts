@@ -101,7 +101,14 @@ ipcMain.handle('clear-items', async () => {
 ipcMain.handle('search-items', async (_event, query, tagId) => {
     log.info('[主进程] 搜索剪贴板列表', query, tagId);
     const db = ClipboardDB.getInstance()
-    return db.searchItems(query, tagId);
+    const items = db.searchItems(query, tagId);
+    
+    // 为每个项目添加标签信息
+    for (const item of items) {
+        item.tags = db.getItemTags(item.id);
+    }
+    
+    return items;
 });
 // 更新主题配置
 ipcMain.handle('update-themes', async (_event, theme) => {
@@ -135,6 +142,12 @@ ipcMain.handle('add-tag', async (_event, name, color) => {
     db.addTag(name, color);
     const tags =  db.getAllTags();
     win?.webContents.send('load-tag-items', tags);
+});
+// 监听剪贴板列表内容绑定标签
+ipcMain.handle('item-bind-tag', async (_event, itemId, tagId) => {
+    log.info('[主进程] 内容和标签绑定', itemId, tagId);
+    const db = ClipboardDB.getInstance()
+    db.bindItemToTag(itemId, tagId);
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common

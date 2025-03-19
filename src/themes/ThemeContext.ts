@@ -36,7 +36,6 @@ export function createThemeContext() {
 
   // 设置主题的方法
   const setTheme = (themeId: string) => {
-    console.log('ThemeKey: ', ThemeKey)
     console.log('[主题切换] 切换的主题id', themeId);
     const theme = themes.find(t => t.id === themeId);
     // 发送IPC消息，通知主题更新了，需要更新配置文件
@@ -93,7 +92,6 @@ export function createThemeContext() {
 // 使用主题上下文的钩子
 export function useTheme() {
   const theme = inject(ThemeKey);
-  console.log('[渲染进程] 使用主题上下文的钩子', theme)
   if (!theme) {
     throw new Error('useTheme() must be used within a ThemeProvider');
   }

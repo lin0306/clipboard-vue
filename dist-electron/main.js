@@ -2208,8 +2208,8 @@ const _ClipboardDB = class _ClipboardDB {
   getItemTags(itemId) {
     return this.db.prepare("SELECT t.* FROM tags t INNER JOIN item_tags it ON t.id = it.tag_id WHERE it.item_id = ?").all(itemId);
   }
-  bindItemToTag(itemId, tagName) {
-    const tag = this.db.prepare("SELECT id FROM tags WHERE name = ?").get(tagName);
+  bindItemToTag(itemId, tagId) {
+    const tag = this.db.prepare("SELECT id FROM tags WHERE id = ?").get(tagId);
     if (!tag) {
       throw new Error("标签不存在");
     }
@@ -2309,7 +2309,11 @@ require$$0$5.ipcMain.handle("clear-items", async () => {
 require$$0$5.ipcMain.handle("search-items", async (_event, query, tagId) => {
   log.info("[主进程] 搜索剪贴板列表", query, tagId);
   const db = ClipboardDB.getInstance();
-  return db.searchItems(query, tagId);
+  const items = db.searchItems(query, tagId);
+  for (const item of items) {
+    item.tags = db.getItemTags(item.id);
+  }
+  return items;
 });
 require$$0$5.ipcMain.handle("update-themes", async (_event, theme) => {
   log.info("[主进程] 更新主题", theme);
@@ -2338,6 +2342,11 @@ require$$0$5.ipcMain.handle("add-tag", async (_event, name, color) => {
   db.addTag(name, color);
   const tags = db.getAllTags();
   win == null ? void 0 : win.webContents.send("load-tag-items", tags);
+});
+require$$0$5.ipcMain.handle("item-bind-tag", async (_event, itemId, tagId) => {
+  log.info("[主进程] 内容和标签绑定", itemId, tagId);
+  const db = ClipboardDB.getInstance();
+  db.bindItemToTag(itemId, tagId);
 });
 require$$0$5.app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {

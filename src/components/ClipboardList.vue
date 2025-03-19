@@ -151,29 +151,7 @@ const MenuItems = computed((): NavBarItem[] => [
   },
 ]);
 
-const TagItems = ref([
-  {
-    id: 1,
-    name: '默认',
-    color: 'rgba(69, 38, 104, 1)',
-  }, {
-    id: 2,
-    name: '标签2',
-    color: 'rgba(255, 0, 0, 1)',
-  }, {
-    id: 3,
-    name: '标签3',
-    color: 'rgba(0, 255, 0, 1)',
-  }, {
-    id: 4,
-    name: '标签4',
-    color: 'rgba(0, 0, 255, 1)',
-  }, {
-    id: 5,
-    name: '标签5',
-    color: 'rgba(59, 129, 74, 1)',
-  }
-]);
+const TagItems = ref<[{id: number, name: string, color: string}]>();
 
 // 剪贴板历史记录
 const itemList = ref<any[]>([])
@@ -185,6 +163,13 @@ let selectedTagId: any = undefined
 const dropdownState = reactive({
   visible: false,
   currentItemId: -1
+});
+
+// 拖拽状态
+const dragState = reactive({
+  isDragging: false,
+  dragItemId: -1,
+  draggedOverTagId: -1
 });
 
 // 添加标签弹窗状态
@@ -205,8 +190,9 @@ function toggleDropdown(id: number) {
 }
 
 // 绑定标签
-async function bindTag(id: number) {
-  msg.info('绑定标签功能待实现', id);
+async function bindTag(itemId: number, tagId: number) {
+  await window.ipcRenderer.invoke('item-bind-tag', itemId, tagId);
+  filterClipboardItems();
   dropdownState.visible = false;
 }
 
@@ -215,15 +201,15 @@ async function bindTag(id: number) {
  * @param {string} searchText - 搜索关键词
  */
 async function filterClipboardItems() {
-  listLoading = ref(true);
+  listLoading.value = true;
   try {
     // 搜索框为空时，根据标签显示项目
     const items = await window.ipcRenderer.invoke('search-items', searchText, selectedTagId);
-    console.log(items);
     itemList.value = items;
+    console.log('重新获取剪贴板列表', items)
   } finally {
     // setTimeout(() => {
-    listLoading = ref(false);
+    listLoading.value = false;
     // }, 1000);
   }
 }
@@ -269,7 +255,7 @@ async function handleAddTagConfirm() {
     msg.warning('标签名称不能为空');
     return;
   }
-  
+
   await addTag(tagModalState.tagName, tagModalState.tagColor);
   tagModalState.visible = false;
 }
@@ -306,6 +292,63 @@ function handleClickOutside(event: MouseEvent) {
   }
 }
 
+// 处理拖拽开始事件
+function handleDragStart(itemId: number, event: DragEvent) {
+  dragState.isDragging = true;
+  dragState.dragItemId = itemId;
+
+  // 设置拖拽数据
+  if (event.dataTransfer) {
+    event.dataTransfer.setData('text/plain', itemId.toString());
+    event.dataTransfer.effectAllowed = 'link';
+  }
+}
+
+// 处理拖拽结束事件
+function handleDragEnd() {
+  dragState.isDragging = false;
+  dragState.dragItemId = -1;
+  dragState.draggedOverTagId = -1;
+}
+
+// 处理拖拽进入标签事件
+function handleDragEnterTag(tagId: number) {
+  dragState.draggedOverTagId = tagId;
+  // 如果项目已经绑定了该标签，则不允许再次绑定
+  if (dragState.dragItemId !== -1 && isItemTagged(dragState.dragItemId, tagId)) {
+    return;
+  }
+}
+
+// 处理拖拽离开标签事件
+function handleDragLeaveTag(event: DragEvent) {
+  // 检查是否直接拖拽到了另一个标签上
+  // 只有当不是拖拽到其他标签元素上时，才清除draggedOverTagId
+  const relatedTarget = event.relatedTarget as HTMLElement;
+  if (!relatedTarget || !relatedTarget.closest('.tag-item')) {
+    dragState.draggedOverTagId = -1;
+  }
+}
+
+// 处理拖拽放置事件
+async function handleDropOnTag(tagId: number) {
+  if (dragState.dragItemId !== -1) {
+    // 调用绑定标签接口
+    await bindTag(dragState.dragItemId, tagId);
+    // 重置拖拽状态
+    handleDragEnd();
+  }
+}
+
+// 检查项目是否已绑定标签
+function isItemTagged(itemId: number, tagId: number) {
+  const item = itemList.value.find(item => item.id === itemId);
+  if (item && item.tags) {
+    return item.tags.some((tag: any) => tag.id === tagId);
+  }
+  return false;
+}
+
 // 组件挂载时获取历史记录并添加点击事件监听
 onMounted(() => {
   filterClipboardItems();
@@ -325,7 +368,12 @@ onUnmounted(() => {
 
   <!-- 标签列表 -->
   <div class="tag-list">
-    <div v-for="tag in TagItems" :key="tag.id" class="tag-item" :style="{ backgroundColor: tag.color }">
+    <div v-for="tag in TagItems" :key="tag.id" class="tag-item" :class="{
+    'tag-dragging-over': dragState.draggedOverTagId === tag.id,
+    'tag-disabled': dragState.isDragging && isItemTagged(dragState.dragItemId, tag.id),
+    'tag-expanded': dragState.isDragging && !isItemTagged(dragState.dragItemId, tag.id)
+  }" :style="{ backgroundColor: tag.color }" @dragenter="handleDragEnterTag(tag.id)"
+      @dragleave="handleDragLeaveTag($event)" @dragover.prevent @drop.prevent="handleDropOnTag(tag.id)">
       <span class="tag-name" :style="{ color: getTextColorForBackground(tag.color) }">{{ tag.name }}</span>
     </div>
   </div>
@@ -363,7 +411,8 @@ onUnmounted(() => {
                     <TrashIcon class="dropdown-icon" />
                     <span>删除</span>
                   </div>
-                  <div class="dropdown-item drag" @click="bindTag(item.id)">
+                  <div class="dropdown-item drag" draggable="true" @dragstart="handleDragStart(item.id, $event)"
+                    @dragend="handleDragEnd">
                     <DragIcon class="dropdown-icon" />
                     <span>绑定标签</span>
                   </div>
@@ -373,14 +422,19 @@ onUnmounted(() => {
           </div>
         </div>
         <div class="card-tags">
-          <!-- 这里可以添加其他标签 -->
+          <div v-if="item.tags && item.tags.length > 0" class="item-tags">
+            <div v-for="tag in item.tags" :key="tag.id" class="item-tag" :style="{ backgroundColor: tag.color }">
+              <span class="item-tag-name" :style="{ color: getTextColorForBackground(tag.color) }">{{ tag.name }}</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
-  
+
   <!-- 添加标签弹窗 -->
-  <a-modal v-model:visible="tagModalState.visible" title="添加标签" @ok="handleAddTagConfirm" @cancel="tagModalState.visible = false">
+  <a-modal v-model:visible="tagModalState.visible" title="添加标签" @ok="handleAddTagConfirm"
+    @cancel="tagModalState.visible = false">
     <div class="tag-form">
       <div class="form-item">
         <label>标签名称</label>
@@ -389,7 +443,7 @@ onUnmounted(() => {
       <div class="form-item">
         <label>标签颜色</label>
         <div class="color-picker-container">
-          <v-color-picker v-model="tagModalState.tagColor" ></v-color-picker>
+          <v-color-picker v-model="tagModalState.tagColor"></v-color-picker>
         </div>
       </div>
     </div>
@@ -401,7 +455,7 @@ onUnmounted(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100%;
+  height: calc(100vh - 80px);
 }
 
 .empty {
@@ -547,6 +601,25 @@ onUnmounted(() => {
   margin: 0;
 }
 
+.item-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.item-tag {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  display: inline-block;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.item-tag-name {
+  font-size: 12px;
+  white-space: nowrap;
+}
+
 .dropdown-icon {
   width: 16px;
   height: 16px;
@@ -570,6 +643,12 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   z-index: 100;
+  transition: left 0.3s ease;
+}
+
+/* 拖拽激活时，标签列表稍微向右移动，增加可见性 */
+.tag-list.dragging-active {
+  left: -5px;
 }
 
 .tag-item {
@@ -584,10 +663,12 @@ onUnmounted(() => {
   overflow: hidden;
   /* 确保内容不会溢出 */
   transform-origin: left center;
-  transition: width 0.3s ease-out, box-shadow 0.2s ease;
+  transition: width 0.3s ease-out, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
-.tag-item:hover {
+/* 鼠标悬停或拖拽时展开标签 */
+.tag-item:hover,
+.tag-item.tag-expanded {
   width: 100px;
   /* 固定宽度而不是拉伸 */
   z-index: 10;
@@ -611,8 +692,35 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
-.tag-item:hover .tag-name {
+/* 鼠标悬停或拖拽时显示标签名称 */
+.tag-item:hover .tag-name,
+.tag-item.tag-expanded .tag-name {
   opacity: 1;
+}
+
+.tag-dragging-over {
+  box-shadow: 0 0 12px var(--theme-primary);
+  transform: scale(1.08);
+  z-index: 20 !important;
+  /* 拖拽悬停时额外增加宽度 */
+}
+
+.tag-disabled {
+  opacity: 0.7;
+  /* 禁用鼠标光标样式 */
+  cursor: not-allowed;
+  /* 禁用点击事件 */
+  pointer-events: none;
+}
+
+.tag-disabled:hover {
+  width: 24px !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+  transform: none !important;
+}
+
+.tag-disabled:hover .tag-name {
+  opacity: 0 !important;
 }
 
 /* 标签表单样式 */

@@ -159,6 +159,9 @@ let listLoading = ref(false)
 let searchText = ''
 let selectedTagId: any = undefined
 
+// 图片缓存，用于存储图片的base64数据
+const imageCache = reactive(new Map<string, string>())
+
 // 下拉菜单状态
 const dropdownState = reactive({
   visible: false,
@@ -207,11 +210,40 @@ async function filterClipboardItems() {
     const items = await window.ipcRenderer.invoke('search-items', searchText, selectedTagId);
     itemList.value = items;
     console.log('重新获取剪贴板列表', items)
+    
+    // 预加载图片的base64数据
+    for (const item of items) {
+      if (item.type === 'image' && item.file_path && !imageCache.has(item.file_path)) {
+        loadImageBase64(item.file_path);
+      }
+    }
   } finally {
-    // setTimeout(() => {
     listLoading.value = false;
-    // }, 1000);
   }
+}
+
+/**
+ * 加载图片的base64数据
+ * @param {string} filePath - 图片文件路径
+ */
+async function loadImageBase64(filePath: string) {
+  try {
+    const base64Data = await window.ipcRenderer.invoke('get-image-base64', filePath);
+    if (base64Data) {
+      imageCache.set(filePath, base64Data);
+    }
+  } catch (error) {
+    console.error('[渲染进程] 加载图片base64数据失败:', error);
+  }
+}
+
+/**
+ * 获取图片的显示源
+ * @param {string} filePath - 图片文件路径
+ * @returns {string} - 图片显示源
+ */
+function getImageSrc(filePath: string): string {
+  return imageCache.get(filePath) || '';
 }
 
 /**
@@ -393,7 +425,10 @@ onUnmounted(() => {
         </div>
         <div class="card-content">
           <div class="content-wrapper">
-            <p>{{ item.content }}</p>
+            <p v-if="item.type === 'text'">{{ item.content }}</p>
+            <p v-if="item.type === 'image'">
+              <img :src="getImageSrc(item.file_path)" alt="Image" class="image-preview" onerror="this.onerror=null;this.src='';this.alt='图片加载失败'" />
+            </p>
             <div class="card-actions">
               <div class="action-buttons">
                 <!-- 置顶/取消置顶按钮 -->
@@ -590,6 +625,20 @@ onUnmounted(() => {
   font-size: 14px;
 }
 
+/* 为图片预览添加样式 */
+.image-preview {
+  max-width: 100%;
+  height: 4em;
+  object-fit: contain;
+}
+
+/* 包含图片的段落需要特殊处理 */
+.content-wrapper p:has(img) {
+  height: auto;
+  height: 4em;
+  -webkit-line-clamp: initial;
+  line-clamp: initial;
+}
 .card-tags {
   display: flex;
   flex-wrap: wrap;

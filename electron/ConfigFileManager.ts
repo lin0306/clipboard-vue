@@ -1,3 +1,6 @@
+/**
+ * 管理Config文件夹下的文件读取，更新等操作
+ */
 import path from 'node:path'
 import fs from 'node:fs'
 import log from './log.js'

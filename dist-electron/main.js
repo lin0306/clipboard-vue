@@ -1800,11 +1800,11 @@ function fileTransportFactory(logger, { registry = globalRegistry, externalApi: 
     if (!fs.existsSync(logsPath)) {
       return [];
     }
-    return fs.readdirSync(logsPath).map((fileName) => path.join(logsPath, fileName)).filter(fileFilter).map((logPath) => {
+    return fs.readdirSync(logsPath).map((fileName) => path.join(logsPath, fileName)).filter(fileFilter).map((logPath2) => {
       try {
         return {
-          path: logPath,
-          lines: fs.readFileSync(logPath, "utf8").split(os.EOL)
+          path: logPath2,
+          lines: fs.readFileSync(logPath2, "utf8").split(os.EOL)
         };
       } catch {
         return null;
@@ -1997,13 +1997,29 @@ const main = main$1;
 var main_1 = main;
 const log = /* @__PURE__ */ getDefaultExportFromCjs(main_1);
 log.initialize();
+let __dirname$4 = path$6.dirname(node_url.fileURLToPath(typeof document === "undefined" ? require("url").pathToFileURL(__filename).href : _documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === "SCRIPT" && _documentCurrentScript.src || new URL("main.js", document.baseURI).href));
+log.info("[日志配置] 程序文件夹位置", __dirname$4);
+const env$3 = process.env.NODE_ENV;
+log.info("[日志配置] 运行环境：", process.env.NODE_ENV);
+if (env$3 !== "development") {
+  __dirname$4 = __dirname$4.replace("\\app.asar\\dist-electron", "");
+}
+let logPath = path$6.join(__dirname$4, "../logs");
+log.info("[日志配置] 日志文件位置：", logPath);
+log.transports.file.resolvePathFn = () => path$6.join(logPath, "main.log");
 let __dirname$3 = path$6.dirname(node_url.fileURLToPath(typeof document === "undefined" ? require("url").pathToFileURL(__filename).href : _documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === "SCRIPT" && _documentCurrentScript.src || new URL("main.js", document.baseURI).href));
 const env$2 = process.env.NODE_ENV;
 if (env$2 !== "development") {
   __dirname$3 = __dirname$3.replace("\\app.asar\\dist-electron", "");
 }
 const _ClipboardDB = class _ClipboardDB {
+  // SQLite数据库连接
+  /**
+   * 私有构造函数，初始化数据库连接和表结构
+   * 实现单例模式，确保只有一个数据库连接实例
+   */
   constructor() {
+    // 单例实例
     __publicField(this, "db");
     log.info("[数据库进程] 数据库进程初始化");
     const dbFolder = path$6.join(__dirname$3, "../data");
@@ -2016,12 +2032,21 @@ const _ClipboardDB = class _ClipboardDB {
     this.db = new Database(dbPath);
     this.initTables();
   }
+  /**
+   * 获取数据库实例的静态方法
+   * 实现单例模式，确保整个应用中只有一个数据库连接
+   * @returns {ClipboardDB} 数据库实例
+   */
   static getInstance() {
     if (!_ClipboardDB.instance) {
       _ClipboardDB.instance = new _ClipboardDB();
     }
     return _ClipboardDB.instance;
   }
+  /**
+   * 初始化数据库表结构
+   * 创建剪贴板条目表、标签表和关联表
+   */
   initTables() {
     log.info("[数据库进程] 初始化数据库表开始");
     this.db.exec(`
@@ -2054,10 +2079,21 @@ const _ClipboardDB = class _ClipboardDB {
                 `);
     log.info("[数据库进程] 初始化数据库表完成");
   }
+  /**
+   * 关闭数据库连接
+   * 在应用退出前调用，确保资源正确释放
+   */
   close() {
     this.db.close();
   }
-  addItem(content, type = "text", filePath = null) {
+  /**
+   * 添加剪贴板条目
+   * 支持文本和图片类型，处理重复内容的逻辑
+   * @param {string} content 剪贴板内容
+   * @param {string} type 内容类型，默认为'text'，也可以是'image'
+   * @param {string|null} filePath 图片类型的文件路径，默认为null
+   */
+  addItem(content, type = "text", filePath) {
     log.info("[数据库进程] 剪贴板内容添加开始", [content, type, filePath]);
     try {
       let copyTime = Date.now();
@@ -2095,16 +2131,31 @@ const _ClipboardDB = class _ClipboardDB {
       log.info("[数据库进程] 剪贴板内容添加完成");
     }
   }
+  /**
+   * 获取所有剪贴板条目
+   * 按置顶状态和时间排序
+   * @returns {Array} 剪贴板条目数组
+   */
   getAllItems() {
     return this.db.prepare("SELECT * FROM clipboard_items ORDER BY is_topped DESC, CASE WHEN is_topped = 1 THEN top_time ELSE copy_time END DESC").all();
   }
+  /**
+   * 根据标签名获取剪贴板条目
+   * @param {string} tagName 标签名称
+   * @returns {Array} 符合条件的剪贴板条目数组
+   */
   getItemsByTag(tagName) {
     return this.db.prepare("SELECT ci.* FROM clipboard_items ci INNER JOIN item_tags it ON ci.id = it.item_id INNER JOIN tags t ON it.tag_id = t.id WHERE t.name = ? ORDER BY ci.is_topped DESC, CASE WHEN ci.is_topped = 1 THEN ci.top_time ELSE ci.copy_time END DESC").all(tagName);
   }
+  /**
+   * 删除剪贴板条目
+   * 如果是图片类型，同时删除对应的临时文件
+   * @param {number} id 条目ID
+   */
   deleteItem(id) {
     try {
       const row = this.db.prepare("SELECT type, file_path FROM clipboard_items WHERE id = ?").get(id);
-      console.log("[数据库进程] 要删除的项目信息:", row);
+      console.log("[数据库进程] 要删除的内容信息:", row);
       if (row && row.type === "image" && row.file_path) {
         try {
           fs$5.unlinkSync(row.file_path);
@@ -2118,6 +2169,11 @@ const _ClipboardDB = class _ClipboardDB {
       throw err;
     }
   }
+  /**
+   * 清空所有剪贴板条目
+   * 删除所有图片文件并清空数据库记录
+   * @returns {Promise<void>} 完成清空操作的Promise
+   */
   clearAll() {
     return new Promise(async (resolve, reject) => {
       try {
@@ -2161,14 +2217,20 @@ const _ClipboardDB = class _ClipboardDB {
       }
     });
   }
+  /**
+   * 切换剪贴板条目的置顶状态
+   * @param {number} id 条目ID
+   * @param {boolean} isTopped 是否置顶
+   */
   toggleTop(id, isTopped) {
     this.db.prepare("UPDATE clipboard_items SET is_topped = ?, top_time = ? WHERE id = ?").run(isTopped ? 1 : 0, isTopped ? Date.now() : null, id);
   }
   /**
    * 搜索剪贴板内容
-   * @param content 复制内容 
-   * @param tagId 标签id
-   * @returns 剪贴板内容列表
+   * 支持按内容和标签ID进行搜索
+   * @param {string} content 搜索内容关键词
+   * @param {number} tagId 标签ID
+   * @returns {Array} 符合条件的剪贴板条目数组
    */
   searchItems(content, tagId) {
     log.info("[数据库进程] 搜索剪贴板内容", [content, tagId]);
@@ -2186,28 +2248,68 @@ const _ClipboardDB = class _ClipboardDB {
     log.info("[数据库进程] 搜索SQL:", sql);
     return this.db.prepare(sql).all(params);
   }
+  /**
+   * 更新剪贴板条目的复制时间
+   * @param {number} id 条目ID
+   * @param {Date} newTime 新的复制时间
+   */
   updateItemTime(id, newTime) {
     this.db.prepare("UPDATE clipboard_items SET copy_time = ? WHERE id = ?").run(newTime, id);
   }
   // 标签相关的方法
+  /**
+   * 添加新标签
+   * @param {string} name 标签名称
+   * @param {string} color 标签颜色
+   */
   addTag(name, color) {
     this.db.prepare("INSERT INTO tags (name, color, created_at) VALUES (?, ?, ?)").run(name, color, Date.now());
   }
+  /**
+   * 删除标签
+   * @param {number} id 标签ID
+   */
   deleteTag(id) {
     this.db.prepare("DELETE FROM tags WHERE id = ?").run(id);
   }
+  /**
+   * 获取所有标签
+   * @returns {Array} 标签数组，按创建时间升序排列
+   */
   getAllTags() {
     return this.db.prepare("SELECT * FROM tags ORDER BY created_at ASC").all();
   }
+  /**
+   * 剪贴板条目绑定标签
+   * @param {number} itemId 剪贴板条目ID
+   * @param {number} tagId 标签ID
+   */
   addItemTag(itemId, tagId) {
     this.db.prepare("INSERT INTO item_tags (item_id, tag_id) VALUES (?, ?)").run(itemId, tagId);
   }
+  /**
+   * 移除剪贴板条目的标签
+   * @param {number} itemId 剪贴板条目ID
+   * @param {number} tagId 标签ID
+   */
   removeItemTag(itemId, tagId) {
     this.db.prepare("DELETE FROM item_tags WHERE item_id = ? AND tag_id = ?").run(itemId, tagId);
   }
+  /**
+   * 获取剪贴板条目的所有标签
+   * @param {number} itemId 剪贴板条目ID
+   * @returns {Array} 标签数组
+   */
   getItemTags(itemId) {
     return this.db.prepare("SELECT t.* FROM tags t INNER JOIN item_tags it ON t.id = it.tag_id WHERE it.item_id = ?").all(itemId);
   }
+  /**
+   * 将剪贴板条目绑定到标签
+   * 检查标签是否存在，避免重复绑定
+   * @param {number} itemId 剪贴板条目ID
+   * @param {number|string} tagId 标签ID
+   * @throws {Error} 当标签不存在时抛出错误
+   */
   bindItemToTag(itemId, tagId) {
     const tag = this.db.prepare("SELECT id FROM tags WHERE id = ?").get(tagId);
     if (!tag) {
@@ -2348,6 +2450,20 @@ require$$0$5.ipcMain.handle("item-bind-tag", async (_event, itemId, tagId) => {
   const db = ClipboardDB.getInstance();
   db.bindItemToTag(itemId, tagId);
 });
+require$$0$5.ipcMain.handle("get-image-base64", async (_event, imagePath) => {
+  log.info("[主进程] 获取图片base64编码", imagePath);
+  try {
+    if (!fs$5.existsSync(imagePath)) {
+      log.error("[主进程] 图片文件不存在:", imagePath);
+      return null;
+    }
+    const imageBuffer = fs$5.readFileSync(imagePath);
+    return `data:image/png;base64,${imageBuffer.toString("base64")}`;
+  } catch (error) {
+    log.error("[主进程] 获取图片base64编码失败:", error);
+    return null;
+  }
+});
 require$$0$5.app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
     require$$0$5.app.quit();
@@ -2387,13 +2503,16 @@ function watchClipboard() {
     const currentImage = require$$0$5.clipboard.readImage();
     if (!currentImage.isEmpty()) {
       const currentImageBuffer = currentImage.toPNG();
-      const isImageChanged = lastImage !== null && Buffer.compare(currentImageBuffer, lastImage) !== 0;
+      const isImageChanged = lastImage === null || Buffer.compare(currentImageBuffer, lastImage) !== 0;
       if (isImageChanged) {
         log.info("[主进程] 检测到剪贴板中有图片");
-        log.info("[主进程] 检测到新的图片内容");
+        log.info("[主进程] 检测到新的图片内容", {
+          size: currentImageBuffer.length,
+          isFirstImage: lastImage === null
+        });
         lastImage = currentImageBuffer;
         const timestamp = Date.now();
-        const tempDir = path$6.join(config.tempPath || path$6.join(__dirname$1, "temp"));
+        const tempDir = path$6.join(config.tempPath || path$6.join(__dirname$1, "../temp"));
         let existingImagePath = null;
         if (fs$5.existsSync(tempDir)) {
           const files = fs$5.readdirSync(tempDir);
@@ -2424,15 +2543,12 @@ function watchClipboard() {
           if (webContents && !webContents.isDestroyed()) {
             if (webContents.getProcessId() && !webContents.isLoading()) {
               try {
-                log.info("[主进程] 准备发送图片信息到渲染进程");
-                win.webContents.send("clipboard-file", {
-                  name: path$6.basename(imagePath),
-                  path: imagePath,
-                  type: "image",
-                  isNewImage: !existingImagePath
-                  // 标记是否为新图片
-                });
-                log.info("[主进程] 图片信息已发送到渲染进程");
+                const db = ClipboardDB.getInstance();
+                db.addItem(path$6.basename(imagePath), "image", imagePath);
+                const webContents2 = win.webContents;
+                if (webContents2 && !webContents2.isDestroyed()) {
+                  webContents2.send("clipboard-updated", currentText);
+                }
               } catch (error) {
                 log.error("[主进程] 发送图片信息到渲染进程时出错:", error);
                 if (!existingImagePath) {

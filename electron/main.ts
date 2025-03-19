@@ -4,7 +4,7 @@ import path from 'node:path'
 import fs from 'node:fs'
 import ClipboardDB from './db.js'
 import log from './log.js'
-import { getConfig, updateConfig } from './settingsFile.js'
+import { getConfig, updateConfig } from './ConfigFileManager.js'
 
 let __dirname = path.dirname(fileURLToPath(import.meta.url))
 log.info("[主进程] 程序文件夹位置", __dirname);
@@ -66,7 +66,7 @@ function createMainWindow() {
         win?.webContents.send('init-themes', savedTheme);
         log.info('[主进程] 发送标签列表到渲染进程');
         const db = ClipboardDB.getInstance()
-        const tags =  db.getAllTags();
+        const tags = db.getAllTags();
         win?.webContents.send('load-tag-items', tags);
         // 启动剪贴板监听
         log.info('[主进程] 窗口加载完成，开始监听剪贴板');
@@ -102,12 +102,12 @@ ipcMain.handle('search-items', async (_event, query, tagId) => {
     log.info('[主进程] 搜索剪贴板列表', query, tagId);
     const db = ClipboardDB.getInstance()
     const items = db.searchItems(query, tagId);
-    
+
     // 为每个项目添加标签信息
     for (const item of items) {
         item.tags = db.getItemTags(item.id);
     }
-    
+
     return items;
 });
 // 更新主题配置
@@ -140,7 +140,7 @@ ipcMain.handle('add-tag', async (_event, name, color) => {
     log.info('[主进程] 标签添加', name, color);
     const db = ClipboardDB.getInstance()
     db.addTag(name, color);
-    const tags =  db.getAllTags();
+    const tags = db.getAllTags();
     win?.webContents.send('load-tag-items', tags);
 });
 // 监听剪贴板列表内容绑定标签
@@ -148,6 +148,22 @@ ipcMain.handle('item-bind-tag', async (_event, itemId, tagId) => {
     log.info('[主进程] 内容和标签绑定', itemId, tagId);
     const db = ClipboardDB.getInstance()
     db.bindItemToTag(itemId, tagId);
+});
+
+// 获取图片的base64编码
+ipcMain.handle('get-image-base64', async (_event, imagePath) => {
+    log.info('[主进程] 获取图片base64编码', imagePath);
+    try {
+        if (!fs.existsSync(imagePath)) {
+            log.error('[主进程] 图片文件不存在:', imagePath);
+            return null;
+        }
+        const imageBuffer = fs.readFileSync(imagePath);
+        return `data:image/png;base64,${imageBuffer.toString('base64')}`;
+    } catch (error) {
+        log.error('[主进程] 获取图片base64编码失败:', error);
+        return null;
+    }
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common
@@ -205,18 +221,30 @@ function watchClipboard() {
         const currentText = clipboard.readText();
         const currentFiles = clipboard.readBuffer('FileNameW');
         const currentImage = clipboard.readImage();
+        // log.info('[主进程] 检测到剪贴板内容变化', currentText, currentFiles, currentImage.isEmpty());
 
         // 检查图片变化 
         if (!currentImage.isEmpty()) {
             const currentImageBuffer = currentImage.toPNG();
-            const isImageChanged = lastImage !== null && Buffer.compare(currentImageBuffer, lastImage) !== 0;
+            // 修改图片变化检测逻辑，确保首次复制的图片也能被检测到
+            // 当lastImage为null时表示首次检测到图片，或者当图片内容与上次不同时
+            const isImageChanged = lastImage === null || Buffer.compare(currentImageBuffer, lastImage) !== 0;
+            
+            // log.info('[主进程] 图片检测状态:', {
+            //     isEmpty: currentImage.isEmpty(),
+            //     isFirstImage: lastImage === null,
+            //     hasChanged: lastImage !== null && Buffer.compare(currentImageBuffer, lastImage) !== 0
+            // });
 
             if (isImageChanged) {
                 log.info('[主进程] 检测到剪贴板中有图片');
-                log.info('[主进程] 检测到新的图片内容');
+                log.info('[主进程] 检测到新的图片内容', {
+                    size: currentImageBuffer.length,
+                    isFirstImage: lastImage === null
+                });
                 lastImage = currentImageBuffer;
                 const timestamp = Date.now();
-                const tempDir = path.join(config.tempPath || path.join(__dirname, 'temp'));
+                const tempDir = path.join(config.tempPath || path.join(__dirname, '../temp'));
 
                 // 检查是否存在相同内容的图片文件
                 let existingImagePath = null;
@@ -255,14 +283,13 @@ function watchClipboard() {
                         // 确保渲染进程已完全加载
                         if (webContents.getProcessId() && !webContents.isLoading()) {
                             try {
-                                log.info('[主进程] 准备发送图片信息到渲染进程');
-                                win.webContents.send('clipboard-file', {
-                                    name: path.basename(imagePath),
-                                    path: imagePath,
-                                    type: 'image',
-                                    isNewImage: !existingImagePath // 标记是否为新图片
-                                });
-                                log.info('[主进程] 图片信息已发送到渲染进程');
+                                // 复制的数据添加到数据库
+                                const db = ClipboardDB.getInstance()
+                                db.addItem(path.basename(imagePath), 'image', imagePath);
+                                const webContents = win.webContents;
+                                if (webContents && !webContents.isDestroyed()) {
+                                    webContents.send('clipboard-updated', currentText);
+                                }
                             } catch (error) {
                                 log.error('[主进程] 发送图片信息到渲染进程时出错:', error);
                                 if (!existingImagePath) {

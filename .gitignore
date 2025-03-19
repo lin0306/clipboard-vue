@@ -27,3 +27,4 @@ release
 data
 *.db
 reference
+temp

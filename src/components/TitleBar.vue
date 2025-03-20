@@ -61,6 +61,7 @@ function onClose(win: string) {
     display: flex;
     gap: 8px;
     -webkit-app-region: no-drag;
+    padding-right: 10px;
 }
 
 .control-button {

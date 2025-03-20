@@ -2355,6 +2355,7 @@ const _ClipboardDB = class _ClipboardDB {
 };
 __publicField(_ClipboardDB, "instance");
 let ClipboardDB = _ClipboardDB;
+process.env["ELECTRON_DISABLE_SECURITY_WARNINGS"] = "true";
 let __dirname$1 = path$6.dirname(node_url.fileURLToPath(typeof document === "undefined" ? require("url").pathToFileURL(__filename).href : _documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === "SCRIPT" && _documentCurrentScript.src || new URL("main.js", document.baseURI).href));
 log.info("[主进程] 程序文件夹位置", __dirname$1);
 process.env.APP_ROOT = path$6.join(__dirname$1, "..");

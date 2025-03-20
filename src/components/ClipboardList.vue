@@ -12,6 +12,7 @@ import MoreIcon from '../assets/icon/MoreIcon.vue';
 import DragIcon from '../assets/icon/DragIcon.vue';
 import convertType from '../utils/convert.ts';
 import { getTextColorForBackground } from '../utils/colorUtils.ts';
+import { Chrome } from '@ckpack/vue-color';
 
 const msg: any = inject('message')
 
@@ -152,7 +153,7 @@ const MenuItems = computed((): NavBarItem[] => [
       // 打开添加标签弹窗
       tagModalState.visible = true;
       tagModalState.tagName = '';
-      tagModalState.tagColor = 'rgba(128, 128, 128, 1)';
+      tagModalState.tagColor = { r: 128, g: 128, b: 128, a: 1 };
     },
   },
 ]);
@@ -197,7 +198,7 @@ const dragState = reactive({
 const tagModalState = reactive({
   visible: false,
   tagName: '',
-  tagColor: 'rgba(128, 128, 128, 1)' // 默认灰色
+  tagColor: { r: 128, g: 128, b: 128, a: 1 } // 默认灰色
 });
 
 // 显示/隐藏下拉菜单
@@ -226,7 +227,7 @@ async function filterClipboardItems() {
   try {
     // 使用选中的标签ID进行过滤
     const tagId = selectedTagState.selectedTagId;
-    console.log('查询条件',searchText.value, tagId);
+    console.log('查询条件', searchText.value, tagId);
     const items = await window.ipcRenderer.invoke('search-items', searchText.value, tagId);
     itemList.value = items;
 
@@ -358,12 +359,13 @@ async function addTag(name: string, color: string) {
  * 处理添加标签确认
  */
 async function handleAddTagConfirm() {
+  console.log(tagModalState.tagColor)
   if (!tagModalState.tagName.trim()) {
     msg.warning('标签名称不能为空');
     return;
   }
-
-  await addTag(tagModalState.tagName, tagModalState.tagColor);
+  const rgba: any = tagModalState.tagColor;
+  await addTag(tagModalState.tagName, 'rgba(' + rgba.rgba.r + ',' + rgba.rgba.g + ',' + rgba.rgba.b + ',' + rgba.rgba.a + ')');
   tagModalState.visible = false;
 }
 
@@ -476,7 +478,7 @@ function handleTagClick(tagId: number) {
     selectedTagState.selectedTagId = tagId;
     selectedTagState.isTopmost = true;
   }
-  
+
   // 根据选中的标签过滤剪贴板列表
   filterClipboardItems();
 }
@@ -498,7 +500,7 @@ onUnmounted(() => {
 <template>
   <TitleBar :closeWindow="`close-app`" />
   <CustomNavBar :menuItems="MenuItems" />
-  <div style="width: 100%;height: 55px;"></div>
+  <div style="width: 100%;height: 60px;"></div>
 
   <!-- 搜索框 -->
   <div class="search-container" v-show="searchBoxState.visible">
@@ -513,11 +515,11 @@ onUnmounted(() => {
   <!-- 标签列表 -->
   <div class="tag-list" :class="{ 'has-selected-tag': selectedTagState.isTopmost }">
     <div v-for="tag in TagItems" :key="tag.id" class="tag-item" :class="{
-      'tag-dragging-over': dragState.draggedOverTagId === tag.id,
-      'tag-disabled': dragState.isDragging && isItemTagged(dragState.dragItemId, tag.id),
-      'tag-expanded': dragState.isDragging && !isItemTagged(dragState.dragItemId, tag.id),
-      'tag-selected': selectedTagState.selectedTagId === tag.id
-    }" :style="{ backgroundColor: tag.color }" @dragenter="handleDragEnterTag(tag.id)"
+    'tag-dragging-over': dragState.draggedOverTagId === tag.id,
+    'tag-disabled': dragState.isDragging && isItemTagged(dragState.dragItemId, tag.id),
+    'tag-expanded': dragState.isDragging && !isItemTagged(dragState.dragItemId, tag.id),
+    'tag-selected': selectedTagState.selectedTagId === tag.id
+  }" :style="{ backgroundColor: tag.color }" @dragenter="handleDragEnterTag(tag.id)"
       @dragleave="handleDragLeaveTag($event)" @dragover.prevent @drop.prevent="handleDropOnTag(tag.id)"
       @click="handleTagClick(tag.id)">
       <span class="tag-name" :style="{ color: getTextColorForBackground(tag.color) }">{{ tag.name }}</span>
@@ -583,7 +585,7 @@ onUnmounted(() => {
   </div>
 
   <!-- 添加标签弹窗 -->
-  <!--<a-modal v-model:open="tagModalState.visible" title="添加标签" @ok="handleAddTagConfirm"
+  <a-modal v-model:open="tagModalState.visible" title="添加标签" @ok="handleAddTagConfirm"
     @cancel="tagModalState.visible = false">
     <div class="tag-form">
       <div class="form-item">
@@ -593,11 +595,11 @@ onUnmounted(() => {
       <div class="form-item">
         <label>标签颜色</label>
         <div class="color-picker-container">
-          <v-color-picker v-model="tagModalState.tagColor"></v-color-picker>
+          <Chrome v-model="tagModalState.tagColor" />
         </div>
       </div>
     </div>
-  </a-modal> -->
+  </a-modal>
 </template>
 
 <style scoped>
@@ -616,8 +618,9 @@ onUnmounted(() => {
 }
 
 .clipboard-list {
-  padding: 8px;
-  height: calc(100vh - 80px);
+  padding: 2px;
+  padding-left: 7px;
+  height: calc(100vh - 65px);
   /* 减去TitleBar(25px)和NavBar+占位div(55px)的高度 */
   overflow-y: scroll;
 }
@@ -879,7 +882,7 @@ onUnmounted(() => {
 
 /* 选中标签的样式 */
 .tag-selected {
-  width: 100px !important; 
+  width: 100px !important;
   z-index: 5 !important;
   opacity: 1;
 }

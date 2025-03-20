@@ -6,6 +6,8 @@ import ClipboardDB from './db.js'
 import log from './log.js'
 import { getConfig, updateConfig, getShortcutKeyConfig } from './ConfigFileManager.js'
 
+process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
+
 let __dirname = path.dirname(fileURLToPath(import.meta.url))
 log.info("[主进程] 程序文件夹位置", __dirname);
 
@@ -121,7 +123,7 @@ function createMainWindow() {
     }
 
     // 打开调试工具，设置为单独窗口
-    win.webContents.openDevTools({ mode: 'detach' });
+    // win.webContents.openDevTools({ mode: 'detach' });
 
     // 监听窗口关闭事件，清理定时器
     win.on('closed', () => {

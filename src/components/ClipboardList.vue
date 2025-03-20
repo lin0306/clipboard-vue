@@ -151,13 +151,25 @@ const MenuItems = computed((): NavBarItem[] => [
   },
 ]);
 
-const TagItems = ref<[{id: number, name: string, color: string}]>();
+const TagItems = ref<[{ id: number, name: string, color: string }]>();
 
 // 剪贴板历史记录
 const itemList = ref<any[]>([])
 let listLoading = ref(false)
-let searchText = ''
-let selectedTagId: any = undefined
+let searchText = ref('')
+
+// 标签选中状态
+const selectedTagState = reactive({
+  selectedTagId: undefined as number | undefined,
+  isTopmost: false // 控制是否置顶显示
+})
+// 搜索框状态
+const searchBoxState = reactive({
+  visible: false
+})
+
+// 快捷键配置
+const shortcutKeyConfig = ref<any>(null)
 
 // 图片缓存，用于存储图片的base64数据
 const imageCache = reactive(new Map<string, string>())
@@ -200,17 +212,18 @@ async function bindTag(itemId: number, tagId: number) {
 }
 
 /**
- * 根据搜索文本过滤剪贴板列表
+ * 根据搜索文本和选中标签过滤剪贴板列表
  * @param {string} searchText - 搜索关键词
  */
 async function filterClipboardItems() {
   listLoading.value = true;
   try {
-    // 搜索框为空时，根据标签显示项目
-    const items = await window.ipcRenderer.invoke('search-items', searchText, selectedTagId);
+    // 使用选中的标签ID进行过滤
+    const tagId = selectedTagState.selectedTagId;
+    console.log('查询条件',searchText.value, tagId);
+    const items = await window.ipcRenderer.invoke('search-items', searchText.value, tagId);
     itemList.value = items;
-    console.log('重新获取剪贴板列表', items)
-    
+
     // 预加载图片的base64数据
     for (const item of items) {
       if (item.type === 'image' && item.file_path && !imageCache.has(item.file_path)) {
@@ -219,6 +232,62 @@ async function filterClipboardItems() {
     }
   } finally {
     listLoading.value = false;
+  }
+}
+
+/**
+ * 切换搜索框显示状态
+ */
+function toggleSearchBox() {
+  searchBoxState.visible = !searchBoxState.visible;
+  if (searchBoxState.visible) {
+    // 当搜索框显示时，自动聚焦
+    setTimeout(() => {
+      const searchInput = document.getElementById('search-input');
+      if (searchInput) {
+        searchInput.focus();
+      }
+    }, 100);
+  } else {
+    // 当搜索框隐藏时，清空搜索内容并重新加载列表
+    if (searchText.value) {
+      searchText.value = '';
+      filterClipboardItems();
+    }
+  }
+}
+
+/**
+ * 处理键盘事件
+ * @param {KeyboardEvent} event - 键盘事件
+ */
+function handleKeyDown(event: KeyboardEvent) {
+  // 如果没有快捷键配置，则不处理
+  if (!shortcutKeyConfig.value || !shortcutKeyConfig.value.search) return;
+
+  const searchConfig = shortcutKeyConfig.value.search;
+  const keys = searchConfig.key;
+
+  let isCtrl = keys.includes("ctrl");
+  let isAlt = keys.includes("alt");
+  let isShift = keys.includes("shift");
+  // mac上是command键，windows上是win键
+  let isMeta = keys.includes("meta");
+  let character = keys[keys.length - 1];
+  if (
+    event.key.toLowerCase() === character.toLowerCase()
+    && event.ctrlKey === isCtrl
+    && event.altKey === isAlt
+    && event.shiftKey === isShift
+    && event.metaKey === isMeta
+  ) {
+    event.preventDefault(); // 阻止默认行为
+    toggleSearchBox();
+  }
+
+  // 当搜索框显示时，按ESC键隐藏
+  if (searchBoxState.visible && event.key === 'Escape') {
+    toggleSearchBox();
   }
 }
 
@@ -313,6 +382,12 @@ window.ipcRenderer.on('load-tag-items', (_event, tags) => {
   TagItems.value = tags;
 });
 
+// 监听快捷键配置加载
+window.ipcRenderer.on('load-shortcut-keys', (_event, config) => {
+  console.log('[渲染进程] 接收到快捷键配置', config);
+  shortcutKeyConfig.value = config;
+});
+
 // 点击外部关闭下拉菜单
 function handleClickOutside(event: MouseEvent) {
   const target = event.target as HTMLElement;
@@ -381,15 +456,36 @@ function isItemTagged(itemId: number, tagId: number) {
   return false;
 }
 
-// 组件挂载时获取历史记录并添加点击事件监听
+/**
+ * 处理标签点击事件
+ * @param {number} tagId - 标签ID
+ */
+function handleTagClick(tagId: number) {
+  // 如果点击的是当前已选中的标签，则取消选中
+  if (selectedTagState.selectedTagId === tagId) {
+    selectedTagState.selectedTagId = undefined;
+    selectedTagState.isTopmost = false;
+  } else {
+    // 否则选中该标签
+    selectedTagState.selectedTagId = tagId;
+    selectedTagState.isTopmost = true;
+  }
+  
+  // 根据选中的标签过滤剪贴板列表
+  filterClipboardItems();
+}
+
+// 组件挂载时获取历史记录并添加事件监听
 onMounted(() => {
   filterClipboardItems();
   document.addEventListener('click', handleClickOutside);
+  document.addEventListener('keydown', handleKeyDown);
 })
 
-// 组件卸载时移除点击事件监听
+// 组件卸载时移除事件监听
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside);
+  document.removeEventListener('keydown', handleKeyDown);
 })
 </script>
 
@@ -398,14 +494,26 @@ onUnmounted(() => {
   <CustomNavBar :menuItems="MenuItems" />
   <div style="width: 100%;height: 55px;"></div>
 
+  <!-- 搜索框 -->
+  <div class="search-container" v-show="searchBoxState.visible">
+    <a-input-search id="search-input" v-model:value="searchText" placeholder="输入关键词搜索"
+      @pressEnter="filterClipboardItems" @keydown.esc="toggleSearchBox" @search="filterClipboardItems">
+      <template #prefix>
+        <i class="fas fa-search"></i>
+      </template>
+    </a-input-search>
+  </div>
+
   <!-- 标签列表 -->
-  <div class="tag-list">
+  <div class="tag-list" :class="{ 'has-selected-tag': selectedTagState.isTopmost }">
     <div v-for="tag in TagItems" :key="tag.id" class="tag-item" :class="{
-    'tag-dragging-over': dragState.draggedOverTagId === tag.id,
-    'tag-disabled': dragState.isDragging && isItemTagged(dragState.dragItemId, tag.id),
-    'tag-expanded': dragState.isDragging && !isItemTagged(dragState.dragItemId, tag.id)
-  }" :style="{ backgroundColor: tag.color }" @dragenter="handleDragEnterTag(tag.id)"
-      @dragleave="handleDragLeaveTag($event)" @dragover.prevent @drop.prevent="handleDropOnTag(tag.id)">
+      'tag-dragging-over': dragState.draggedOverTagId === tag.id,
+      'tag-disabled': dragState.isDragging && isItemTagged(dragState.dragItemId, tag.id),
+      'tag-expanded': dragState.isDragging && !isItemTagged(dragState.dragItemId, tag.id),
+      'tag-selected': selectedTagState.selectedTagId === tag.id
+    }" :style="{ backgroundColor: tag.color }" @dragenter="handleDragEnterTag(tag.id)"
+      @dragleave="handleDragLeaveTag($event)" @dragover.prevent @drop.prevent="handleDropOnTag(tag.id)"
+      @click="handleTagClick(tag.id)">
       <span class="tag-name" :style="{ color: getTextColorForBackground(tag.color) }">{{ tag.name }}</span>
     </div>
   </div>
@@ -427,7 +535,8 @@ onUnmounted(() => {
           <div class="content-wrapper">
             <p v-if="item.type === 'text'">{{ item.content }}</p>
             <p v-if="item.type === 'image'">
-              <img :src="getImageSrc(item.file_path)" alt="Image" class="image-preview" onerror="this.onerror=null;this.src='';this.alt='图片加载失败'" />
+              <img :src="getImageSrc(item.file_path)" alt="Image" class="image-preview"
+                onerror="this.onerror=null;this.src='';this.alt='图片加载失败'" />
             </p>
             <div class="card-actions">
               <div class="action-buttons">
@@ -639,6 +748,7 @@ onUnmounted(() => {
   -webkit-line-clamp: initial;
   line-clamp: initial;
 }
+
 .card-tags {
   display: flex;
   flex-wrap: wrap;
@@ -695,6 +805,11 @@ onUnmounted(() => {
   transition: left 0.3s ease;
 }
 
+/* 当有标签被选中时，标签列表稍微向右移动 */
+/* .tag-list.has-selected-tag {
+  left: -5px;
+} */
+
 /* 拖拽激活时，标签列表稍微向右移动，增加可见性 */
 .tag-list.dragging-active {
   left: -5px;
@@ -713,11 +828,13 @@ onUnmounted(() => {
   /* 确保内容不会溢出 */
   transform-origin: left center;
   transition: width 0.3s ease-out, box-shadow 0.2s ease, transform 0.2s ease;
+  opacity: 0.5;
 }
 
 /* 鼠标悬停或拖拽时展开标签 */
 .tag-item:hover,
 .tag-item.tag-expanded {
+  opacity: 1;
   width: 100px;
   /* 固定宽度而不是拉伸 */
   z-index: 10;
@@ -752,6 +869,19 @@ onUnmounted(() => {
   transform: scale(1.08);
   z-index: 20 !important;
   /* 拖拽悬停时额外增加宽度 */
+}
+
+/* 选中标签的样式 */
+.tag-selected {
+  width: 100px !important; 
+  z-index: 5 !important;
+  opacity: 1;
+}
+
+/* 选中标签的名称始终显示 */
+.tag-selected .tag-name {
+  opacity: 1;
+  font-weight: bold;
 }
 
 .tag-disabled {
@@ -801,5 +931,29 @@ onUnmounted(() => {
   border-radius: 4px;
   border: 1px solid var(--theme-border);
   margin-bottom: 5px;
+}
+
+/* 搜索框样式 */
+.search-container {
+  position: fixed;
+  top: 65px;
+  right: 10px;
+  width: 300px;
+  z-index: 100;
+  background-color: var(--theme-cardBackground);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  padding: 8px;
+  transition: all 0.3s ease;
+}
+
+.search-container .ant-input-affix-wrapper {
+  border-radius: 4px;
+  border: 1px solid var(--theme-border);
+}
+
+.search-container .ant-input {
+  background-color: var(--theme-cardBackground);
+  color: var(--theme-text);
 }
 </style>

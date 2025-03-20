@@ -20,10 +20,8 @@ import { fileURLToPath } from 'node:url'
 log.initialize();
 
 let __dirname = path.dirname(fileURLToPath(import.meta.url))
-log.info("[日志配置] 程序文件夹位置", __dirname);
 
 const env = process.env.NODE_ENV;
-log.info("[日志配置] 运行环境：", process.env.NODE_ENV)
 if (env !== 'development') {
     __dirname = __dirname.replace("\\app.asar\\dist-electron", "");
 }

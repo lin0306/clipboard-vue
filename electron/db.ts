@@ -7,6 +7,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import log from './log.js'
+import { getConfig } from './ConfigFileManager.js';
 
 // 获取当前文件的目录路径
 let __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -220,17 +221,8 @@ class ClipboardDB {
         return new Promise<void>(async (resolve, reject) => {
             try {
                 // 读取配置文件获取临时文件存储路径
-                let configDir;
-                if (env === 'development') {
-                    configDir = path.join(__dirname, '../config');
-                } else {
-                    configDir = path.join(__dirname, './config');
-                }
-                log.info('[数据库进程] 配置文件目录:', configDir);
-                const configPath = path.join(configDir, 'settings.conf');
-                log.info('[数据库进程] 配置文件路径:', configPath);
+                const configPath = getConfig();
                 const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-                log.info('[数据库进程] 读取到的配置:', config);
                 const tempDir = config.tempPath;
 
                 // 先获取所有图片类型的记录
@@ -287,29 +279,49 @@ class ClipboardDB {
      * @returns {Array} 符合条件的剪贴板条目数组
      */
     searchItems(content: string, tagId: number): any[] {
-        log.info('[数据库进程] 搜索剪贴板内容', [content, tagId]);
-        // 构建基础SQL查询
-        let sql = 'SELECT DISTINCT ci.* FROM clipboard_items ci';
-        const params = [];
+        
+        // 构建基础SQL查询，获取符合条件的剪贴板条目
+        let itemsSql = 'SELECT DISTINCT ci.*, ('
+            + 'SELECT json_group_array(json_object('
+            + "'id', t.id, 'name', t.name, 'color', t.color, 'created_at', t.created_at"
+            + ')) FROM tags t'
+            + ' INNER JOIN item_tags it ON t.id = it.tag_id'
+            + ' WHERE it.item_id = ci.id'
+            + ') as tags_json FROM clipboard_items ci';
+        const itemsParams = [];
 
         // 根据标签ID构建查询条件
         if (tagId && tagId !== null) {
             // 通过关联表连接标签和剪贴板条目
-            sql += ' INNER JOIN item_tags it ON ci.id = it.item_id'
+            itemsSql += ' INNER JOIN item_tags it ON ci.id = it.item_id'
                 + ' INNER JOIN tags t ON it.tag_id = t.id'
-                + ' WHERE t.id = ? AND ci.content LIKE ?';
-            params.push(`%${tagId}%`);
+                + ' WHERE t.id = ?';
+            itemsParams.push(tagId);
         }
         // 根据内容关键词构建查询条件
         if (content && content !== null && content !== '') {
-            sql += ' WHERE content LIKE ?';
-            params.push(`%${content}%`);
+            itemsSql += (tagId && tagId !== null) ? ' AND ci.content LIKE ?' : ' WHERE ci.content LIKE ?';
+            itemsParams.push(`%${content}%`);
         }
 
         // 添加排序条件：先按置顶状态，再按时间排序
-        sql += ' ORDER BY ci.is_topped DESC, CASE WHEN ci.is_topped = 1 THEN ci.top_time ELSE ci.copy_time END DESC';
-        log.info('[数据库进程] 搜索SQL:', sql);
-        return this.db.prepare(sql).all(params);
+        itemsSql += ' ORDER BY ci.is_topped DESC, CASE WHEN ci.is_topped = 1 THEN ci.top_time ELSE ci.copy_time END DESC';
+        
+        // 获取符合条件的剪贴板条目
+        const items = this.db.prepare(itemsSql).all(itemsParams) as any[];
+        
+        // 处理JSON字符串为JavaScript对象
+        for (const item of items) {
+            try {
+                item.tags = item.tags_json ? JSON.parse(item.tags_json) : [];
+                delete item.tags_json; // 删除原始JSON字符串字段
+            } catch (e) {
+                log.error('[数据库进程] 解析标签JSON失败:', e);
+                item.tags = [];
+            }
+        }
+        
+        return items;
     }
 
     /**

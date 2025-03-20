@@ -1998,9 +1998,7 @@ var main_1 = main;
 const log = /* @__PURE__ */ getDefaultExportFromCjs(main_1);
 log.initialize();
 let __dirname$4 = path$6.dirname(node_url.fileURLToPath(typeof document === "undefined" ? require("url").pathToFileURL(__filename).href : _documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === "SCRIPT" && _documentCurrentScript.src || new URL("main.js", document.baseURI).href));
-log.info("[日志配置] 程序文件夹位置", __dirname$4);
 const env$3 = process.env.NODE_ENV;
-log.info("[日志配置] 运行环境：", process.env.NODE_ENV);
 if (env$3 !== "development") {
   __dirname$4 = __dirname$4.replace("\\app.asar\\dist-electron", "");
 }
@@ -2012,6 +2010,40 @@ const env$2 = process.env.NODE_ENV;
 if (env$2 !== "development") {
   __dirname$3 = __dirname$3.replace("\\app.asar\\dist-electron", "");
 }
+const settingsFileName = "settings.conf";
+const shortcutKeyFileName = "shortcut-key.conf";
+function getConfig() {
+  const configPath = getConfigPath(settingsFileName);
+  const config2 = JSON.parse(fs$5.readFileSync(configPath, "utf8"));
+  return config2;
+}
+function getShortcutKeyConfig() {
+  const configPath = getConfigPath(shortcutKeyFileName);
+  const config2 = JSON.parse(fs$5.readFileSync(configPath, "utf8"));
+  log.info("[配置文件] 读取到的快捷键配置:", config2);
+  return config2;
+}
+function updateConfig(config2) {
+  const configPath = getConfigPath(settingsFileName);
+  fs$5.writeFileSync(configPath, JSON.stringify(config2, null, 4));
+}
+function getConfigPath(fileName) {
+  let configDir;
+  if (env$2 === "development") {
+    configDir = path$6.join(__dirname$3, "../config");
+  } else {
+    configDir = path$6.join(__dirname$3, "./config");
+  }
+  log.info("[配置文件] 配置文件夹目录:", configDir);
+  const configPath = path$6.join(configDir, fileName);
+  console.log("[配置文件] " + fileName + "文件路径:", configPath);
+  return configPath;
+}
+let __dirname$2 = path$6.dirname(node_url.fileURLToPath(typeof document === "undefined" ? require("url").pathToFileURL(__filename).href : _documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === "SCRIPT" && _documentCurrentScript.src || new URL("main.js", document.baseURI).href));
+const env$1 = process.env.NODE_ENV;
+if (env$1 !== "development") {
+  __dirname$2 = __dirname$2.replace("\\app.asar\\dist-electron", "");
+}
 const _ClipboardDB = class _ClipboardDB {
   // SQLite数据库连接
   /**
@@ -2022,7 +2054,7 @@ const _ClipboardDB = class _ClipboardDB {
     // 单例实例
     __publicField(this, "db");
     log.info("[数据库进程] 数据库进程初始化");
-    const dbFolder = path$6.join(__dirname$3, "../data");
+    const dbFolder = path$6.join(__dirname$2, "../data");
     log.info("[数据库进程] 数据文件存储文件夹位置：", dbFolder);
     if (!fs$5.existsSync(dbFolder)) {
       fs$5.mkdirSync(dbFolder);
@@ -2177,17 +2209,8 @@ const _ClipboardDB = class _ClipboardDB {
   clearAll() {
     return new Promise(async (resolve, reject) => {
       try {
-        let configDir;
-        if (env$2 === "development") {
-          configDir = path$6.join(__dirname$3, "../config");
-        } else {
-          configDir = path$6.join(__dirname$3, "./config");
-        }
-        log.info("[数据库进程] 配置文件目录:", configDir);
-        const configPath = path$6.join(configDir, "settings.conf");
-        log.info("[数据库进程] 配置文件路径:", configPath);
+        const configPath = getConfig();
         const config2 = JSON.parse(fs$5.readFileSync(configPath, "utf8"));
-        log.info("[数据库进程] 读取到的配置:", config2);
         const tempDir = config2.tempPath;
         log.info("[数据库进程] 正在获取所有图片记录...");
         const rows = this.db.prepare("SELECT type, file_path FROM clipboard_items WHERE type = ?").all("image");
@@ -2233,20 +2256,28 @@ const _ClipboardDB = class _ClipboardDB {
    * @returns {Array} 符合条件的剪贴板条目数组
    */
   searchItems(content, tagId) {
-    log.info("[数据库进程] 搜索剪贴板内容", [content, tagId]);
-    let sql = "SELECT DISTINCT ci.* FROM clipboard_items ci";
-    const params = [];
+    let itemsSql = "SELECT DISTINCT ci.*, (SELECT json_group_array(json_object('id', t.id, 'name', t.name, 'color', t.color, 'created_at', t.created_at)) FROM tags t INNER JOIN item_tags it ON t.id = it.tag_id WHERE it.item_id = ci.id) as tags_json FROM clipboard_items ci";
+    const itemsParams = [];
     if (tagId && tagId !== null) {
-      sql += " INNER JOIN item_tags it ON ci.id = it.item_id INNER JOIN tags t ON it.tag_id = t.id WHERE t.id = ? AND ci.content LIKE ?";
-      params.push(`%${tagId}%`);
+      itemsSql += " INNER JOIN item_tags it ON ci.id = it.item_id INNER JOIN tags t ON it.tag_id = t.id WHERE t.id = ?";
+      itemsParams.push(tagId);
     }
     if (content && content !== null && content !== "") {
-      sql += " WHERE content LIKE ?";
-      params.push(`%${content}%`);
+      itemsSql += tagId && tagId !== null ? " AND ci.content LIKE ?" : " WHERE ci.content LIKE ?";
+      itemsParams.push(`%${content}%`);
     }
-    sql += " ORDER BY ci.is_topped DESC, CASE WHEN ci.is_topped = 1 THEN ci.top_time ELSE ci.copy_time END DESC";
-    log.info("[数据库进程] 搜索SQL:", sql);
-    return this.db.prepare(sql).all(params);
+    itemsSql += " ORDER BY ci.is_topped DESC, CASE WHEN ci.is_topped = 1 THEN ci.top_time ELSE ci.copy_time END DESC";
+    const items = this.db.prepare(itemsSql).all(itemsParams);
+    for (const item of items) {
+      try {
+        item.tags = item.tags_json ? JSON.parse(item.tags_json) : [];
+        delete item.tags_json;
+      } catch (e) {
+        log.error("[数据库进程] 解析标签JSON失败:", e);
+        item.tags = [];
+      }
+    }
+    return items;
   }
   /**
    * 更新剪贴板条目的复制时间
@@ -2325,35 +2356,6 @@ const _ClipboardDB = class _ClipboardDB {
 };
 __publicField(_ClipboardDB, "instance");
 let ClipboardDB = _ClipboardDB;
-let __dirname$2 = path$6.dirname(node_url.fileURLToPath(typeof document === "undefined" ? require("url").pathToFileURL(__filename).href : _documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === "SCRIPT" && _documentCurrentScript.src || new URL("main.js", document.baseURI).href));
-log.info("[配置文件] 程序文件夹位置", __dirname$2);
-const env$1 = process.env.NODE_ENV;
-log.info("[配置文件] 运行环境：", process.env.NODE_ENV);
-if (env$1 !== "development") {
-  __dirname$2 = __dirname$2.replace("\\app.asar\\dist-electron", "");
-}
-function getConfig() {
-  const configPath = getConfigPath();
-  const config2 = JSON.parse(fs$5.readFileSync(configPath, "utf8"));
-  log.info("[配置文件] 读取到的配置:", config2);
-  return config2;
-}
-function updateConfig(config2) {
-  const configPath = getConfigPath();
-  fs$5.writeFileSync(configPath, JSON.stringify(config2, null, 4));
-}
-function getConfigPath() {
-  let configDir;
-  if (env$1 === "development") {
-    configDir = path$6.join(__dirname$2, "../config");
-  } else {
-    configDir = path$6.join(__dirname$2, "./config");
-  }
-  log.info("[配置文件] 配置文件目录:", configDir);
-  const configPath = path$6.join(configDir, "settings.conf");
-  console.log("[配置文件] 配置文件路径:", configPath);
-  return configPath;
-}
 let __dirname$1 = path$6.dirname(node_url.fileURLToPath(typeof document === "undefined" ? require("url").pathToFileURL(__filename).href : _documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === "SCRIPT" && _documentCurrentScript.src || new URL("main.js", document.baseURI).href));
 log.info("[主进程] 程序文件夹位置", __dirname$1);
 process.env.APP_ROOT = path$6.join(__dirname$1, "..");
@@ -2387,6 +2389,9 @@ function createMainWindow() {
     const db = ClipboardDB.getInstance();
     const tags = db.getAllTags();
     win == null ? void 0 : win.webContents.send("load-tag-items", tags);
+    log.info("[主进程] 发送快捷键配置到渲染进程");
+    const shortcutKeyConfig = getShortcutKeyConfig();
+    win == null ? void 0 : win.webContents.send("load-shortcut-keys", shortcutKeyConfig);
     log.info("[主进程] 窗口加载完成，开始监听剪贴板");
     watchClipboard();
   });
@@ -2408,13 +2413,10 @@ require$$0$5.ipcMain.handle("clear-items", async () => {
   db.clearAll();
   return true;
 });
-require$$0$5.ipcMain.handle("search-items", async (_event, query, tagId) => {
-  log.info("[主进程] 搜索剪贴板列表", query, tagId);
+require$$0$5.ipcMain.handle("search-items", async (_event, content, tagId) => {
+  log.info("[主进程] 获取剪贴板数据，查询条件", content, tagId);
   const db = ClipboardDB.getInstance();
-  const items = db.searchItems(query, tagId);
-  for (const item of items) {
-    item.tags = db.getItemTags(item.id);
-  }
+  const items = db.searchItems(content, tagId);
   return items;
 });
 require$$0$5.ipcMain.handle("update-themes", async (_event, theme) => {

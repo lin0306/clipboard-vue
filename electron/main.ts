@@ -4,7 +4,7 @@ import path from 'node:path'
 import fs from 'node:fs'
 import ClipboardDB from './db.js'
 import log from './log.js'
-import { getConfig, updateConfig } from './ConfigFileManager.js'
+import { getConfig, updateConfig, getShortcutKeyConfig } from './ConfigFileManager.js'
 
 let __dirname = path.dirname(fileURLToPath(import.meta.url))
 log.info("[主进程] 程序文件夹位置", __dirname);
@@ -68,6 +68,10 @@ function createMainWindow() {
         const db = ClipboardDB.getInstance()
         const tags = db.getAllTags();
         win?.webContents.send('load-tag-items', tags);
+        // 发送快捷键配置
+        log.info('[主进程] 发送快捷键配置到渲染进程');
+        const shortcutKeyConfig = getShortcutKeyConfig();
+        win?.webContents.send('load-shortcut-keys', shortcutKeyConfig);
         // 启动剪贴板监听
         log.info('[主进程] 窗口加载完成，开始监听剪贴板');
         watchClipboard();
@@ -98,16 +102,11 @@ ipcMain.handle('clear-items', async () => {
     return true
 })
 // 监听剪贴板列表搜索
-ipcMain.handle('search-items', async (_event, query, tagId) => {
-    log.info('[主进程] 搜索剪贴板列表', query, tagId);
+ipcMain.handle('search-items', async (_event, content, tagId) => {
+    log.info('[主进程] 获取剪贴板数据，查询条件', content, tagId);
     const db = ClipboardDB.getInstance()
-    const items = db.searchItems(query, tagId);
-
-    // 为每个项目添加标签信息
-    for (const item of items) {
-        item.tags = db.getItemTags(item.id);
-    }
-
+    const items = db.searchItems(content, tagId);
+    // 标签信息已在SQL查询中获取，无需再次查询
     return items;
 });
 // 更新主题配置
@@ -117,6 +116,7 @@ ipcMain.handle('update-themes', async (_event, theme) => {
     updateConfig(config);
     return true;
 });
+
 // 监听剪贴板列表内容置顶
 ipcMain.handle('top-item', async (_event, id) => {
     log.info('[主进程] 剪贴板内容置顶', id);

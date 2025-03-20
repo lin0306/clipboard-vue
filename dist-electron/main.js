@@ -2438,7 +2438,6 @@ function createMainWindow() {
   } else {
     win.loadFile(path$6.join(RENDERER_DIST, "index.html"));
   }
-  win.webContents.openDevTools({ mode: "detach" });
   win.on("closed", () => {
     if (clipboardTimer) {
       clearTimeout(clipboardTimer);

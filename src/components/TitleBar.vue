@@ -9,7 +9,7 @@
                 <UnFixedIcon class="program-btn" id="unfixation-button-img" />
             </div>
             <div class="control-button close-button">
-                <CloseIcon class="program-btn" id="close-button-img" />
+                <CloseIcon class="program-btn" id="close-button-img" @click="onClose(closeWindow)" />
             </div>
         </div>
     </div>
@@ -18,6 +18,16 @@
 import FixedIcon from '../assets/icon/FixedIcon.vue'
 import UnFixedIcon from '../assets/icon/UnFixedIcon.vue'
 import CloseIcon from '../assets/icon/CloseIcon.vue'
+
+import { defineProps } from 'vue'
+
+defineProps<{
+    closeWindow: string;
+}>();
+
+function onClose(win: string) {
+    window.ipcRenderer.send(win);
+}
 </script>
 <style>
 /* 标题栏样式 */

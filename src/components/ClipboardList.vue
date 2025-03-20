@@ -35,14 +35,18 @@ const MenuItems = computed((): NavBarItem[] => [
         key: '调试工具',
         label: '调试工具',
         onClick: () => {
-          msg.success('打开调试工具');
+          // 打开开发者工具
+          window.ipcRenderer.send('toggle-dev-tools');
+          msg.success('已打开开发者工具');
         }
       },
       {
         key: '重新加载',
         label: '重新加载',
         onClick: () => {
-          msg.success('重新加载');
+          msg.loading('正在重新加载应用程序...');
+          // 重新加载应用程序
+          window.ipcRenderer.send('reload-app');
         }
       },
       {
@@ -52,7 +56,9 @@ const MenuItems = computed((): NavBarItem[] => [
         key: '关闭',
         label: '关闭',
         onClick: () => {
-          msg.success('关闭');
+          msg.loading('正在关闭应用程序...');
+          // 关闭应用程序
+          window.ipcRenderer.send('quit-app');
         }
       },
     ],
@@ -490,7 +496,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <TitleBar />
+  <TitleBar :closeWindow="`close-app`" />
   <CustomNavBar :menuItems="MenuItems" />
   <div style="width: 100%;height: 55px;"></div>
 

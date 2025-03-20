@@ -18,8 +18,8 @@ const require$$0$3 = require("events");
 const require$$0$4 = require("http");
 const require$$1$1 = require("https");
 var _documentCurrentScript = typeof document !== "undefined" ? document.currentScript : null;
-function getDefaultExportFromCjs(x) {
-  return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, "default") ? x["default"] : x;
+function getDefaultExportFromCjs(x2) {
+  return x2 && x2.__esModule && Object.prototype.hasOwnProperty.call(x2, "default") ? x2["default"] : x2;
 }
 const fs$4 = require$$0;
 const path$5 = require$$2;
@@ -2020,7 +2020,6 @@ function getConfig() {
 function getShortcutKeyConfig() {
   const configPath = getConfigPath(shortcutKeyFileName);
   const config2 = JSON.parse(fs$5.readFileSync(configPath, "utf8"));
-  log.info("[配置文件] 读取到的快捷键配置:", config2);
   return config2;
 }
 function updateConfig(config2) {
@@ -2036,7 +2035,7 @@ function getConfigPath(fileName) {
   }
   log.info("[配置文件] 配置文件夹目录:", configDir);
   const configPath = path$6.join(configDir, fileName);
-  console.log("[配置文件] " + fileName + "文件路径:", configPath);
+  log.info("[配置文件] " + fileName + " 文件路径:", configPath);
   return configPath;
 }
 let __dirname$2 = path$6.dirname(node_url.fileURLToPath(typeof document === "undefined" ? require("url").pathToFileURL(__filename).href : _documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === "SCRIPT" && _documentCurrentScript.src || new URL("main.js", document.baseURI).href));
@@ -2369,15 +2368,45 @@ if (env !== "development") {
   __dirname$1 = __dirname$1.replace("\\app.asar\\dist-electron", "");
 }
 let win;
+let isHideWindow = false;
+let x = void 0;
+let y = void 0;
 const config = getConfig();
 function createMainWindow() {
+  const primaryDisplay = require$$0$5.screen.getPrimaryDisplay();
+  const { width, height } = primaryDisplay.workAreaSize;
+  const mousePos = require$$0$5.screen.getCursorScreenPoint();
+  const windowWidth = config.windowWidth || 400;
+  const windowHeight = config.windowHeight || 600;
+  if (isHideWindow) ;
+  else {
+    x = mousePos.x - windowWidth / 2;
+    if (x < 0) {
+      x = 0;
+    } else if (x + windowWidth > width) {
+      x = width - windowWidth;
+    }
+    y = mousePos.y - windowHeight / 2;
+    if (y < 0) {
+      y = 0;
+    } else if (y + windowHeight > height) {
+      y = height - windowHeight;
+    }
+  }
   win = new require$$0$5.BrowserWindow({
-    icon: path$6.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
+    icon: path$6.join(process.env.VITE_PUBLIC, "logo.png"),
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: true,
       preload: path$6.join(path$6.dirname(node_url.fileURLToPath(typeof document === "undefined" ? require("url").pathToFileURL(__filename).href : _documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === "SCRIPT" && _documentCurrentScript.src || new URL("main.js", document.baseURI).href)), "preload.mjs")
-    }
+    },
+    width: windowWidth,
+    height: windowHeight,
+    frame: false,
+    resizable: !Boolean(config.fixedWindowSize),
+    x,
+    y,
+    transparent: false
   });
   const savedTheme = config.theme || "light";
   log.info("[主进程] 读取到的主题配置:", savedTheme);
@@ -2400,12 +2429,63 @@ function createMainWindow() {
   } else {
     win.loadFile(path$6.join(RENDERER_DIST, "index.html"));
   }
-  win.webContents.openDevTools({ mode: "detach" });
   win.on("closed", () => {
     if (clipboardTimer) {
       clearTimeout(clipboardTimer);
       clipboardTimer = null;
     }
+  });
+  createTray(win);
+  require$$0$5.app.setLoginItemSettings({
+    openAtLogin: Boolean(config.powerOnSelfStart),
+    openAsHidden: false,
+    // 设置为 true 可以隐藏启动时的窗口
+    args: []
+    // 自定义参数
+  });
+}
+function createTray(win2) {
+  console.log("是否隐藏了主窗口：" + isHideWindow);
+  if (isHideWindow) {
+    return;
+  }
+  const trayMenuTemplate = [
+    {
+      label: "打开主窗口",
+      click: function() {
+        createMainWindow();
+      }
+    },
+    {
+      label: "设置",
+      click: function() {
+      }
+    },
+    {
+      label: "帮助",
+      click: function() {
+      }
+    },
+    {
+      label: "关于",
+      click: function() {
+      }
+    },
+    {
+      label: "退出",
+      click: function() {
+        require$$0$5.app.quit();
+        require$$0$5.app.quit();
+      }
+    }
+  ];
+  const trayIcon = path$6.join(process.env.VITE_PUBLIC, "logo.png");
+  const appTray = new require$$0$5.Tray(trayIcon);
+  const contextMenu = require$$0$5.Menu.buildFromTemplate(trayMenuTemplate);
+  appTray.setToolTip("我的剪贴板");
+  appTray.setContextMenu(contextMenu);
+  appTray.on("click", function() {
+    win2.show();
   });
 }
 require$$0$5.ipcMain.handle("clear-items", async () => {
@@ -2464,6 +2544,36 @@ require$$0$5.ipcMain.handle("get-image-base64", async (_event, imagePath) => {
   } catch (error) {
     log.error("[主进程] 获取图片base64编码失败:", error);
     return null;
+  }
+});
+require$$0$5.ipcMain.on("toggle-dev-tools", () => {
+  log.info("[主进程] 打开开发者工具");
+  if (win) {
+    win.webContents.openDevTools({ mode: "detach" });
+  }
+});
+require$$0$5.ipcMain.on("reload-app", () => {
+  log.info("[主进程] 重新加载应用程序");
+  if (win) {
+    win.reload();
+  }
+});
+require$$0$5.ipcMain.on("quit-app", () => {
+  log.info("[主进程] 退出应用程序");
+  require$$0$5.app.quit();
+});
+require$$0$5.ipcMain.on("close-app", () => {
+  if (Boolean(config.colsingHideToTaskbar)) {
+    const location = win == null ? void 0 : win.getPosition();
+    if (location) {
+      x = location[0];
+      y = location[1];
+    }
+    win == null ? void 0 : win.hide();
+    isHideWindow = true;
+  } else {
+    win == null ? void 0 : win.close();
+    require$$0$5.app.quit();
   }
 });
 require$$0$5.app.on("window-all-closed", () => {

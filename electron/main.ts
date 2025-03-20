@@ -42,7 +42,11 @@ let y: number | undefined = undefined;
 const config = getConfig();
 
 function createMainWindow() {
-    isOpenWindow = true;
+    log.info("是否打开了主窗口：" + isOpenWindow);
+  if (isOpenWindow) {
+    return;
+  }
+  isOpenWindow = true;
 
     // 获取屏幕尺寸和鼠标位置
     const primaryDisplay = screen.getPrimaryDisplay();
@@ -97,6 +101,7 @@ function createMainWindow() {
 
     // 在页面加载完成后发送主题设置
     win.webContents.on('did-finish-load', () => {
+        win?.webContents.send('window-type', 'list');
         win?.webContents.send('main-process-message', (new Date).toLocaleString())
         log.info('[主进程] 发送主题设置到渲染进程');
         win?.webContents.send('init-themes', savedTheme);
@@ -121,7 +126,7 @@ function createMainWindow() {
     }
 
     // 打开调试工具，设置为单独窗口
-    // win.webContents.openDevTools({ mode: 'detach' });
+    win.webContents.openDevTools({ mode: 'detach' });
 
     // 监听窗口关闭事件，清理定时器
     win.on('closed', () => {
@@ -142,85 +147,81 @@ function createMainWindow() {
     });
 }
 
-// // 是否已经打开设置窗口
-// let isOpenSettingsWindow = false;
-// // 创建设置窗口
-// function createSettingsWindow() {
-//     if (isOpenSettingsWindow) {
-//         return;
-//     }
-//     isOpenSettingsWindow = true;
-//     const isProduction = process.env.NODE_ENV === 'production';
-//     const configDir = isProduction ? path.join(app.getAppPath(), 'resources/conf') : path.join(__dirname, 'conf');
-//     const configPath = path.join(configDir, 'settings.conf');
-//     if (!fs.existsSync(configDir)) fs.mkdirSync(configDir, { recursive: true });
-//     const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-//     const savedTheme = config.theme || 'light';
+// 是否已经打开设置窗口
+let isOpenSettingsWindow = false;
+// 创建设置窗口
+function createSettingsWindow() {
+    if (isOpenSettingsWindow) {
+        return;
+    }
+    isOpenSettingsWindow = true;
+    
+    const savedTheme = config.theme || 'light';
 
-//     const settingsWindow = new BrowserWindow({
-//         width: 650,
-//         height: 500,
-//         frame: false,
-//         resizable: false,
-//         webPreferences: {
-//             nodeIntegration: true,
-//             contextIsolation: false,
-//             nativeWindowOpen: true
-//         },
-//     });
+    const settingsWindow = new BrowserWindow({
+        width: 650,
+        height: 500,
+        frame: false,
+        resizable: false,
+        webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: true,
+            preload: path.join(path.dirname(fileURLToPath(import.meta.url)), 'preload.mjs'),
+        },
+        icon: path.join(process.env.VITE_PUBLIC, 'logo.png'),
+        transparent: false
+    });
 
-//     // 窗口置顶
-//     // 这个设置允许在Keynote演示模式下显示在顶部。BrowserWindow中有一项alwaysOnTop。
-//     // 当我设置为true时，其他应用程序会被覆盖在顶部，但Keynote演示模式下不行。
-//     // 所以我需要设置mainWindow.setAlwaysOnTop(true, "screen-saver")。
-//     settingsWindow.setAlwaysOnTop(true, "screen-saver")
-//     // 这个设置允许在切换到其他工作区时显示。
-//     settingsWindow.setVisibleOnAllWorkspaces(true)
+    // // 窗口置顶
+    // // 这个设置允许在Keynote演示模式下显示在顶部。BrowserWindow中有一项alwaysOnTop。
+    // // 当我设置为true时，其他应用程序会被覆盖在顶部，但Keynote演示模式下不行。
+    // // 所以我需要设置mainWindow.setAlwaysOnTop(true, "screen-saver")。
+    // settingsWindow.setAlwaysOnTop(true, "screen-saver")
+    // // 这个设置允许在切换到其他工作区时显示。
+    // settingsWindow.setVisibleOnAllWorkspaces(true)
 
-//     settingsWindow.loadFile('components/settings/settings.html');
+    if (VITE_DEV_SERVER_URL) {
+        settingsWindow.loadURL(VITE_DEV_SERVER_URL)
+    } else {
+        // win.loadFile('dist/index.html')
+        settingsWindow.loadFile(path.join(RENDERER_DIST, 'index.html'))
+    }
 
-//     // 打开调试工具，设置为单独窗口
-//     // settingsWindow.webContents.openDevTools({ mode: 'detach' });
+    // 打开调试工具，设置为单独窗口
+    settingsWindow.webContents.openDevTools({ mode: 'detach' });
 
-//     // 在页面加载完成后发送主题设置
-//     settingsWindow.webContents.on('did-finish-load', () => {
-//         settingsWindow.webContents.send('change-theme', savedTheme);
-//         settingsWindow.webContents.send('init-config');
-//     });
+    // 在页面加载完成后发送主题设置
+    settingsWindow.webContents.on('did-finish-load', () => {
+        settingsWindow.webContents.send('window-type', 'settings');
+        settingsWindow.webContents.send('init-themes', savedTheme);
+        settingsWindow.webContents.send('load-config', config);
+        settingsWindow.webContents.send('main-process-message', (new Date).toLocaleString())
+        const shortcutKeyConfig = getShortcutKeyConfig();
+        win?.webContents.send('load-shortcut-keys', shortcutKeyConfig);
+    });
 
-//     // 为当前设置窗口创建一个专门的关闭事件处理函数
-//     const closeSettingsHandler = () => {
-//         if (!settingsWindow.isDestroyed()) {
-//             settingsWindow.close();
-//         }
-//     };
+    ipcMain.on('close-settings', () => {
+        if (!settingsWindow.isDestroyed()) {
+            settingsWindow.close();
+        }
+    });
 
-//     // 注册关闭事件监听
-//     const closeSettingsChannel = 'close-settings-' + Date.now();
-//     ipcMain.on(closeSettingsChannel, closeSettingsHandler);
+    // 当窗口关闭时，移除事件监听器
+    settingsWindow.on('closed', () => {
+        isOpenSettingsWindow = false;
+    });
 
-//     // 当窗口关闭时，移除事件监听器
-//     settingsWindow.on('closed', () => {
-//         ipcMain.removeListener(closeSettingsChannel, closeSettingsHandler);
-//         isOpenSettingsWindow = false;
-//     });
-
-//     // 将新的channel ID发送给渲染进程
-//     settingsWindow.webContents.on('did-finish-load', () => {
-//         settingsWindow.webContents.send('settings-channel', closeSettingsChannel);
-//     });
-
-//     // 监听打开开发者工具的请求
-//     ipcMain.on('open-settings-devtools', () => {
-//         if (settingsWindow && !settingsWindow.isDestroyed()) {
-//             settingsWindow.webContents.openDevTools({ mode: 'detach' });
-//         }
-//     });
-// }
+    // 监听打开开发者工具的请求
+    ipcMain.on('open-settings-devtools', () => {
+        if (settingsWindow && !settingsWindow.isDestroyed()) {
+            settingsWindow.webContents.openDevTools({ mode: 'detach' });
+        }
+    });
+}
 
 // 系统托盘对象
 function createTray(win: BrowserWindow) {
-    console.log("是否隐藏了主窗口：" + isHideWindow);
+    log.info("是否隐藏了主窗口：" + isHideWindow);
     if (isHideWindow) {
         return;
     }
@@ -234,7 +235,7 @@ function createTray(win: BrowserWindow) {
         {
             label: '设置',
             click: function () {
-                // createSettingsWindow();
+                createSettingsWindow();
             }
         },
         {
@@ -383,6 +384,9 @@ ipcMain.on('close-app', () => {
         app.quit();
     }
 });
+
+// 打开设置窗口
+ipcMain.on('open-settings', createSettingsWindow);
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits

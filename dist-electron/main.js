@@ -2368,11 +2368,17 @@ if (env !== "development") {
   __dirname$1 = __dirname$1.replace("\\app.asar\\dist-electron", "");
 }
 let win;
+let isOpenWindow = false;
 let isHideWindow = false;
 let x = void 0;
 let y = void 0;
 const config = getConfig();
 function createMainWindow() {
+  console.log("是否打开了主窗口：" + isOpenWindow);
+  if (isOpenWindow) {
+    return;
+  }
+  isOpenWindow = true;
   const primaryDisplay = require$$0$5.screen.getPrimaryDisplay();
   const { width, height } = primaryDisplay.workAreaSize;
   const mousePos = require$$0$5.screen.getCursorScreenPoint();
@@ -2411,6 +2417,7 @@ function createMainWindow() {
   const savedTheme = config.theme || "light";
   log.info("[主进程] 读取到的主题配置:", savedTheme);
   win.webContents.on("did-finish-load", () => {
+    win == null ? void 0 : win.webContents.send("window-type", "list");
     win == null ? void 0 : win.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());
     log.info("[主进程] 发送主题设置到渲染进程");
     win == null ? void 0 : win.webContents.send("init-themes", savedTheme);
@@ -2429,6 +2436,7 @@ function createMainWindow() {
   } else {
     win.loadFile(path$6.join(RENDERER_DIST, "index.html"));
   }
+  win.webContents.openDevTools({ mode: "detach" });
   win.on("closed", () => {
     if (clipboardTimer) {
       clearTimeout(clipboardTimer);
@@ -2442,6 +2450,54 @@ function createMainWindow() {
     // 设置为 true 可以隐藏启动时的窗口
     args: []
     // 自定义参数
+  });
+}
+let isOpenSettingsWindow = false;
+function createSettingsWindow() {
+  if (isOpenSettingsWindow) {
+    return;
+  }
+  isOpenSettingsWindow = true;
+  const savedTheme = config.theme || "light";
+  const settingsWindow = new require$$0$5.BrowserWindow({
+    width: 650,
+    height: 500,
+    frame: false,
+    resizable: false,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: true,
+      preload: path$6.join(path$6.dirname(node_url.fileURLToPath(typeof document === "undefined" ? require("url").pathToFileURL(__filename).href : _documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === "SCRIPT" && _documentCurrentScript.src || new URL("main.js", document.baseURI).href)), "preload.mjs")
+    },
+    icon: path$6.join(process.env.VITE_PUBLIC, "logo.png"),
+    transparent: false
+  });
+  if (VITE_DEV_SERVER_URL) {
+    settingsWindow.loadURL(VITE_DEV_SERVER_URL);
+  } else {
+    settingsWindow.loadFile(path$6.join(RENDERER_DIST, "index.html"));
+  }
+  settingsWindow.webContents.openDevTools({ mode: "detach" });
+  settingsWindow.webContents.on("did-finish-load", () => {
+    settingsWindow.webContents.send("window-type", "settings");
+    settingsWindow.webContents.send("init-themes", savedTheme);
+    settingsWindow.webContents.send("load-config", config);
+    settingsWindow.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());
+    const shortcutKeyConfig = getShortcutKeyConfig();
+    win == null ? void 0 : win.webContents.send("load-shortcut-keys", shortcutKeyConfig);
+  });
+  require$$0$5.ipcMain.on("close-settings", () => {
+    if (!settingsWindow.isDestroyed()) {
+      settingsWindow.close();
+    }
+  });
+  settingsWindow.on("closed", () => {
+    isOpenSettingsWindow = false;
+  });
+  require$$0$5.ipcMain.on("open-settings-devtools", () => {
+    if (settingsWindow && !settingsWindow.isDestroyed()) {
+      settingsWindow.webContents.openDevTools({ mode: "detach" });
+    }
   });
 }
 function createTray(win2) {
@@ -2459,6 +2515,7 @@ function createTray(win2) {
     {
       label: "设置",
       click: function() {
+        createSettingsWindow();
       }
     },
     {
@@ -2563,6 +2620,7 @@ require$$0$5.ipcMain.on("quit-app", () => {
   require$$0$5.app.quit();
 });
 require$$0$5.ipcMain.on("close-app", () => {
+  isOpenWindow = false;
   if (Boolean(config.colsingHideToTaskbar)) {
     const location = win == null ? void 0 : win.getPosition();
     if (location) {
@@ -2576,6 +2634,7 @@ require$$0$5.ipcMain.on("close-app", () => {
     require$$0$5.app.quit();
   }
 });
+require$$0$5.ipcMain.on("open-settings", createSettingsWindow);
 require$$0$5.app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
     require$$0$5.app.quit();

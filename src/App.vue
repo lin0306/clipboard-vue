@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import ClipboardList from './components/ClipboardList.vue'
-import { createThemeContext } from './themes/ThemeContext';
-import { computed } from 'vue';
+import Settings from './components/Settings.vue'
+import { createThemeContext } from './themes/ThemeContext'
+import { computed, onMounted, ref } from 'vue';
 import { ConfigProvider } from 'ant-design-vue';
 import { theme } from 'ant-design-vue';
 import zhCN from 'ant-design-vue/es/locale/zh_CN';
@@ -24,11 +25,36 @@ const antdTheme = computed(() => {
 });
 
 const locale = computed(() => zhCN);
+
+// 窗口组件 map<key:组件唯一标识, value:窗口组件>
+const componentMap: any = {
+  list: ClipboardList,
+  settings: Settings,
+};
+
+// 当前打开的窗口组件
+const windowType = ref('list');
+
+// 当前显示的组件
+const currentComponent = computed(() => {
+  return componentMap[windowType.value];
+});
+
+// 监听来自主进程的窗口类型消息
+onMounted(() => {
+  // 监听主进程发送的窗口类型
+  window.ipcRenderer.on('window-type', (_event, type: string) => {
+    console.log("从主进程获取窗口类型", type);
+    if (componentMap[type]) {
+      windowType.value = type;
+    }
+  });
+});
 </script>
 
 <template>
   <ConfigProvider :theme="antdTheme" :locale="locale">
-    <ClipboardList />
+    <component :is="currentComponent" />
   </ConfigProvider>
 </template>
 

@@ -28,7 +28,8 @@ const MenuItems = computed((): NavBarItem[] => [
         key: '偏好设置',
         label: '偏好设置',
         onClick: () => {
-          msg.success('打开偏好设置');
+          // 打开开发者工具
+          window.ipcRenderer.send('open-settings');
         }
       },
       {
@@ -37,7 +38,6 @@ const MenuItems = computed((): NavBarItem[] => [
         onClick: () => {
           // 打开开发者工具
           window.ipcRenderer.send('toggle-dev-tools');
-          msg.success('已打开开发者工具');
         }
       },
       {

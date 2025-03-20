@@ -99,7 +99,7 @@ export function useTheme() {
     const defaultThemeColors = reactive({ ...lightTheme.colors });
 
     // 创建一个默认的setTheme函数，它会在控制台输出警告但不执行任何操作
-    const defaultSetTheme = (themeId: string) => {
+    const defaultSetTheme = (_themeId: string) => {
       console.warn('在ThemeProvider外部调用setTheme无效');
     };
 

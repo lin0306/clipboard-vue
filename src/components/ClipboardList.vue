@@ -583,7 +583,7 @@ onUnmounted(() => {
   </div>
 
   <!-- 添加标签弹窗 -->
-  <a-modal v-model:visible="tagModalState.visible" title="添加标签" @ok="handleAddTagConfirm"
+  <!--<a-modal v-model:open="tagModalState.visible" title="添加标签" @ok="handleAddTagConfirm"
     @cancel="tagModalState.visible = false">
     <div class="tag-form">
       <div class="form-item">
@@ -597,7 +597,7 @@ onUnmounted(() => {
         </div>
       </div>
     </div>
-  </a-modal>
+  </a-modal> -->
 </template>
 
 <style scoped>

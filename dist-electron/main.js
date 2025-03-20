@@ -2374,7 +2374,7 @@ let x = void 0;
 let y = void 0;
 const config = getConfig();
 function createMainWindow() {
-  console.log("是否打开了主窗口：" + isOpenWindow);
+  log.info("是否打开了主窗口：" + isOpenWindow);
   if (isOpenWindow) {
     return;
   }
@@ -2404,7 +2404,9 @@ function createMainWindow() {
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: true,
-      preload: path$6.join(path$6.dirname(node_url.fileURLToPath(typeof document === "undefined" ? require("url").pathToFileURL(__filename).href : _documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === "SCRIPT" && _documentCurrentScript.src || new URL("main.js", document.baseURI).href)), "preload.mjs")
+      preload: path$6.join(path$6.dirname(node_url.fileURLToPath(typeof document === "undefined" ? require("url").pathToFileURL(__filename).href : _documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === "SCRIPT" && _documentCurrentScript.src || new URL("main.js", document.baseURI).href)), "preload.mjs"),
+      defaultEncoding: "utf8"
+      // 设置默认编码为 UTF-8
     },
     width: windowWidth,
     height: windowHeight,
@@ -2418,7 +2420,6 @@ function createMainWindow() {
   log.info("[主进程] 读取到的主题配置:", savedTheme);
   win.webContents.on("did-finish-load", () => {
     win == null ? void 0 : win.webContents.send("window-type", "list");
-    win == null ? void 0 : win.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());
     log.info("[主进程] 发送主题设置到渲染进程");
     win == null ? void 0 : win.webContents.send("init-themes", savedTheme);
     log.info("[主进程] 发送标签列表到渲染进程");
@@ -2467,10 +2468,13 @@ function createSettingsWindow() {
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: true,
-      preload: path$6.join(path$6.dirname(node_url.fileURLToPath(typeof document === "undefined" ? require("url").pathToFileURL(__filename).href : _documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === "SCRIPT" && _documentCurrentScript.src || new URL("main.js", document.baseURI).href)), "preload.mjs")
+      preload: path$6.join(path$6.dirname(node_url.fileURLToPath(typeof document === "undefined" ? require("url").pathToFileURL(__filename).href : _documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === "SCRIPT" && _documentCurrentScript.src || new URL("main.js", document.baseURI).href)), "preload.mjs"),
+      defaultEncoding: "utf8"
+      // 设置默认编码为 UTF-8
     },
     icon: path$6.join(process.env.VITE_PUBLIC, "logo.png"),
-    transparent: false
+    transparent: false,
+    parent: win
   });
   if (VITE_DEV_SERVER_URL) {
     settingsWindow.loadURL(VITE_DEV_SERVER_URL);
@@ -2501,7 +2505,7 @@ function createSettingsWindow() {
   });
 }
 function createTray(win2) {
-  console.log("是否隐藏了主窗口：" + isHideWindow);
+  log.info("是否隐藏了主窗口：" + isHideWindow);
   if (isHideWindow) {
     return;
   }
@@ -2638,7 +2642,7 @@ require$$0$5.ipcMain.on("open-settings", createSettingsWindow);
 require$$0$5.app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
     require$$0$5.app.quit();
-    win = null;
+    win = void 0;
   }
 });
 const gotTheLock = require$$0$5.app.requestSingleInstanceLock();

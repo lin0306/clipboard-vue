@@ -33,7 +33,7 @@ if (env !== 'development') {
     __dirname = __dirname.replace("\\app.asar\\dist-electron", "");
 }
 
-let win: BrowserWindow | null
+let win: BrowserWindow | undefined
 let isOpenWindow = false;
 let isHideWindow = false;
 let x: number | undefined = undefined;
@@ -43,10 +43,10 @@ const config = getConfig();
 
 function createMainWindow() {
     log.info("是否打开了主窗口：" + isOpenWindow);
-  if (isOpenWindow) {
-    return;
-  }
-  isOpenWindow = true;
+    if (isOpenWindow) {
+        return;
+    }
+    isOpenWindow = true;
 
     // 获取屏幕尺寸和鼠标位置
     const primaryDisplay = screen.getPrimaryDisplay();
@@ -81,6 +81,7 @@ function createMainWindow() {
             nodeIntegration: true,
             contextIsolation: true,
             preload: path.join(path.dirname(fileURLToPath(import.meta.url)), 'preload.mjs'),
+            defaultEncoding: 'utf8', // 设置默认编码为 UTF-8
         },
         width: windowWidth,
         height: windowHeight,
@@ -94,15 +95,9 @@ function createMainWindow() {
     const savedTheme = config.theme || 'light';
     log.info('[主进程] 读取到的主题配置:', savedTheme);
 
-    // Test active push message to Renderer-process.
-    // win.webContents.on('did-finish-load', () => {
-    //     win?.webContents.send('main-process-message', (new Date).toLocaleString())
-    // })
-
     // 在页面加载完成后发送主题设置
     win.webContents.on('did-finish-load', () => {
         win?.webContents.send('window-type', 'list');
-        win?.webContents.send('main-process-message', (new Date).toLocaleString())
         log.info('[主进程] 发送主题设置到渲染进程');
         win?.webContents.send('init-themes', savedTheme);
         log.info('[主进程] 发送标签列表到渲染进程');
@@ -155,7 +150,7 @@ function createSettingsWindow() {
         return;
     }
     isOpenSettingsWindow = true;
-    
+
     const savedTheme = config.theme || 'light';
 
     const settingsWindow = new BrowserWindow({
@@ -167,9 +162,11 @@ function createSettingsWindow() {
             nodeIntegration: true,
             contextIsolation: true,
             preload: path.join(path.dirname(fileURLToPath(import.meta.url)), 'preload.mjs'),
+            defaultEncoding: 'utf8', // 设置默认编码为 UTF-8
         },
         icon: path.join(process.env.VITE_PUBLIC, 'logo.png'),
-        transparent: false
+        transparent: false,
+        parent: win,
     });
 
     // // 窗口置顶
@@ -394,7 +391,7 @@ ipcMain.on('open-settings', createSettingsWindow);
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
         app.quit()
-        win = null
+        win = undefined
     }
 })
 

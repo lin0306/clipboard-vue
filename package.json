@@ -14,14 +14,12 @@
   },
   "dependencies": {
     "@ant-design/icons-vue": "^7.0.1",
-    "@mdi/font": "^7.4.47",
     "ant-design-vue": "^4.2.6",
     "better-sqlite3": "^11.8.1",
     "bindings": "^1.5.0",
     "electron-log": "^5.3.2",
     "file-uri-to-path": "^2.0.0",
-    "vue": "^3.4.21",
-    "vuetify": "^3.7.16"
+    "vue": "^3.4.21"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.12",

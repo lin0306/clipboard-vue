@@ -1,7 +1,7 @@
 // 主题配置文件
 
 export interface ThemeConfig {
-[x: string]: any;
+  [x: string]: any;
   id: string;
   name: string;
   colors: ThemeConfigColors;
@@ -9,19 +9,19 @@ export interface ThemeConfig {
 
 export interface ThemeConfigColors {
   primary: string;
-    secondary: string;
-    background: string;
-    text: string;
-    border: string;
-    titleBarBackground: string;
-    titleBarIconColor: string;
-    navBackground: string;
-    cardBackground: string;
-    hoverBackground: string;
-    divider: string;
-    tagColor: string;
-    scrollBarColor: string;
-    scrollBarColorHover: string;
+  secondary: string;
+  background: string;
+  text: string;
+  border: string;
+  titleBarBackground: string;
+  titleBarIconColor: string;
+  navBackground: string;
+  cardBackground: string;
+  hoverBackground: string;
+  divider: string;
+  tagColor: string;
+  scrollBarColor: string;
+  scrollBarColorHover: string;
 }
 
 // 默认主题 - 灰阶色调

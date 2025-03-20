@@ -93,7 +93,21 @@ export function createThemeContext() {
 export function useTheme() {
   const theme = inject(ThemeKey);
   if (!theme) {
-    throw new Error('useTheme() must be used within a ThemeProvider');
+    console.warn('useTheme() 在ThemeProvider外部被调用，返回默认主题');
+    // 返回基于lightTheme的默认主题对象
+    const defaultThemeItem = ref<ThemeConfig>(lightTheme);
+    const defaultThemeColors = reactive({ ...lightTheme.colors });
+
+    // 创建一个默认的setTheme函数，它会在控制台输出警告但不执行任何操作
+    const defaultSetTheme = (themeId: string) => {
+      console.warn('在ThemeProvider外部调用setTheme无效');
+    };
+
+    return {
+      currentTheme: defaultThemeItem,
+      setTheme: defaultSetTheme,
+      themeColors: defaultThemeColors,
+    };
   }
   return theme;
 }

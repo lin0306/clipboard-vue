@@ -90,10 +90,6 @@ const MenuItems = computed((): NavBarItem[] => [
     ],
   },
   {
-    key: '查找',
-    label: '查找',
-  },
-  {
     key: '清空剪贴板',
     label: '清空剪贴板',
     onClick: () => {

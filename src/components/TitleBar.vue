@@ -98,11 +98,13 @@ function onClose(win: string) {
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
-    transition: transform 0.3s ease;
-    opacity: 0.7;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    opacity: 0.3;
 }
 
-.unfixation-button {
+.fixation-button, .unfixation-button {
+    position: relative;
+    overflow: hidden;
     display: flex;
 }
 
@@ -115,7 +117,7 @@ function onClose(win: string) {
     opacity: 1;
 }
 
-#unfixation-button-img:hover {
+#unfixation-button-img {
     opacity: 1;
 }
 </style>

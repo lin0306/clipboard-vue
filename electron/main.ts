@@ -94,6 +94,14 @@ function createMainWindow() {
         transparent: false
     })
 
+    // 窗口置顶
+    // 这个设置允许在Keynote演示模式下显示在顶部。BrowserWindow中有一项alwaysOnTop。
+    // 当我设置为true时，其他应用程序会被覆盖在顶部，但Keynote演示模式下不行。
+    // 所以我需要设置mainWindow.setAlwaysOnTop(true, "screen-saver")。
+    win.setAlwaysOnTop(true, "screen-saver")
+    // 这个设置允许在切换到其他工作区时显示。
+    win.setVisibleOnAllWorkspaces(true)
+
     const savedTheme = config.theme || 'light';
     log.info('[主进程] 读取到的主题配置:', savedTheme);
 
@@ -358,7 +366,7 @@ ipcMain.handle('item-copy', async (_event, id: number) => {
                 clipboard.writeText(item.content);
             }
             return true;
-        } else{
+        } else {
             log.error('[主进程] 将内容复制到系统剪贴板，根据id没有找到内容', id);
             return false;
         }

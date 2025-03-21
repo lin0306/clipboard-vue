@@ -2419,6 +2419,8 @@ function createMainWindow() {
     y,
     transparent: false
   });
+  win.setAlwaysOnTop(true, "screen-saver");
+  win.setVisibleOnAllWorkspaces(true);
   const savedTheme = config.theme || "light";
   log.info("[主进程] 读取到的主题配置:", savedTheme);
   win.webContents.on("did-finish-load", () => {

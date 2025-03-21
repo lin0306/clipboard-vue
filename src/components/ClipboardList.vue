@@ -573,8 +573,8 @@ onUnmounted(() => {
             </div>
           </div>
         </div>
-        <div class="card-tags">
-          <div v-if="item.tags && item.tags.length > 0" class="item-tags">
+        <div class="card-tags" v-if="item.tags && item.tags.length > 0">
+          <div class="item-tags">
             <div v-for="tag in item.tags" :key="tag.id" class="item-tag" :style="{ backgroundColor: tag.color }">
               <span class="item-tag-name" :style="{ color: getTextColorForBackground(tag.color) }">{{ tag.name }}</span>
             </div>
@@ -626,15 +626,20 @@ onUnmounted(() => {
 }
 
 .clipboard-item {
-  margin-bottom: 12px;
+  margin-bottom: 7px;
+}
+
+.clipboard-card:hover {
+  background-color: var(--theme-border);
 }
 
 .clipboard-card {
   background-color: var(--theme-cardBackground);
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  padding: 12px;
-  transition: box-shadow 0.3s;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 7px;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  border: 1px solid transparent;
 }
 
 .clipboard-card:hover {
@@ -806,18 +811,20 @@ onUnmounted(() => {
 /* 标签列表样式 */
 .tag-list {
   position: fixed;
-  top: 70px;
-  left: -10px;
+  top: 55px;
+  left: -16px;
   display: flex;
   flex-direction: column;
   z-index: 100;
   transition: left 0.3s ease;
+  overflow-y: auto;
+  height: calc(100vh - 57px);
 }
 
-/* 当有标签被选中时，标签列表稍微向右移动 */
-/* .tag-list.has-selected-tag {
-  left: -5px;
-} */
+/* 隐藏 Chrome、Safari 和 Opera 的滚动条 */
+.tag-list::-webkit-scrollbar {
+  width: 0px;
+}
 
 /* 拖拽激活时，标签列表稍微向右移动，增加可见性 */
 .tag-list.dragging-active {
@@ -826,18 +833,16 @@ onUnmounted(() => {
 
 .tag-item {
   width: 24px;
-  height: 40px;
+  height: 30px;
   border-radius: 4px;
-  margin-bottom: -10px;
-  /* 负margin实现层叠效果 */
+  margin-bottom: -4px;
   position: relative;
   cursor: pointer;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   overflow: hidden;
-  /* 确保内容不会溢出 */
   transform-origin: left center;
-  transition: width 0.3s ease-out, box-shadow 0.2s ease, transform 0.2s ease;
-  opacity: 0.5;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  opacity: 0.3;
 }
 
 /* 鼠标悬停或拖拽时展开标签 */
@@ -849,12 +854,11 @@ onUnmounted(() => {
   z-index: 10;
   /* 悬浮时置于顶层 */
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
-  /* 增强阴影效果 */
 }
 
 .tag-name {
   position: absolute;
-  left: 15px;
+  left: 20px;
   top: 50%;
   transform: translateY(-50%);
   font-size: 12px;
@@ -865,19 +869,21 @@ onUnmounted(() => {
   pointer-events: none;
   width: 70px;
   overflow: hidden;
+  transform-origin: left center;
 }
 
 /* 鼠标悬停或拖拽时显示标签名称 */
 .tag-item:hover .tag-name,
 .tag-item.tag-expanded .tag-name {
   opacity: 1;
+  transform: translateY(-50%);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .tag-dragging-over {
   box-shadow: 0 0 12px var(--theme-primary);
   transform: scale(1.08);
   z-index: 20 !important;
-  /* 拖拽悬停时额外增加宽度 */
 }
 
 /* 选中标签的样式 */
@@ -885,6 +891,7 @@ onUnmounted(() => {
   width: 100px !important;
   z-index: 5 !important;
   opacity: 1;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.7);
 }
 
 /* 选中标签的名称始终显示 */

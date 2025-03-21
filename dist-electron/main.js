@@ -2052,7 +2052,7 @@ const _ClipboardDB = class _ClipboardDB {
   constructor() {
     // 单例实例
     __publicField(this, "db");
-    log.info("[数据库进程] 数据库进程初始化");
+    log.info("[数据库进程] 数据库初始化");
     const dbFolder = path$6.join(__dirname$2, "../data");
     log.info("[数据库进程] 数据文件存储文件夹位置：", dbFolder);
     if (!fs$5.existsSync(dbFolder)) {
@@ -2062,6 +2062,7 @@ const _ClipboardDB = class _ClipboardDB {
     log.info("[数据库进程] 数据文件存储位置：", dbPath);
     this.db = new Database(dbPath);
     this.initTables();
+    log.info("[数据库进程] 数据库初始化完成");
   }
   /**
    * 获取数据库实例的静态方法
@@ -2079,7 +2080,6 @@ const _ClipboardDB = class _ClipboardDB {
    * 创建剪贴板条目表、标签表和关联表
    */
   initTables() {
-    log.info("[数据库进程] 初始化数据库表开始");
     this.db.exec(`
                     CREATE TABLE IF NOT EXISTS clipboard_items (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -2108,7 +2108,6 @@ const _ClipboardDB = class _ClipboardDB {
                         PRIMARY KEY (item_id, tag_id)
                     )
                 `);
-    log.info("[数据库进程] 初始化数据库表完成");
   }
   /**
    * 关闭数据库连接
@@ -2128,10 +2127,8 @@ const _ClipboardDB = class _ClipboardDB {
     log.info("[数据库进程] 剪贴板内容添加开始", [content, type, filePath]);
     try {
       let copyTime = Date.now();
-      log.info("[数据库进程] 设置初始复制时间:", copyTime);
       try {
         this.db.transaction(() => {
-          log.info("[数据库进程] 事务开始");
           if (type === "text") {
             log.info("[数据库进程] 删除相同文本内容的旧记录");
             this.db.prepare("DELETE FROM clipboard_items WHERE content = ? AND type = ?").run(content, type);
@@ -2147,9 +2144,7 @@ const _ClipboardDB = class _ClipboardDB {
           }
           log.info("[数据库进程] 准备插入新的剪贴板记录");
           this.db.prepare("INSERT INTO clipboard_items (content, copy_time, type, file_path) VALUES (?, ?, ?, ?)").run(content, copyTime, type, filePath);
-          log.info("[数据库进程] 事务执行完成");
         })();
-        log.info("[数据库进程] 事务提交成功");
       } catch (txError) {
         log.error("[数据库进程] 事务执行失败", txError);
         throw txError;

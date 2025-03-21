@@ -242,6 +242,16 @@ async function filterClipboardItems() {
   }
 }
 
+async function onCopy(info: any) {
+      // 发送复制消息
+      const isSuccess = await window.ipcRenderer.invoke('item-copy', info.id);
+      if (isSuccess) {
+        filterClipboardItems();
+      } else {
+        msg.error('复制失败');
+      }
+}
+
 /**
  * 切换搜索框显示状态
  */
@@ -533,7 +543,7 @@ onUnmounted(() => {
     <a-empty />
   </div>
   <div v-else class="clipboard-list">
-    <div v-for="item in itemList" :key="item.id" class="clipboard-item">
+    <div v-for="item in itemList" :key="item.id" class="clipboard-item" @dblclick="onCopy(item)">
       <div class="clipboard-card">
         <div class="card-header">
           <div class="card-title">{{ new Date(item.copy_time).toLocaleString() }}</div>

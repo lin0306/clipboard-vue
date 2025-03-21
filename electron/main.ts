@@ -1,4 +1,4 @@
-import { app, BrowserWindow, clipboard, ipcMain, screen, Tray, Menu } from 'electron'
+import { app, BrowserWindow, clipboard, ipcMain, screen, Tray, Menu, nativeImage } from 'electron'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import fs from 'node:fs'
@@ -341,6 +341,31 @@ ipcMain.handle('get-image-base64', async (_event, imagePath) => {
     } catch (error) {
         log.error('[主进程] 获取图片base64编码失败:', error);
         return null;
+    }
+});
+
+// 监听将内容复制到剪贴板
+ipcMain.handle('item-copy', async (_event, id: number) => {
+    log.info('[主进程] 将内容复制到系统剪贴板，id:', id);
+    try {
+        const db = ClipboardDB.getInstance()
+        const item: any = db.getItemById(id);
+        if (item) {
+            db.updateItemTime(id, Date.now());
+            if (item.type === 'image') {
+                const image = nativeImage.createFromPath(item.file_path);
+                clipboard.writeImage(image);
+            } else {
+                clipboard.writeText(item.content);
+            }
+            return true;
+        } else{
+            log.error('[主进程] 将内容复制到系统剪贴板，根据id没有找到内容', id);
+            return false;
+        }
+    } catch (error) {
+        log.error('[主进程] 将内容复制到系统剪贴板失败:', error);
+        return false;
     }
 });
 

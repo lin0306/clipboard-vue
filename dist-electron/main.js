@@ -2130,17 +2130,21 @@ const _ClipboardDB = class _ClipboardDB {
       try {
         this.db.transaction(() => {
           if (type === "text") {
-            log.info("[数据库进程] 删除相同文本内容的旧记录");
-            this.db.prepare("DELETE FROM clipboard_items WHERE content = ? AND type = ?").run(content, type);
-          } else if (type === "image" && filePath) {
-            log.info("[数据库进程] 查询相同图片路径的记录");
-            const row = this.db.prepare("SELECT copy_time FROM clipboard_items WHERE type = ? AND file_path = ?").get("image", filePath);
+            log.info("[数据库进程] 查询相同文本内容的旧记录");
+            const row = this.db.prepare("SELECT id FROM clipboard_items WHERE content = ? AND type = ?").get(content, type);
             if (row) {
-              copyTime = row.copy_time;
-              log.info("[数据库进程] 找到相同图片路径记录，使用原复制时间:", copyTime);
+              this.updateItemTime(row.id, copyTime);
+              log.info("[数据库进程] 有查询到相同文本内容的记录，覆盖复制时间");
+              return;
             }
-            log.info("[数据库进程] 删除相同图片路径的旧记录");
-            this.db.prepare("DELETE FROM clipboard_items WHERE type = ? AND file_path = ?").run("image", filePath);
+          } else if (type === "image" && filePath) {
+            log.info("[数据库进程] 查询相同图片路径的旧记录");
+            const row = this.db.prepare("SELECT id FROM clipboard_items WHERE type = ? AND file_path = ?").get("image", filePath);
+            if (row) {
+              this.updateItemTime(row.id, copyTime);
+              log.info("[数据库进程] 有查询到相同图片内容的记录，覆盖复制时间");
+              return;
+            }
           }
           log.info("[数据库进程] 准备插入新的剪贴板记录");
           this.db.prepare("INSERT INTO clipboard_items (content, copy_time, type, file_path) VALUES (?, ?, ?, ?)").run(content, copyTime, type, filePath);
@@ -2156,6 +2160,9 @@ const _ClipboardDB = class _ClipboardDB {
     } finally {
       log.info("[数据库进程] 剪贴板内容添加完成");
     }
+  }
+  getItemById(id) {
+    return this.db.prepare("SELECT * FROM clipboard_items WHERE id =?").get(id);
   }
   /**
    * 获取所有剪贴板条目
@@ -2276,7 +2283,7 @@ const _ClipboardDB = class _ClipboardDB {
   /**
    * 更新剪贴板条目的复制时间
    * @param {number} id 条目ID
-   * @param {Date} newTime 新的复制时间
+   * @param {number} newTime 新的复制时间
    */
   updateItemTime(id, newTime) {
     this.db.prepare("UPDATE clipboard_items SET copy_time = ? WHERE id = ?").run(newTime, id);
@@ -2600,6 +2607,29 @@ require$$0$5.ipcMain.handle("get-image-base64", async (_event, imagePath) => {
   } catch (error) {
     log.error("[主进程] 获取图片base64编码失败:", error);
     return null;
+  }
+});
+require$$0$5.ipcMain.handle("item-copy", async (_event, id) => {
+  log.info("[主进程] 将内容复制到系统剪贴板，id:", id);
+  try {
+    const db = ClipboardDB.getInstance();
+    const item = db.getItemById(id);
+    if (item) {
+      db.updateItemTime(id, Date.now());
+      if (item.type === "image") {
+        const image = require$$0$5.nativeImage.createFromPath(item.file_path);
+        require$$0$5.clipboard.writeImage(image);
+      } else {
+        require$$0$5.clipboard.writeText(item.content);
+      }
+      return true;
+    } else {
+      log.error("[主进程] 将内容复制到系统剪贴板，根据id没有找到内容", id);
+      return false;
+    }
+  } catch (error) {
+    log.error("[主进程] 将内容复制到系统剪贴板失败:", error);
+    return false;
   }
 });
 require$$0$5.ipcMain.on("toggle-dev-tools", () => {

@@ -121,21 +121,23 @@ class ClipboardDB {
             // 将事务包装在单独的try-catch中
             try {
                 this.db.transaction(() => {
-                    // 删除相同内容的旧记录
+                    // 覆盖相同内容的旧记录的复制时间
                     if (type === 'text') {
-                        log.info("[数据库进程] 删除相同文本内容的旧记录");
-                        this.db.prepare('DELETE FROM clipboard_items WHERE content = ? AND type = ?').run(content, type);
-                    } else if (type === 'image' && filePath) {
-                        log.info("[数据库进程] 查询相同图片路径的记录");
-                        const row = this.db.prepare('SELECT copy_time FROM clipboard_items WHERE type = ? AND file_path = ?').get('image', filePath) as { copy_time: number } | undefined;
-
+                        log.info("[数据库进程] 查询相同文本内容的旧记录");
+                        const row = this.db.prepare('SELECT id FROM clipboard_items WHERE content = ? AND type = ?').get(content, type) as { id: number };
                         if (row) {
-                            copyTime = row.copy_time;
-                            log.info("[数据库进程] 找到相同图片路径记录，使用原复制时间:", copyTime);
+                            this.updateItemTime(row.id, copyTime);
+                            log.info("[数据库进程] 有查询到相同文本内容的记录，覆盖复制时间");
+                            return;
                         }
-
-                        log.info("[数据库进程] 删除相同图片路径的旧记录");
-                        this.db.prepare('DELETE FROM clipboard_items WHERE type = ? AND file_path = ?').run('image', filePath);
+                    } else if (type === 'image' && filePath) {
+                        log.info("[数据库进程] 查询相同图片路径的旧记录");
+                        const row = this.db.prepare('SELECT id FROM clipboard_items WHERE type = ? AND file_path = ?').get('image', filePath) as { id: number };
+                        if (row) {
+                            this.updateItemTime(row.id, copyTime);
+                            log.info("[数据库进程] 有查询到相同图片内容的记录，覆盖复制时间");
+                            return;
+                        }
                     }
 
                     log.info("[数据库进程] 准备插入新的剪贴板记录");
@@ -153,6 +155,10 @@ class ClipboardDB {
         } finally {
             log.info("[数据库进程] 剪贴板内容添加完成");
         }
+    }
+
+    getItemById(id: number) {
+        return this.db.prepare('SELECT * FROM clipboard_items WHERE id =?').get(id);
     }
 
     /**
@@ -272,7 +278,7 @@ class ClipboardDB {
      * @returns {Array} 符合条件的剪贴板条目数组
      */
     searchItems(content: string, tagId: number): any[] {
-        
+
         // 构建基础SQL查询，获取符合条件的剪贴板条目
         let itemsSql = 'SELECT DISTINCT ci.*, ('
             + 'SELECT json_group_array(json_object('
@@ -299,10 +305,10 @@ class ClipboardDB {
 
         // 添加排序条件：先按置顶状态，再按时间排序
         itemsSql += ' ORDER BY ci.is_topped DESC, CASE WHEN ci.is_topped = 1 THEN ci.top_time ELSE ci.copy_time END DESC';
-        
+
         // 获取符合条件的剪贴板条目
         const items = this.db.prepare(itemsSql).all(itemsParams) as any[];
-        
+
         // 处理JSON字符串为JavaScript对象
         for (const item of items) {
             try {
@@ -313,16 +319,16 @@ class ClipboardDB {
                 item.tags = [];
             }
         }
-        
+
         return items;
     }
 
     /**
      * 更新剪贴板条目的复制时间
      * @param {number} id 条目ID
-     * @param {Date} newTime 新的复制时间
+     * @param {number} newTime 新的复制时间
      */
-    updateItemTime(id: number, newTime: Date) {
+    updateItemTime(id: number, newTime: number) {
         this.db.prepare('UPDATE clipboard_items SET copy_time = ? WHERE id = ?').run(newTime, id);
     }
 

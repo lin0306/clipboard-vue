@@ -1,11 +1,11 @@
 <template>
-    <div id="title-bar">
-        <div class="window-title">剪贴板</div>
+    <div id="title-bar" :class="{ 'fixed': isFixed }">
+        <div class="window-title">{{ title }}</div>
         <div class="window-controls">
-            <div class="control-button fixation-button">
+            <div v-if="showFixedBtn && !isFixed" class="control-button fixation-button" @click="onFixWindow">
                 <FixedIcon class="program-btn" id="fixation-button-img" />
             </div>
-            <div class="control-button unfixation-button">
+            <div v-if="showFixedBtn && isFixed" class="control-button unfixation-button" @click="onUnfixWindow">
                 <UnFixedIcon class="program-btn" id="unfixation-button-img" />
             </div>
             <div class="control-button close-button">
@@ -19,11 +19,27 @@ import FixedIcon from '../assets/icon/FixedIcon.vue'
 import UnFixedIcon from '../assets/icon/UnFixedIcon.vue'
 import CloseIcon from '../assets/icon/CloseIcon.vue'
 
-import { defineProps } from 'vue'
+import { defineProps, withDefaults, ref } from 'vue'
 
-defineProps<{
+withDefaults(defineProps<{
+    title: string;
     closeWindow: string;
-}>();
+    showFixedBtn: boolean;
+}>(), {
+    showFixedBtn: false
+});
+
+const isFixed = ref(false);
+
+// 固定窗口
+function onFixWindow() {
+    isFixed.value = true;
+}
+
+// 取消固定窗口
+function onUnfixWindow() {
+    isFixed.value = false;
+}
 
 function onClose(win: string) {
     window.ipcRenderer.send(win);
@@ -87,7 +103,7 @@ function onClose(win: string) {
 }
 
 .unfixation-button {
-    display: none;
+    display: flex;
 }
 
 #close-button-img:hover {

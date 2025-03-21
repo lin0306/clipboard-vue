@@ -498,7 +498,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <TitleBar :closeWindow="`close-app`" />
+  <TitleBar :title="`剪贴板`" :showFixedBtn="true" :closeWindow="`close-app`" />
   <CustomNavBar :menuItems="MenuItems" />
   <div style="width: 100%;height: 60px;"></div>
 

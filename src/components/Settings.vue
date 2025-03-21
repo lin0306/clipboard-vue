@@ -2,5 +2,5 @@
 import titleBar from './TitleBar.vue'
 </script>
 <template>
-    <titleBar :closeWindow="`close-settings`" />
+    <titleBar :title="`设置`" :closeWindow="`close-settings`" />
 </template>

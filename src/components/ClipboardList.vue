@@ -243,13 +243,13 @@ async function filterClipboardItems() {
 }
 
 async function onCopy(info: any) {
-      // 发送复制消息
-      const isSuccess = await window.ipcRenderer.invoke('item-copy', info.id);
-      if (isSuccess) {
-        filterClipboardItems();
-      } else {
-        msg.error('复制失败');
-      }
+  // 发送复制消息
+  const isSuccess = await window.ipcRenderer.invoke('item-copy', info.id);
+  if (isSuccess) {
+    filterClipboardItems();
+  } else {
+    msg.error('复制失败');
+  }
 }
 
 /**
@@ -553,8 +553,7 @@ onUnmounted(() => {
           <div class="content-wrapper">
             <p v-if="item.type === 'text'">{{ item.content }}</p>
             <p v-if="item.type === 'image'">
-              <img :src="getImageSrc(item.file_path)" alt="Image" class="image-preview"
-                onerror="this.onerror=null;this.src='';this.alt='图片加载失败'" />
+              <img :src="getImageSrc(item.file_path)" alt="Image" class="image-item" />
             </p>
             <div class="card-actions">
               <div class="action-buttons">
@@ -759,10 +758,11 @@ onUnmounted(() => {
 }
 
 /* 为图片预览添加样式 */
-.image-preview {
+.image-item {
   max-width: 100%;
   height: 4em;
   object-fit: contain;
+  border-radius: 6px;
 }
 
 /* 包含图片的段落需要特殊处理 */

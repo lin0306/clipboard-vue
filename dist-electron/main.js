@@ -2596,14 +2596,13 @@ require$$0$5.ipcMain.handle("item-bind-tag", async (_event, itemId, tagId) => {
   db.bindItemToTag(itemId, tagId);
 });
 require$$0$5.ipcMain.handle("get-image-base64", async (_event, imagePath) => {
-  log.info("[主进程] 获取图片base64编码", imagePath);
   try {
     if (!fs$5.existsSync(imagePath)) {
       log.error("[主进程] 图片文件不存在:", imagePath);
       return null;
     }
-    const imageBuffer = fs$5.readFileSync(imagePath);
-    return `data:image/png;base64,${imageBuffer.toString("base64")}`;
+    const image = require$$0$5.nativeImage.createFromPath(imagePath);
+    return `data:image/png;base64,${image.toPNG().toString("base64")}`;
   } catch (error) {
     log.error("[主进程] 获取图片base64编码失败:", error);
     return null;

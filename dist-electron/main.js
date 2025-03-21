@@ -2463,7 +2463,6 @@ function createSettingsWindow() {
     return;
   }
   isOpenSettingsWindow = true;
-  const savedTheme = config.theme || "light";
   const settingsWindow = new require$$0$5.BrowserWindow({
     width: 650,
     height: 500,
@@ -2488,9 +2487,7 @@ function createSettingsWindow() {
   settingsWindow.webContents.openDevTools({ mode: "detach" });
   settingsWindow.webContents.on("did-finish-load", () => {
     settingsWindow.webContents.send("window-type", "settings");
-    settingsWindow.webContents.send("init-themes", savedTheme);
     settingsWindow.webContents.send("load-config", config);
-    settingsWindow.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());
     const shortcutKeyConfig = getShortcutKeyConfig();
     win == null ? void 0 : win.webContents.send("load-shortcut-keys", shortcutKeyConfig);
   });
@@ -2505,6 +2502,51 @@ function createSettingsWindow() {
   require$$0$5.ipcMain.on("open-settings-devtools", () => {
     if (settingsWindow && !settingsWindow.isDestroyed()) {
       settingsWindow.webContents.openDevTools({ mode: "detach" });
+    }
+  });
+}
+let isOpenTagsWindow = false;
+function createTagsWindow() {
+  if (isOpenTagsWindow) {
+    return;
+  }
+  isOpenTagsWindow = true;
+  const tagsWindow = new require$$0$5.BrowserWindow({
+    width: 650,
+    height: 500,
+    frame: false,
+    resizable: false,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: true,
+      preload: path$6.join(path$6.dirname(node_url.fileURLToPath(typeof document === "undefined" ? require("url").pathToFileURL(__filename).href : _documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === "SCRIPT" && _documentCurrentScript.src || new URL("main.js", document.baseURI).href)), "preload.mjs"),
+      defaultEncoding: "utf8"
+      // 设置默认编码为 UTF-8
+    },
+    icon: path$6.join(process.env.VITE_PUBLIC, "logo.png"),
+    transparent: false,
+    parent: win
+  });
+  if (VITE_DEV_SERVER_URL) {
+    tagsWindow.loadURL(VITE_DEV_SERVER_URL);
+  } else {
+    tagsWindow.loadFile(path$6.join(RENDERER_DIST, "index.html"));
+  }
+  tagsWindow.webContents.openDevTools({ mode: "detach" });
+  tagsWindow.webContents.on("did-finish-load", () => {
+    tagsWindow.webContents.send("window-type", "tags");
+  });
+  require$$0$5.ipcMain.on("close-tags", () => {
+    if (!tagsWindow.isDestroyed()) {
+      tagsWindow.close();
+    }
+  });
+  tagsWindow.on("closed", () => {
+    isOpenTagsWindow = false;
+  });
+  require$$0$5.ipcMain.on("open-tags-devtools", () => {
+    if (tagsWindow && !tagsWindow.isDestroyed()) {
+      tagsWindow.webContents.openDevTools({ mode: "detach" });
     }
   });
 }
@@ -2665,6 +2707,7 @@ require$$0$5.ipcMain.on("close-app", () => {
   }
 });
 require$$0$5.ipcMain.on("open-settings", createSettingsWindow);
+require$$0$5.ipcMain.on("open-tags", createTagsWindow);
 require$$0$5.app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
     require$$0$5.app.quit();

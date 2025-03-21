@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import ClipboardList from './components/ClipboardList.vue'
-import Settings from './components/Settings.vue'
-import { createThemeContext } from './themes/ThemeContext'
+import { createThemeContext } from './themes/ThemeContext';
 import { computed, onMounted, ref } from 'vue';
 import { ConfigProvider } from 'ant-design-vue';
 import { theme } from 'ant-design-vue';
 import zhCN from 'ant-design-vue/es/locale/zh_CN';
+
+import ClipboardList from './components/ClipboardList.vue'
+import Settings from './components/Settings.vue'
+import TagManager from './components/TagManager.vue'
 
 // 创建主题上下文
 const { currentTheme } = createThemeContext();
@@ -30,6 +32,7 @@ const locale = computed(() => zhCN);
 const componentMap: any = {
   list: ClipboardList,
   settings: Settings,
+  tags: TagManager,
 };
 
 // 当前打开的窗口组件

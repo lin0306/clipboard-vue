@@ -161,8 +161,6 @@ function createSettingsWindow() {
     }
     isOpenSettingsWindow = true;
 
-    const savedTheme = config.theme || 'light';
-
     const settingsWindow = new BrowserWindow({
         width: 650,
         height: 500,
@@ -179,14 +177,6 @@ function createSettingsWindow() {
         parent: win,
     });
 
-    // // 窗口置顶
-    // // 这个设置允许在Keynote演示模式下显示在顶部。BrowserWindow中有一项alwaysOnTop。
-    // // 当我设置为true时，其他应用程序会被覆盖在顶部，但Keynote演示模式下不行。
-    // // 所以我需要设置mainWindow.setAlwaysOnTop(true, "screen-saver")。
-    // settingsWindow.setAlwaysOnTop(true, "screen-saver")
-    // // 这个设置允许在切换到其他工作区时显示。
-    // settingsWindow.setVisibleOnAllWorkspaces(true)
-
     if (VITE_DEV_SERVER_URL) {
         settingsWindow.loadURL(VITE_DEV_SERVER_URL)
     } else {
@@ -200,9 +190,7 @@ function createSettingsWindow() {
     // 在页面加载完成后发送主题设置
     settingsWindow.webContents.on('did-finish-load', () => {
         settingsWindow.webContents.send('window-type', 'settings');
-        settingsWindow.webContents.send('init-themes', savedTheme);
         settingsWindow.webContents.send('load-config', config);
-        settingsWindow.webContents.send('main-process-message', (new Date).toLocaleString())
         const shortcutKeyConfig = getShortcutKeyConfig();
         win?.webContents.send('load-shortcut-keys', shortcutKeyConfig);
     });
@@ -222,6 +210,65 @@ function createSettingsWindow() {
     ipcMain.on('open-settings-devtools', () => {
         if (settingsWindow && !settingsWindow.isDestroyed()) {
             settingsWindow.webContents.openDevTools({ mode: 'detach' });
+        }
+    });
+}
+
+// 是否已经打开标签管理窗口
+let isOpenTagsWindow = false;
+// 创建设置窗口
+function createTagsWindow() {
+    if (isOpenTagsWindow) {
+        return;
+    }
+    isOpenTagsWindow = true;
+
+    const tagsWindow = new BrowserWindow({
+        width: 650,
+        height: 500,
+        frame: false,
+        resizable: false,
+        webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: true,
+            preload: path.join(path.dirname(fileURLToPath(import.meta.url)), 'preload.mjs'),
+            defaultEncoding: 'utf8', // 设置默认编码为 UTF-8
+        },
+        icon: path.join(process.env.VITE_PUBLIC, 'logo.png'),
+        transparent: false,
+        parent: win,
+    });
+
+    if (VITE_DEV_SERVER_URL) {
+        tagsWindow.loadURL(VITE_DEV_SERVER_URL)
+    } else {
+        // win.loadFile('dist/index.html')
+        tagsWindow.loadFile(path.join(RENDERER_DIST, 'index.html'))
+    }
+
+    // 打开调试工具，设置为单独窗口
+    tagsWindow.webContents.openDevTools({ mode: 'detach' });
+
+    // 在页面加载完成后发送主题设置
+    tagsWindow.webContents.on('did-finish-load', () => {
+        tagsWindow.webContents.send('window-type', 'tags');
+    });
+
+    ipcMain.on('close-tags', () => {
+        if (!tagsWindow.isDestroyed()) {
+            tagsWindow.close();
+        }
+    });
+
+    // 当窗口关闭时，移除事件监听器
+    tagsWindow.on('closed', () => {
+        isOpenTagsWindow = false;
+    });
+
+    // 监听打开开发者工具的请求
+    ipcMain.on('open-tags-devtools', () => {
+        if (tagsWindow && !tagsWindow.isDestroyed()) {
+            tagsWindow.webContents.openDevTools({ mode: 'detach' });
         }
     });
 }
@@ -418,6 +465,9 @@ ipcMain.on('close-app', () => {
 
 // 打开设置窗口
 ipcMain.on('open-settings', createSettingsWindow);
+
+// 打开标签管理窗口
+ipcMain.on('open-tags', createTagsWindow);
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits

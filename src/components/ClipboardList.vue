@@ -71,6 +71,10 @@ const MenuItems = computed((): NavBarItem[] => [
       {
         key: '标签管理',
         label: '标签管理',
+        onClick: () => {
+          // 打开开发者工具
+          window.ipcRenderer.send('open-tags');
+        }
       },
       {
         key: '数据视图',

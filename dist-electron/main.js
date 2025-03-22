@@ -40056,15 +40056,6 @@ require$$0$5.ipcMain.handle("item-copy", async (_event, id) => {
       if (item.type === "image") {
         const image = require$$0$5.nativeImage.createFromPath(item.file_path);
         require$$0$5.clipboard.writeImage(image);
-      } else if (item.type === "file") {
-        if (fs$5.existsSync(item.file_path)) {
-          const filePath = item.file_path;
-          require$$0$5.clipboard.writeBuffer("public.file-url", Buffer.from(`file://${encodeURI(filePath)}`, "utf-8"));
-          log.info("[主进程] 文件已复制到系统剪贴板:", filePath);
-        } else {
-          log.error("[主进程] 文件不存在:", item.file_path);
-          return false;
-        }
       } else {
         require$$0$5.clipboard.writeText(item.content);
       }
@@ -40143,7 +40134,6 @@ require$$0$5.app.on("window-all-closed", () => {
 });
 let lastText = require$$0$5.clipboard.readText();
 let lastImage = require$$0$5.clipboard.readImage().isEmpty() ? null : require$$0$5.clipboard.readImage().toPNG();
-let lastFiles = [];
 let clipboardTimer = null;
 function watchClipboard() {
   if (!win || win.isDestroyed() || !win.webContents || win.webContents.isDestroyed()) {
@@ -40153,7 +40143,6 @@ function watchClipboard() {
   try {
     const currentText = require$$0$5.clipboard.readText();
     const currentImage = require$$0$5.clipboard.readImage();
-    const currentFiles = require$$0$5.clipboard.readBuffer("FileNameW");
     if (!currentImage.isEmpty()) {
       const currentImageBuffer = currentImage.toPNG();
       const isImageChanged = lastImage === null || Buffer.compare(currentImageBuffer, lastImage) !== 0;
@@ -40236,85 +40225,6 @@ function watchClipboard() {
         } catch (error) {
           log.error("[主进程] 发送文本消息时出错:", error);
         }
-      }
-    }
-    if (currentFiles && currentFiles.length > 0) {
-      try {
-        const filesString = currentFiles.toString("utf16le").replace(/\x00/g, "");
-        const files = filesString.split("\r\n").filter(Boolean);
-        if (files.length > 0) {
-          const newFiles = files.filter((file2) => !lastFiles.includes(file2));
-          lastFiles = files;
-          if (newFiles.length > 0) {
-            log.info("[主进程] 检测到新的文件:", newFiles);
-            const timestamp = Date.now();
-            const tempDir = path$6.join(config.value.tempPath || path$6.join(__dirname$1, "../temp"));
-            if (!fs$5.existsSync(tempDir)) {
-              fs$5.mkdirSync(tempDir, { recursive: true });
-            }
-            for (const filePath of newFiles) {
-              try {
-                const fileName = path$6.basename(filePath);
-                const destPath = path$6.join(tempDir, `file_${timestamp}_${fileName}`);
-                const db = ClipboardDB.getInstance();
-                let existingFilePath = null;
-                if (fs$5.existsSync(tempDir)) {
-                  const tempFiles = fs$5.readdirSync(tempDir);
-                  const crypto = require("crypto");
-                  let originalFileHash;
-                  try {
-                    const fileBuffer = fs$5.readFileSync(filePath);
-                    const hashSum = crypto.createHash("sha256");
-                    hashSum.update(fileBuffer);
-                    originalFileHash = hashSum.digest("hex");
-                    log.info("[主进程] 原始文件哈希值:", originalFileHash);
-                  } catch (hashError) {
-                    log.error("[主进程] 计算原始文件哈希值时出错:", hashError);
-                    continue;
-                  }
-                  for (const tempFile of tempFiles) {
-                    if (tempFile.startsWith("file_")) {
-                      const tempFilePath = path$6.join(tempDir, tempFile);
-                      try {
-                        const tempFileBuffer = fs$5.readFileSync(tempFilePath);
-                        const tempHashSum = crypto.createHash("sha256");
-                        tempHashSum.update(tempFileBuffer);
-                        const tempFileHash = tempHashSum.digest("hex");
-                        if (originalFileHash === tempFileHash) {
-                          existingFilePath = tempFilePath;
-                          log.info("[主进程] 通过哈希值匹配到相同文件:", tempFilePath);
-                          break;
-                        }
-                      } catch (tempHashError) {
-                        log.error("[主进程] 计算临时文件哈希值时出错:", tempHashError);
-                      }
-                    }
-                  }
-                }
-                let finalPath;
-                if (existingFilePath) {
-                  finalPath = existingFilePath;
-                  log.info("[主进程] 找到相同内容的文件:", finalPath);
-                } else {
-                  fs$5.copyFileSync(filePath, destPath);
-                  finalPath = destPath;
-                  log.info("[主进程] 文件已复制到临时目录:", destPath);
-                }
-                db.addItem(fileName, "file", finalPath);
-                if (win && !win.isDestroyed()) {
-                  const webContents = win.webContents;
-                  if (webContents && !webContents.isDestroyed()) {
-                    webContents.send("clipboard-updated");
-                  }
-                }
-              } catch (fileError) {
-                log.error("[主进程] 处理剪贴板文件时出错:", fileError);
-              }
-            }
-          }
-        }
-      } catch (error) {
-        log.error("[主进程] 处理剪贴板文件时出错:", error);
       }
     }
   } catch (error) {

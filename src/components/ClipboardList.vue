@@ -552,10 +552,13 @@ onUnmounted(() => {
         <div class="card-content">
           <div class="content-wrapper">
             <p v-if="item.type === 'text'">{{ item.content }}</p>
-            <p v-if="item.type === 'image'">
+            <p v-else-if="item.type === 'image'">
               <img :src="getImageSrc(item.file_path)" alt="Image" class="image-item" />
             </p>
-            <p v-if="item.type === 'file'">{{ item.content }}</p>
+            <p v-else-if="item.type === 'file'">
+              <i class="fas fa-file"></i>
+              <span>{{ item.content }}</span>
+            </p>
             <p v-else></p>
             <div class="card-actions">
               <div class="action-buttons">

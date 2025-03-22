@@ -195,7 +195,7 @@ class ClipboardDB {
             const row = this.db.prepare('SELECT type, file_path FROM clipboard_items WHERE id = ?').get(id) as { type: string, file_path: string } | undefined;
             console.log('[数据库进程] 要删除的内容信息:', row);
             // 如果是图片类型，删除对应的临时文件
-            if (row && row.type === 'image' && row.file_path) {
+            if (row && row.file_path) {
                 try {
                     fs.unlinkSync(row.file_path);
                 } catch (unlinkError) {
@@ -225,17 +225,17 @@ class ClipboardDB {
 
                 // 先获取所有图片类型的记录
                 log.info('[数据库进程] 正在获取所有图片记录...');
-                const rows = this.db.prepare('SELECT type, file_path FROM clipboard_items WHERE type = ?').all('image') as { type: string, file_path: string }[];
+                const rows = this.db.prepare('SELECT type, file_path FROM clipboard_items WHERE file_path IS NOT NULL').all() as { type: string, file_path: string }[];
 
                 // 删除所有图片文件
-                log.info('[数据库进程] 开始删除图片文件...');
+                log.info('[数据库进程] 开始删除文件...');
                 for (const row of rows) {
                     if (row.file_path) {
                         try {
                             fs.unlinkSync(row.file_path);
-                            log.info(`[数据库进程] 成功删除图片文件: ${row.file_path}`);
+                            log.info(`[数据库进程] 成功删除文件: ${row.file_path}`);
                         } catch (unlinkError) {
-                            console.error(`[数据库进程] 删除图片文件失败: ${row.file_path}`, unlinkError);
+                            console.error(`[数据库进程] 删除文件失败: ${row.file_path}`, unlinkError);
                         }
                     }
                 }

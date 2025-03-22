@@ -1,22 +1,20 @@
 "use strict";
 const electron = require("electron");
 electron.contextBridge.exposeInMainWorld("ipcRenderer", {
-  on(...args) {
-    const [channel, listener] = args;
-    return electron.ipcRenderer.on(channel, (event, ...args2) => listener(event, ...args2));
+  // 发送消息到主进程
+  send: (channel, ...args) => {
+    electron.ipcRenderer.send(channel, ...args);
   },
-  off(...args) {
-    const [channel, ...omit] = args;
-    return electron.ipcRenderer.off(channel, ...omit);
+  // 从主进程接收消息
+  on: (channel, callback) => {
+    electron.ipcRenderer.on(channel, (_event, ...args) => callback(...args));
   },
-  send(...args) {
-    const [channel, ...omit] = args;
-    return electron.ipcRenderer.send(channel, ...omit);
+  // 移除监听器
+  removeAllListeners: (channel) => {
+    electron.ipcRenderer.removeAllListeners(channel);
   },
-  invoke(...args) {
-    const [channel, ...omit] = args;
-    return electron.ipcRenderer.invoke(channel, ...omit);
+  // 调用主进程方法并等待结果
+  invoke: (channel, ...args) => {
+    return electron.ipcRenderer.invoke(channel, ...args);
   }
-  // You can expose other APTs you need here.
-  // ...
 });

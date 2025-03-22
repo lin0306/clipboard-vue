@@ -408,6 +408,19 @@ ipcMain.handle('item-copy', async (_event, id: number) => {
             if (item.type === 'image') {
                 const image = nativeImage.createFromPath(item.file_path);
                 clipboard.writeImage(image);
+            // } else if (item.type === 'file') {
+            //     // 处理文件复制到剪贴板
+            //     if (fs.existsSync(item.file_path)) {
+            //         // 在Windows上，使用特殊的FileNameW格式写入文件路径
+            //         const filePath = item.file_path;
+            //         // 将文件路径转换为UTF-16LE格式的Buffer
+            //         const filePathBuffer = Buffer.from(filePath + '\0', 'utf16le');
+            //         clipboard.writeBuffer('FileNameW', filePathBuffer);
+            //         log.info('[主进程] 文件已复制到系统剪贴板:', filePath);
+            //     } else {
+            //         log.error('[主进程] 文件不存在:', item.file_path);
+            //         return false;
+            //     }
             } else {
                 clipboard.writeText(item.content);
             }
@@ -515,6 +528,7 @@ app.on('window-all-closed', () => {
 
 let lastText = clipboard.readText();
 let lastImage = clipboard.readImage().isEmpty() ? null : clipboard.readImage().toPNG();
+// let lastFiles: string[] = [];
 let clipboardTimer: string | number | NodeJS.Timeout | null | undefined = null;
 
 // 监听剪贴板变化
@@ -528,6 +542,7 @@ function watchClipboard() {
     try {
         const currentText = clipboard.readText();
         const currentImage = clipboard.readImage();
+        // const currentFiles = clipboard.readBuffer('FileNameW');
 
         // 检查图片变化 
         if (!currentImage.isEmpty()) {
@@ -629,6 +644,118 @@ function watchClipboard() {
                 }
             }
         }
+
+        // todo electron没有完整的文件复制和粘贴功能，暂时不支持文件复制和粘贴
+        // // 检查文件变化
+        // if (currentFiles && currentFiles.length > 0) {
+        //     try {
+        //         // 将Buffer转换为UTF-16LE字符串并移除空字符
+        //         const filesString = currentFiles.toString('utf16le').replace(/\x00/g, '');
+        //         // 分割文件路径
+        //         const files = filesString.split('\r\n').filter(Boolean);
+
+        //         if (files.length > 0) {
+        //             // 检查是否有新文件，不再依赖isFirstClipboardCheck标志
+        //             const newFiles = files.filter(file => !lastFiles.includes(file));
+
+        //             // 更新lastFiles变量，记录当前剪贴板中的所有文件
+        //             lastFiles = files;
+
+        //             if (newFiles.length > 0) {
+        //                 log.info('[主进程] 检测到新的文件:', newFiles);
+
+        //                 const timestamp = Date.now();
+        //                 const tempDir = path.join(config.value.tempPath || path.join(__dirname, '../temp'));
+
+        //                 // 确保临时目录存在
+        //                 if (!fs.existsSync(tempDir)) {
+        //                     fs.mkdirSync(tempDir, { recursive: true });
+        //                 }
+
+        //                 // 处理每个新文件
+        //                 for (const filePath of newFiles) {
+        //                     try {
+        //                         const fileName = path.basename(filePath);
+        //                         const destPath = path.join(tempDir, `file_${timestamp}_${fileName}`);
+
+        //                         // 检查数据库中是否已有相同文件路径的记录
+        //                         const db = ClipboardDB.getInstance();
+
+        //                         // 查找临时目录中是否已存在相同内容的文件
+        //                         let existingFilePath = null;
+        //                         if (fs.existsSync(tempDir)) {
+        //                             const tempFiles = fs.readdirSync(tempDir);
+
+        //                             // 计算原始文件的哈希值
+        //                             const crypto = require('crypto');
+        //                             let originalFileHash: string;
+        //                             try {
+        //                                 const fileBuffer = fs.readFileSync(filePath);
+        //                                 const hashSum = crypto.createHash('sha256');
+        //                                 hashSum.update(fileBuffer);
+        //                                 originalFileHash = hashSum.digest('hex');
+        //                                 log.info('[主进程] 原始文件哈希值:', originalFileHash);
+        //                             } catch (hashError) {
+        //                                 log.error('[主进程] 计算原始文件哈希值时出错:', hashError);
+        //                                 continue; // 如果无法计算哈希值，跳过此文件
+        //                             }
+
+        //                             // 遍历临时目录中的文件，比较哈希值
+        //                             for (const tempFile of tempFiles) {
+        //                                 if (tempFile.startsWith('file_')) {
+        //                                     const tempFilePath = path.join(tempDir, tempFile);
+        //                                     try {
+        //                                         // 计算临时文件的哈希值
+        //                                         const tempFileBuffer = fs.readFileSync(tempFilePath);
+        //                                         const tempHashSum = crypto.createHash('sha256');
+        //                                         tempHashSum.update(tempFileBuffer);
+        //                                         const tempFileHash = tempHashSum.digest('hex');
+
+        //                                         // 比较哈希值，如果相同则是相同文件
+        //                                         if (originalFileHash === tempFileHash) {
+        //                                             existingFilePath = tempFilePath;
+        //                                             log.info('[主进程] 通过哈希值匹配到相同文件:', tempFilePath);
+        //                                             break;
+        //                                         }
+        //                                     } catch (tempHashError) {
+        //                                         log.error('[主进程] 计算临时文件哈希值时出错:', tempHashError);
+        //                                     }
+        //                                 }
+        //                             }
+        //                         }
+
+        //                         let finalPath;
+        //                         if (existingFilePath) {
+        //                             // 使用已存在的文件
+        //                             finalPath = existingFilePath;
+        //                             log.info('[主进程] 找到相同内容的文件:', finalPath);
+        //                         } else {
+        //                             // 复制文件到临时目录
+        //                             fs.copyFileSync(filePath, destPath);
+        //                             finalPath = destPath;
+        //                             log.info('[主进程] 文件已复制到临时目录:', destPath);
+        //                         }
+
+        //                         // 添加到数据库
+        //                         db.addItem(fileName, 'file', finalPath);
+
+        //                         // 通知渲染进程
+        //                         if (win && !win.isDestroyed()) {
+        //                             const webContents = win.webContents;
+        //                             if (webContents && !webContents.isDestroyed()) {
+        //                                 webContents.send('clipboard-updated');
+        //                             }
+        //                         }
+        //                     } catch (fileError) {
+        //                         log.error('[主进程] 处理剪贴板文件时出错:', fileError);
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //     } catch (error) {
+        //         log.error('[主进程] 处理剪贴板文件时出错:', error);
+        //     }
+        // }
 
     } catch (error) {
         log.error('[主进程] 检查剪贴板时出错:', error);

@@ -555,6 +555,8 @@ onUnmounted(() => {
             <p v-if="item.type === 'image'">
               <img :src="getImageSrc(item.file_path)" alt="Image" class="image-item" />
             </p>
+            <p v-if="item.type === 'file'">{{ item.content }}</p>
+            <p v-else></p>
             <div class="card-actions">
               <div class="action-buttons">
                 <!-- 置顶/取消置顶按钮 -->

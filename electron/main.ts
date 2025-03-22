@@ -4,7 +4,8 @@ import path from 'node:path'
 import fs from 'node:fs'
 import ClipboardDB from './db.js'
 import log from './log.js'
-import { getConfig, updateConfig, getShortcutKeyConfig } from './ConfigFileManager.js'
+import { getSettings, updateSettings, getShortcutKeys } from './ConfigFileManager.js'
+import { computed } from 'vue'
 
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
 
@@ -41,7 +42,7 @@ let isHideWindow = false;
 let x: number | undefined = undefined;
 let y: number | undefined = undefined;
 
-const config = getConfig();
+const config: any = computed(() => getSettings());
 
 function createMainWindow() {
     log.info("是否打开了主窗口：" + isOpenWindow);
@@ -56,8 +57,8 @@ function createMainWindow() {
     const mousePos = screen.getCursorScreenPoint();
 
     // 使用配置文件中保存的窗口尺寸，如果没有则使用默认值
-    const windowWidth = config.windowWidth || 400;
-    const windowHeight = config.windowHeight || 600;
+    const windowWidth = config.value.windowWidth || 400;
+    const windowHeight = config.value.windowHeight || 600;
 
     if (isHideWindow) { } else {
         // 计算窗口的x坐标
@@ -88,7 +89,7 @@ function createMainWindow() {
         width: windowWidth,
         height: windowHeight,
         frame: false,
-        resizable: !Boolean(config.fixedWindowSize),
+        resizable: !Boolean(config.value.fixedWindowSize),
         x: x,
         y: y,
         transparent: false
@@ -102,7 +103,7 @@ function createMainWindow() {
     // 这个设置允许在切换到其他工作区时显示。
     win.setVisibleOnAllWorkspaces(true)
 
-    const savedTheme = config.theme || 'light';
+    const savedTheme = config.value.theme || 'light';
     log.info('[主进程] 读取到的主题配置:', savedTheme);
 
     // 在页面加载完成后发送主题设置
@@ -116,8 +117,7 @@ function createMainWindow() {
         win?.webContents.send('load-tag-items', tags);
         // 发送快捷键配置
         log.info('[主进程] 发送快捷键配置到渲染进程');
-        const shortcutKeyConfig = getShortcutKeyConfig();
-        win?.webContents.send('load-shortcut-keys', shortcutKeyConfig);
+        win?.webContents.send('load-shortcut-keys', getShortcutKeys());
         // 启动剪贴板监听
         log.info('[主进程] 窗口加载完成，开始监听剪贴板');
         watchClipboard();
@@ -146,7 +146,7 @@ function createMainWindow() {
 
     // 设置应用程序开机自启动
     app.setLoginItemSettings({
-        openAtLogin: Boolean(config.powerOnSelfStart),
+        openAtLogin: Boolean(config.value.powerOnSelfStart),
         openAsHidden: false, // 设置为 true 可以隐藏启动时的窗口
         args: [] // 自定义参数
     });
@@ -185,14 +185,13 @@ function createSettingsWindow() {
     }
 
     // 打开调试工具，设置为单独窗口
-    settingsWindow.webContents.openDevTools({ mode: 'detach' });
+    // settingsWindow.webContents.openDevTools({ mode: 'detach' });
 
     // 在页面加载完成后发送主题设置
     settingsWindow.webContents.on('did-finish-load', () => {
         settingsWindow.webContents.send('window-type', 'settings');
-        settingsWindow.webContents.send('load-config', config);
-        const shortcutKeyConfig = getShortcutKeyConfig();
-        win?.webContents.send('load-shortcut-keys', shortcutKeyConfig);
+        settingsWindow.webContents.send('load-config', getSettings());
+        win?.webContents.send('load-shortcut-keys', getShortcutKeys());
     });
 
     ipcMain.on('close-settings', () => {
@@ -345,8 +344,8 @@ ipcMain.handle('search-items', async (_event, content, tagId) => {
 // 更新主题配置
 ipcMain.handle('update-themes', async (_event, theme) => {
     log.info('[主进程] 更新主题', theme);
-    config.theme = theme;
-    updateConfig(config);
+    config.value.theme = theme;
+    updateSettings(config.value);
     return true;
 });
 
@@ -423,6 +422,13 @@ ipcMain.handle('item-copy', async (_event, id: number) => {
     }
 });
 
+// 监听配置文件更新
+ipcMain.handle('update-config', async (_event, config) => {
+    log.info('[主进程] 更新配置', config);
+    updateSettings(config);
+    return true;
+});
+
 // 监听打开开发者工具的请求
 ipcMain.on('toggle-dev-tools', () => {
     log.info('[主进程] 打开开发者工具');
@@ -449,7 +455,7 @@ ipcMain.on('quit-app', () => {
 // 监听关闭窗口的请求
 ipcMain.on('close-app', () => {
     isOpenWindow = false;
-    if (Boolean(config.colsingHideToTaskbar)) {
+    if (Boolean(config.value.colsingHideToTaskbar)) {
         const location: number[] | undefined = win?.getPosition();
         if (location) {
             x = location[0];
@@ -508,9 +514,9 @@ app.on('window-all-closed', () => {
 })
 
 let lastText = clipboard.readText();
-// let lastFiles = clipboard.readBuffer('FileNameW');
 let lastImage = clipboard.readImage().isEmpty() ? null : clipboard.readImage().toPNG();
 let clipboardTimer: string | number | NodeJS.Timeout | null | undefined = null;
+
 // 监听剪贴板变化
 function watchClipboard() {
     // 首先检查窗口和渲染进程状态
@@ -521,9 +527,7 @@ function watchClipboard() {
 
     try {
         const currentText = clipboard.readText();
-        const currentFiles = clipboard.readBuffer('FileNameW');
         const currentImage = clipboard.readImage();
-        // log.info('[主进程] 检测到剪贴板内容变化', currentText, currentFiles, currentImage.isEmpty());
 
         // 检查图片变化 
         if (!currentImage.isEmpty()) {
@@ -531,12 +535,6 @@ function watchClipboard() {
             // 修改图片变化检测逻辑，确保首次复制的图片也能被检测到
             // 当lastImage为null时表示首次检测到图片，或者当图片内容与上次不同时
             const isImageChanged = lastImage === null || Buffer.compare(currentImageBuffer, lastImage) !== 0;
-
-            // log.info('[主进程] 图片检测状态:', {
-            //     isEmpty: currentImage.isEmpty(),
-            //     isFirstImage: lastImage === null,
-            //     hasChanged: lastImage !== null && Buffer.compare(currentImageBuffer, lastImage) !== 0
-            // });
 
             if (isImageChanged) {
                 log.info('[主进程] 检测到剪贴板中有图片');
@@ -546,7 +544,7 @@ function watchClipboard() {
                 });
                 lastImage = currentImageBuffer;
                 const timestamp = Date.now();
-                const tempDir = path.join(config.tempPath || path.join(__dirname, '../temp'));
+                const tempDir = path.join(config.value.tempPath || path.join(__dirname, '../temp'));
 
                 // 检查是否存在相同内容的图片文件
                 let existingImagePath = null;
@@ -590,7 +588,7 @@ function watchClipboard() {
                                 db.addItem(path.basename(imagePath), 'image', imagePath);
                                 const webContents = win.webContents;
                                 if (webContents && !webContents.isDestroyed()) {
-                                    webContents.send('clipboard-updated', currentText);
+                                    webContents.send('clipboard-updated');
                                 }
                             } catch (error) {
                                 log.error('[主进程] 发送图片信息到渲染进程时出错:', error);
@@ -624,7 +622,7 @@ function watchClipboard() {
                 try {
                     const webContents = win.webContents;
                     if (webContents && !webContents.isDestroyed()) {
-                        webContents.send('clipboard-updated', currentText);
+                        webContents.send('clipboard-updated');
                     }
                 } catch (error) {
                     log.error('[主进程] 发送文本消息时出错:', error);
@@ -632,33 +630,6 @@ function watchClipboard() {
             }
         }
 
-        // 检查文件变化
-        if (currentFiles && currentFiles.length > 0) {
-            try {
-                const filesString = currentFiles.toString('utf16le').replace(/\x00/g, '');
-                const files = filesString.split('\r\n').filter(Boolean);
-
-                // 检查是否与上次的文件列表不同
-                // if (JSON.stringify(files) !== JSON.stringify(lastFiles)) {
-                //     lastFiles = files;
-                if (win && !win.isDestroyed()) {
-                    const webContents = win.webContents;
-                    if (webContents && !webContents.isDestroyed()) {
-                        files.forEach(filePath => {
-                            const fileName = path.basename(filePath);
-                            webContents.send('clipboard-file', {
-                                name: fileName,
-                                path: filePath,
-                                type: 'file'
-                            });
-                        });
-                    }
-                }
-                // }
-            } catch (error) {
-                log.error('[主进程] 处理剪贴板文件时出错:', error);
-            }
-        }
     } catch (error) {
         log.error('[主进程] 检查剪贴板时出错:', error);
     }

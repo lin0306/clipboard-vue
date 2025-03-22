@@ -7,7 +7,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import log from './log.js'
-import { getConfig } from './ConfigFileManager.js';
+import { getSettings } from './ConfigFileManager.js';
 
 // 获取当前文件的目录路径
 let __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -130,15 +130,15 @@ class ClipboardDB {
                             log.info("[数据库进程] 有查询到相同文本内容的记录，覆盖复制时间");
                             return;
                         }
-                    } else if (type === 'image' && filePath) {
-                        log.info("[数据库进程] 查询相同图片路径的旧记录");
-                        const row = this.db.prepare('SELECT id FROM clipboard_items WHERE type = ? AND file_path = ?').get('image', filePath) as { id: number };
+                    } else if (filePath) {
+                        log.info("[数据库进程] 查询相同文件路径的旧记录");
+                        const row = this.db.prepare('SELECT id FROM clipboard_items WHERE type = ? AND file_path = ?').get(type, filePath) as { id: number };
                         if (row) {
                             this.updateItemTime(row.id, copyTime);
-                            log.info("[数据库进程] 有查询到相同图片内容的记录，覆盖复制时间");
+                            log.info("[数据库进程] 有查询到相同文件内容的记录，覆盖复制时间");
                             return;
                         }
-                    }
+                    } 
 
                     log.info("[数据库进程] 准备插入新的剪贴板记录");
                     this.db.prepare('INSERT INTO clipboard_items (content, copy_time, type, file_path) VALUES (?, ?, ?, ?)').run(content, copyTime, type, filePath);
@@ -220,8 +220,7 @@ class ClipboardDB {
         return new Promise<void>(async (resolve, reject) => {
             try {
                 // 读取配置文件获取临时文件存储路径
-                const configPath = getConfig();
-                const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+                const config = getSettings();
                 const tempDir = config.tempPath;
 
                 // 先获取所有图片类型的记录

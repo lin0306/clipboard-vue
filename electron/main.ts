@@ -103,11 +103,25 @@ function createMainWindow() {
     // 这个设置允许在切换到其他工作区时显示。
     win.setVisibleOnAllWorkspaces(true)
 
+    if (VITE_DEV_SERVER_URL) {
+        win.loadURL(VITE_DEV_SERVER_URL)
+        log.info("[主进程] 加载url页面", VITE_DEV_SERVER_URL)
+    } else {
+        // win.loadFile('dist/index.html')
+        win.loadFile(path.join(RENDERER_DIST, 'index.html'))
+        log.info("[主进程] 加载index.html页面", path.join(RENDERER_DIST, 'index.html'))
+    }
+
+    // 打开调试工具，设置为单独窗口
+    win.webContents.openDevTools({ mode: 'detach' });
+
+
     const savedTheme = config.value.theme || 'light';
     log.info('[主进程] 读取到的主题配置:', savedTheme);
 
     // 在页面加载完成后发送主题设置
     win.webContents.on('did-finish-load', () => {
+        log.info('[主进程] 发送窗口类型到渲染进程：list')
         win?.webContents.send('window-type', 'list');
         log.info('[主进程] 发送主题设置到渲染进程');
         win?.webContents.send('init-themes', savedTheme);
@@ -122,16 +136,6 @@ function createMainWindow() {
         log.info('[主进程] 窗口加载完成，开始监听剪贴板');
         watchClipboard();
     });
-
-    if (VITE_DEV_SERVER_URL) {
-        win.loadURL(VITE_DEV_SERVER_URL)
-    } else {
-        // win.loadFile('dist/index.html')
-        win.loadFile(path.join(RENDERER_DIST, 'index.html'))
-    }
-
-    // 打开调试工具，设置为单独窗口
-    // win.webContents.openDevTools({ mode: 'detach' });
 
     // 监听窗口关闭事件，清理定时器
     win.on('closed', () => {
@@ -408,19 +412,19 @@ ipcMain.handle('item-copy', async (_event, id: number) => {
             if (item.type === 'image') {
                 const image = nativeImage.createFromPath(item.file_path);
                 clipboard.writeImage(image);
-            // } else if (item.type === 'file') {
-            //     // 处理文件复制到剪贴板
-            //     if (fs.existsSync(item.file_path)) {
-            //         // 在Windows上，使用特殊的FileNameW格式写入文件路径
-            //         const filePath = item.file_path;
-            //         // 将文件路径转换为UTF-16LE格式的Buffer
-            //         const filePathBuffer = Buffer.from(filePath + '\0', 'utf16le');
-            //         clipboard.writeBuffer('FileNameW', filePathBuffer);
-            //         log.info('[主进程] 文件已复制到系统剪贴板:', filePath);
-            //     } else {
-            //         log.error('[主进程] 文件不存在:', item.file_path);
-            //         return false;
-            //     }
+                // } else if (item.type === 'file') {
+                //     // 处理文件复制到剪贴板
+                //     if (fs.existsSync(item.file_path)) {
+                //         // 在Windows上，使用特殊的FileNameW格式写入文件路径
+                //         const filePath = item.file_path;
+                //         // 将文件路径转换为UTF-16LE格式的Buffer
+                //         const filePathBuffer = Buffer.from(filePath + '\0', 'utf16le');
+                //         clipboard.writeBuffer('FileNameW', filePathBuffer);
+                //         log.info('[主进程] 文件已复制到系统剪贴板:', filePath);
+                //     } else {
+                //         log.error('[主进程] 文件不存在:', item.file_path);
+                //         return false;
+                //     }
             } else {
                 clipboard.writeText(item.content);
             }
@@ -484,6 +488,23 @@ ipcMain.on('close-app', () => {
 
 // 打开设置窗口
 ipcMain.on('open-settings', createSettingsWindow);
+
+// 监听重启应用的请求
+ipcMain.on('restart-app', () => {
+    // 重置窗口状态变量，确保重启后能正确创建窗口
+    isOpenWindow = false;
+    isOpenSettingsWindow = false;
+    // 关闭所有窗口
+    BrowserWindow.getAllWindows().forEach(window => {
+        log.info('[主进程] 关闭窗口', window);
+        if (!window.isDestroyed()) {
+            window.close();
+        }
+    });
+    // 重启应用
+    app.relaunch();
+    app.exit(0);
+});
 
 // 打开标签管理窗口
 ipcMain.on('open-tags', createTagsWindow);

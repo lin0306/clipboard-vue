@@ -45,6 +45,7 @@ const currentComponent = computed(() => {
 
 // 监听来自主进程的窗口类型消息
 onMounted(() => {
+  console.log("渲染进程启动");
   // 监听主进程发送的窗口类型
   window.ipcRenderer.on('window-type', (_event, type: string) => {
     console.log("从主进程获取窗口类型", type);

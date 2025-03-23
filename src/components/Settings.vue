@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue';
 import titleBar from './TitleBar.vue';
-import { Menu, Switch, Input, Button, Select, InputNumber, message } from 'ant-design-vue';
+import { Menu, Switch, Input, Button, Select, InputNumber, message, Modal } from 'ant-design-vue';
 import RightArrowIcon from '../assets/icon/RightArrowIcon.vue';
+
+// 重启确认弹窗状态
+const restartModalVisible = ref(false);
 
 // 菜单相关
 const selectedKeys = ref(['general']);
@@ -67,19 +70,46 @@ const saveConfig = async () => {
   if (!hasChanges.value) {
     return; // 如果没有修改，不做任何处理
   }
-  console.log('保存配置:', currentConfig);
+  if (selectedKeys.value[0] === 'general') {
+    console.log('保存配置:', currentConfig);
 
-  // 创建一个可序列化的配置对象副本
-  const configJson = JSON.parse(JSON.stringify(currentConfig));
-  
-  // 发送配置到主进程
-  const isSuccess = await window.ipcRenderer.invoke('update-config', configJson);
-  if (isSuccess) {
-    message.success('设置已保存，部分设置需要重启程序后生效');
-    // 更新原始配置
-    Object.assign(originalConfig, currentConfig);
-  } else {
-    message.error('保存设置失败');
+    // 是否修改了【固定窗口大小】
+    const isUpdateFixedWindowSize = currentConfig.fixedWindowSize !== originalConfig.fixedWindowSize;
+    // 是否修改了【开机自启】
+    const isUpdatePowerOnSelfStart = currentConfig.powerOnSelfStart !== originalConfig.powerOnSelfStart;
+    // 是否修改了【替换全局热键】
+    const isUpdateReplaceGlobalHotkey = currentConfig.replaceGlobalHotkey !== originalConfig.replaceGlobalHotkey;
+    // 是否修改了【语言】
+    const isUpdateLanguages = currentConfig.languages !== originalConfig.languages;
+    // 是否修改了【页面宽度】
+    const isUpdateWindowWidth = currentConfig.windowWidth !== originalConfig.windowWidth;
+    // 是否修改了【页面高度】
+    const isUpdateWindowHeight = currentConfig.windowHeight !== originalConfig.windowHeight;
+
+    // 创建一个可序列化的配置对象副本
+    const configJson = JSON.parse(JSON.stringify(currentConfig));
+
+    // 发送配置到主进程
+    const isSuccess = await window.ipcRenderer.invoke('update-config', configJson);
+    if (isSuccess) {
+      if (isUpdateFixedWindowSize
+        || isUpdatePowerOnSelfStart
+        || isUpdateReplaceGlobalHotkey
+        || isUpdateLanguages
+        || isUpdateWindowWidth
+        || isUpdateWindowHeight
+      ) {
+        message.success('设置已保存，部分设置需要重启程序后生效');
+        // 显示重启确认弹窗
+        restartModalVisible.value = true;
+      } else {
+        message.success('设置已保存');
+      }
+      // 更新原始配置
+      Object.assign(originalConfig, currentConfig);
+    } else {
+      message.error('保存设置失败');
+    }
   }
 };
 
@@ -92,6 +122,18 @@ const resetConfig = () => {
 function openDevTools() {
   window.ipcRenderer.send('open-settings-devtools');
 }
+// 处理重启应用
+// todo：测试环境重启有bug，会白屏
+const handleRestart = () => {
+  restartModalVisible.value = false;
+  // 触发重启应用
+  window.ipcRenderer.send('restart-app');
+};
+
+// 关闭重启确认弹窗
+const closeRestartModal = () => {
+  restartModalVisible.value = false;
+};
 </script>
 
 <template>
@@ -135,7 +177,7 @@ function openDevTools() {
             <Switch v-model:checked="currentConfig.fixedWindowSize" />
           </div>
 
-          <div class="setting-item" v-if="currentConfig.fixedWindowSize">
+          <div class="setting-item right" v-if="currentConfig.fixedWindowSize">
             <div class="window-size-inputs">
               <div class="size-input-group">
                 <span class="setting-label">高:</span>
@@ -186,6 +228,15 @@ function openDevTools() {
         </div>
       </div>
     </div>
+
+    <!-- 重启确认弹窗 -->
+    <Modal v-model:visible="restartModalVisible" title="重启确认" :maskClosable="false" :closable="true">
+      <p>部分设置需要重启程序后生效，是否现在重启？</p>
+      <template #footer>
+        <Button @click="closeRestartModal">稍后重启</Button>
+        <Button type="primary" @click="handleRestart">现在重启</Button>
+      </template>
+    </Modal>
   </div>
 </template>
 
@@ -234,6 +285,10 @@ function openDevTools() {
   align-items: center;
   margin-bottom: 16px;
   padding: 8px 0;
+}
+
+.right {
+  justify-content: flex-end !important;
 }
 
 .setting-label {

@@ -24,7 +24,7 @@ import { defineProps, withDefaults, ref } from 'vue'
 withDefaults(defineProps<{
     title: string;
     closeWindow: string;
-    showFixedBtn: boolean;
+    showFixedBtn?: boolean;
 }>(), {
     showFixedBtn: false
 });

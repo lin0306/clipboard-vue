@@ -39860,6 +39860,11 @@ function createMainWindow() {
     args: []
     // 自定义参数
   });
+  if (!config.value.tempPath) {
+    const tempDir = path$6.join(__dirname$1, "../temp");
+    config.value.tempPath = tempDir;
+    updateSettings(config.value);
+  }
 }
 let isOpenSettingsWindow = false;
 function createSettingsWindow() {

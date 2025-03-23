@@ -154,6 +154,13 @@ function createMainWindow() {
         openAsHidden: false, // 设置为 true 可以隐藏启动时的窗口
         args: [] // 自定义参数
     });
+
+    // 临时文件位置没有设置，设置成当前程序的根目录为临时文件夹位置
+    if (!config.value.tempPath) {
+    const tempDir = path.join(__dirname, '../temp');
+    config.value.tempPath = tempDir;
+    updateSettings(config.value);
+    }
 }
 
 // 是否已经打开设置窗口

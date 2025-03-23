@@ -3,6 +3,7 @@ import { ref, reactive, onMounted, computed } from 'vue';
 import titleBar from './TitleBar.vue';
 import { Menu, Switch, Input, Button, Select, InputNumber, message, Modal } from 'ant-design-vue';
 import RightArrowIcon from '../assets/icon/RightArrowIcon.vue';
+import EditIcon from '../assets/icon/EditIcon.vue';
 
 // 重启确认弹窗状态
 const restartModalVisible = ref(false);
@@ -35,7 +36,7 @@ const currentConfig = reactive({ ...originalConfig });
 const originalShortcutKeys = reactive({});
 
 // 当前编辑的配置
-const currentShortcutKeys = reactive({ ...originalShortcutKeys });
+const currentShortcutKeys = reactive<any>({ ...originalShortcutKeys });
 
 // 语言选项
 const languageOptions = [
@@ -45,25 +46,86 @@ const languageOptions = [
 
 // 是否有修改
 const hasChanges = computed(() => {
+  console.log('校验', originalShortcutKeys, currentShortcutKeys)
+  if (selectedKeys.value[0] === 'shortcut') {
+    // 检查是否在编辑快捷键，或者原始快捷键和当前快捷键是否不同
+    return JSON.stringify(originalShortcutKeys) !== JSON.stringify(currentShortcutKeys);
+  }
   return JSON.stringify(originalConfig) !== JSON.stringify(currentConfig);
 });
 
-// 加载配置
-onMounted(() => {
-  // 监听主进程发送的配置信息
-  window.ipcRenderer.on('load-config', (_event, config) => {
-    console.log('接收到配置信息:', config);
-    Object.assign(originalConfig, config);
-    Object.assign(currentConfig, config);
-  });
+// 当前正在编辑的快捷键
+const editingShortcut = ref<number | null>(null);
+// 临时存储编辑中的按键
+const tempKeys = ref<any[]>([]);
+// 快捷键编辑弹窗状态
+const shortcutModalVisible = ref(false);
 
-  // 监听快捷键配置加载
-  window.ipcRenderer.on('load-shortcut-keys', (_event, config) => {
-    console.log('[渲染进程] 接收到快捷键配置', config);
-    Object.assign(originalShortcutKeys, config);
-    Object.assign(currentShortcutKeys, config);
-  });
-});
+// 开始编辑快捷键
+function startEditShortcut(key: number) {
+  editingShortcut.value = key;
+  tempKeys.value = [...currentShortcutKeys[key].key];
+  shortcutModalVisible.value = true;
+  // 打开弹窗后添加全局按键监听
+  document.addEventListener('keydown', handleKeyDown);
+}
+
+// 取消编辑快捷键
+function cancelEditShortcut() {
+  editingShortcut.value = null;
+  tempKeys.value = [];
+  shortcutModalVisible.value = false;
+  // 关闭弹窗后移除全局按键监听
+  document.removeEventListener('keydown', handleKeyDown);
+}
+
+// 确认编辑快捷键
+function confirmEditShortcut() {
+  const key = editingShortcut.value;
+  if (key && tempKeys.value.length > 0) {
+    currentShortcutKeys[key].key = [...tempKeys.value];
+  }
+  editingShortcut.value = null;
+  tempKeys.value = [];
+  shortcutModalVisible.value = false;
+  // 关闭弹窗后移除全局按键监听
+  document.removeEventListener('keydown', handleKeyDown);
+}
+
+// 格式化快捷键显示，修饰键首字母大写，普通键全部大写
+function formatKeyDisplay(key: string): string {
+  // 修饰键列表
+  const modifierKeys = ['ctrl', 'shift', 'alt', 'meta'];
+
+  if (modifierKeys.includes(key.toLowerCase())) {
+    // 修饰键首字母大写
+    return key.charAt(0).toUpperCase() + key.slice(1);
+  } else {
+    // 普通键全部大写
+    return key.toUpperCase();
+  }
+}
+
+// 处理按键事件
+function handleKeyDown(event: any) {
+  console.log('按下按键:', event);
+  event.preventDefault();
+
+  // 清除之前的按键
+  tempKeys.value = [];
+
+  // 添加修饰键
+  if (event.ctrlKey) tempKeys.value.push('ctrl');
+  if (event.shiftKey) tempKeys.value.push('shift');
+  if (event.altKey) tempKeys.value.push('alt');
+  if (event.metaKey) tempKeys.value.push('meta');
+
+  // 添加主键（如果不是修饰键）
+  const keyName = event.key.toLowerCase();
+  if (!['control', 'shift', 'alt', 'meta'].includes(keyName) && keyName !== 'dead') {
+    tempKeys.value.push(keyName === ' ' ? 'space' : keyName);
+  }
+}
 
 // 保存配置
 const saveConfig = async () => {
@@ -111,11 +173,40 @@ const saveConfig = async () => {
       message.error('保存设置失败');
     }
   }
+  if (selectedKeys.value[0] === 'shortcut') {
+    console.log('保存快捷键设置:', currentShortcutKeys);
+
+    // 创建一个可序列化的快捷键配置对象副本
+    const shortcutKeysJson = JSON.parse(JSON.stringify(currentShortcutKeys));
+
+    // 发送快捷键配置到主进程
+    try {
+      const isSuccess = await window.ipcRenderer.invoke('update-shortcut-keys', shortcutKeysJson);
+      if (isSuccess) {
+        message.success('快捷键设置已保存');
+        // 更新原始快捷键配置，使用深拷贝确保两个对象不共享引用
+        Object.assign(originalShortcutKeys, JSON.parse(JSON.stringify(currentShortcutKeys)));
+        // 关闭编辑模式
+        editingShortcut.value = null;
+      } else {
+        message.error('保存快捷键设置失败');
+      }
+    } catch (error: any) {
+      console.error('保存快捷键设置出错:', error);
+      message.error('保存快捷键设置失败: ' + error.message);
+    }
+  }
 };
 
 // 重置配置
 const resetConfig = () => {
-  Object.assign(currentConfig, originalConfig);
+  if (selectedKeys.value[0] === 'shortcut') {
+    Object.assign(currentShortcutKeys, originalShortcutKeys);
+    // 关闭编辑模式
+    editingShortcut.value = null;
+  } else {
+    Object.assign(currentConfig, originalConfig);
+  }
   message.info('已重置为上次保存的设置');
 };
 
@@ -134,6 +225,24 @@ const handleRestart = () => {
 const closeRestartModal = () => {
   restartModalVisible.value = false;
 };
+
+// 加载配置
+onMounted(() => {
+  // 监听主进程发送的配置信息
+  window.ipcRenderer.on('load-config', (_event, config) => {
+    console.log('接收到配置信息:', config);
+    Object.assign(originalConfig, config);
+    Object.assign(currentConfig, config);
+  });
+
+  // 监听快捷键配置加载
+  window.ipcRenderer.on('load-shortcut-keys', (_event, config) => {
+    console.log('[渲染进程] 接收到快捷键配置', config);
+    // 使用深拷贝而不是引用赋值，确保originalShortcutKeys和currentShortcutKeys是独立的对象
+    Object.assign(originalShortcutKeys, JSON.parse(JSON.stringify(config)));
+    Object.assign(currentShortcutKeys, JSON.parse(JSON.stringify(config)));
+  });
+});
 </script>
 
 <template>
@@ -218,7 +327,25 @@ const closeRestartModal = () => {
         <!-- 快捷键设置 -->
         <div v-show="selectedKeys.includes('shortcut')" class="settings-section">
           <h2>快捷键设置</h2>
-          <p class="setting-description">快捷键设置功能开发中...</p>
+
+          <div v-for="(shortcut, key) in currentShortcutKeys" :key="key" class="setting-item shortcut-item">
+            <span class="setting-label">{{ shortcut.name }}</span>
+
+            <!-- 显示当前快捷键 -->
+            <div class="shortcut-display" @click="startEditShortcut(key)">
+              <div class="shortcut-keys">
+                <template v-for="(k, index) in shortcut.key" :key="index">
+                  <span class="key-badge">{{ formatKeyDisplay(k) }}</span>
+                  <span v-if="index < shortcut.key.length - 1" class="key-plus">+</span>
+                </template>
+              </div>
+              <span class="edit-icon">
+                <EditIcon />
+              </span>
+            </div>
+          </div>
+
+          <p v-if="Object.keys(currentShortcutKeys).length === 0" class="setting-description">暂无快捷键配置</p>
         </div>
 
         <!-- 底部按钮 -->
@@ -237,6 +364,20 @@ const closeRestartModal = () => {
         <Button type="primary" @click="handleRestart">现在重启</Button>
       </template>
     </Modal>
+
+    <!-- 快捷键编辑弹窗 -->
+    <Modal v-model:visible="shortcutModalVisible" title="编辑快捷键" :maskClosable="false" :closable="true">
+      <div class="shortcut-modal-content">
+        <div class="shortcut-input" tabindex="0">
+          {{ tempKeys.map(k => formatKeyDisplay(k)).join(' + ') || '按下快捷键...' }}
+        </div>
+        <p class="shortcut-hint">请按下您想要设置的快捷键组合</p>
+      </div>
+      <template #footer>
+        <Button @click="cancelEditShortcut">取消</Button>
+        <Button type="primary" @click="confirmEditShortcut">确认</Button>
+      </template>
+    </Modal>
   </div>
 </template>
 
@@ -245,6 +386,103 @@ const closeRestartModal = () => {
   height: 100vh;
   display: flex;
   flex-direction: column;
+
+  /* 快捷键相关样式 */
+  .shortcut-item {
+    margin-bottom: 15px;
+  }
+
+  .shortcut-display {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 6px;
+    background-color: var(--theme-background-secondary);
+    transition: background-color 0.2s;
+  }
+  
+  .shortcut-keys {
+    display: flex;
+    align-items: center;
+  }
+  
+  .key-plus {
+    margin: 0 4px;
+    font-weight: bold;
+    opacity: 0.7;
+    font-size: 14px;
+  }
+
+  .shortcut-display:hover {
+    background-color: var(--theme-background-hover);
+  }
+
+  .key-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    margin-right: 8px;
+    background-color: rgba(0, 0, 0, 0.6);
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #ffffff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .edit-icon {
+    width: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0.5;
+  }
+
+  .edit-icon:hover {
+    opacity: 1;
+  }
+
+  .shortcut-edit {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .shortcut-input {
+    padding: 8px 12px;
+    border: 1px solid var(--theme-divider);
+    border-radius: 4px;
+    background-color: var(--theme-background-secondary);
+    cursor: text;
+    min-height: 36px;
+    outline: none;
+  }
+
+  .shortcut-input:focus {
+    border-color: var(--theme-primary);
+  }
+
+  .shortcut-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .shortcut-modal-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 10px 0;
+  }
+
+  .shortcut-hint {
+    color: var(--theme-secondary);
+    font-size: 14px;
+    margin: 0;
+  }
+
   background-color: var(--theme-background);
   color: var(--theme-text);
 }

@@ -4,7 +4,7 @@ import path from 'node:path'
 import fs from 'node:fs'
 import ClipboardDB from './db.js'
 import log from './log.js'
-import { getSettings, updateSettings, getShortcutKeys } from './ConfigFileManager.js'
+import { getSettings, updateSettings, getShortcutKeys, updateShortcutKeys } from './ConfigFileManager.js'
 import { computed } from 'vue'
 
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
@@ -113,7 +113,7 @@ function createMainWindow() {
     }
 
     // 打开调试工具，设置为单独窗口
-    win.webContents.openDevTools({ mode: 'detach' });
+    // win.webContents.openDevTools({ mode: 'detach' });
 
 
     const savedTheme = config.value.theme || 'light';
@@ -195,7 +195,7 @@ function createSettingsWindow() {
     settingsWindow.webContents.on('did-finish-load', () => {
         settingsWindow.webContents.send('window-type', 'settings');
         settingsWindow.webContents.send('load-config', getSettings());
-        win?.webContents.send('load-shortcut-keys', getShortcutKeys());
+        settingsWindow.webContents.send('load-shortcut-keys', getShortcutKeys());
     });
 
     ipcMain.on('close-settings', () => {
@@ -443,6 +443,14 @@ ipcMain.handle('item-copy', async (_event, id: number) => {
 ipcMain.handle('update-config', async (_event, config) => {
     log.info('[主进程] 更新配置', config);
     updateSettings(config);
+    return true;
+});
+
+// 监听快捷键配置更新
+ipcMain.handle('update-shortcut-keys', async (_event, config) => {
+    log.info('[主进程] 更新快捷键配置', config);
+    updateShortcutKeys(config);
+    win?.webContents.send('load-shortcut-keys', config);
     return true;
 });
 

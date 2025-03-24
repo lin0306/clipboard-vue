@@ -508,6 +508,11 @@ onMounted(() => {
   width: 150px;
   height: 100%;
   background-color: var(--theme-navBackground);
+  overflow-y: scroll;
+}
+
+.settings-menu::-webkit-scrollbar {
+  width: 0px;
 }
 
 .settings-panel {
@@ -540,6 +545,8 @@ onMounted(() => {
 
 .setting-label {
   font-size: 14px;
+  min-width: 90px;
+  margin-right: 5px;
 }
 
 .window-size-inputs {

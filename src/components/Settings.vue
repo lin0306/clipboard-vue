@@ -290,11 +290,11 @@ onMounted(() => {
           <div class="setting-item right" v-if="currentConfig.fixedWindowSize">
             <div class="window-size-inputs">
               <div class="size-input-group">
-                <span class="setting-label">{{ languageTexts.settings.windowHeight }}</span>
+                <span class="setting-label sub-label">{{ languageTexts.settings.windowHeight }}</span>
                 <InputNumber v-model:value="currentConfig.windowHeight" :min="300" :max="1000" />
               </div>
               <div class="size-input-group">
-                <span class="setting-label">{{ languageTexts.settings.windowWidth }}</span>
+                <span class="setting-label sub-label">{{ languageTexts.settings.windowWidth }}</span>
                 <InputNumber v-model:value="currentConfig.windowWidth" :min="300" :max="1000" />
               </div>
             </div>
@@ -547,6 +547,10 @@ onMounted(() => {
   font-size: 14px;
   min-width: 90px;
   margin-right: 5px;
+}
+
+.sub-label {
+  min-width: 0px !important;
 }
 
 .window-size-inputs {

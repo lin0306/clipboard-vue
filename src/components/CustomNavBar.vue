@@ -32,7 +32,7 @@
 <script setup lang="ts">
 import { ref, defineProps, onMounted, onUnmounted } from 'vue'
 import HookIcon from '../assets/icon/HookIcon.vue';
-import { useTheme } from '../themes/ThemeContext';
+import { useTheme } from '../themes/ThemeConfig';
 import {NavBarItem} from "../types/menus/NavBarItem.ts";
 
 defineProps<{

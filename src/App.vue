@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { createThemeContext } from './themes/ThemeContext';
 import { computed, onMounted, ref } from 'vue';
 import { ConfigProvider } from 'ant-design-vue';
 import { theme } from 'ant-design-vue';
-import zhCN from 'ant-design-vue/es/locale/zh_CN';
+
+import { createThemeContext } from './themes/ThemeConfig';
 
 import ClipboardList from './components/ClipboardList.vue'
 import Settings from './components/Settings.vue'

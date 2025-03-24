@@ -2,7 +2,7 @@
 import { inject, ref, onMounted, onUnmounted, computed, reactive } from 'vue'
 import TitleBar from './TitleBar.vue';
 import CustomNavBar from './CustomNavBar.vue';
-import { useTheme } from '../themes/ThemeContext';
+import { useTheme } from '../themes/ThemeConfig';
 import { themes } from '../themes/ThemeConfig';
 import { NavBarItem } from "../types/menus/NavBarItem.ts";
 import TopIcon from '../assets/icon/TopIcon.vue';

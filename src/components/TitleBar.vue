@@ -19,7 +19,7 @@ import FixedIcon from '../assets/icons/FixedIcon.vue'
 import UnFixedIcon from '../assets/icons/UnFixedIcon.vue'
 import CloseIcon from '../assets/icons/CloseIcon.vue'
 
-import { defineProps, withDefaults, ref } from 'vue'
+import { ref } from 'vue'
 
 withDefaults(defineProps<{
     title: string;

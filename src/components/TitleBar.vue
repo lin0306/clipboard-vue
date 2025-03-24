@@ -15,9 +15,9 @@
     </div>
 </template>
 <script lang="ts" setup>
-import FixedIcon from '../assets/icon/FixedIcon.vue'
-import UnFixedIcon from '../assets/icon/UnFixedIcon.vue'
-import CloseIcon from '../assets/icon/CloseIcon.vue'
+import FixedIcon from '../assets/icons/FixedIcon.vue'
+import UnFixedIcon from '../assets/icons/UnFixedIcon.vue'
+import CloseIcon from '../assets/icons/CloseIcon.vue'
 
 import { defineProps, withDefaults, ref } from 'vue'
 

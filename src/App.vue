@@ -3,8 +3,8 @@ import { computed, onMounted, ref } from 'vue';
 import { ConfigProvider } from 'ant-design-vue';
 import { theme } from 'ant-design-vue';
 
-import { createThemeContext } from './themes/ThemeConfig';
-import { createLanguageContext } from './locales/LocalesConfig';
+import { createThemeContext } from './configs/ThemeConfig';
+import { createLanguageContext } from './configs/LanguageConfig.ts';
 
 import ClipboardList from './components/ClipboardList.vue'
 import Settings from './components/Settings.vue'

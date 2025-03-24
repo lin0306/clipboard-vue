@@ -2,14 +2,13 @@
 import { inject, ref, onMounted, onUnmounted, computed, reactive } from 'vue'
 import TitleBar from './TitleBar.vue';
 import CustomNavBar from './CustomNavBar.vue';
-import { useTheme } from '../themes/ThemeConfig';
-import { themes } from '../themes/ThemeConfig';
+import { useTheme, themes } from '../configs/ThemeConfig';
 import { NavBarItem } from "../types/menus/NavBarItem.ts";
-import TopIcon from '../assets/icon/TopIcon.vue';
-import UntopIcon from '../assets/icon/UntopIcon.vue';
-import TrashIcon from '../assets/icon/TrashIcon.vue';
-import MoreIcon from '../assets/icon/MoreIcon.vue';
-import DragIcon from '../assets/icon/DragIcon.vue';
+import TopIcon from '../assets/icons/TopIcon.vue';
+import UntopIcon from '../assets/icons/UntopIcon.vue';
+import TrashIcon from '../assets/icons/TrashIcon.vue';
+import MoreIcon from '../assets/icons/MoreIcon.vue';
+import DragIcon from '../assets/icons/DragIcon.vue';
 import convertType from '../utils/convert.ts';
 import { getTextColorForBackground } from '../utils/colorUtils.ts';
 import { Chrome } from '@ckpack/vue-color';

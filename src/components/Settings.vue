@@ -2,9 +2,9 @@
 import { ref, reactive, onMounted, computed } from 'vue';
 import titleBar from './TitleBar.vue';
 import { Menu, Switch, Input, Button, Select, InputNumber, message, Modal } from 'ant-design-vue';
-import RightArrowIcon from '../assets/icon/RightArrowIcon.vue';
-import EditIcon from '../assets/icon/EditIcon.vue';
-import { useLanguage, languages } from '../locales/LocalesConfig';
+import RightArrowIcon from '../assets/icons/RightArrowIcon.vue';
+import EditIcon from '../assets/icons/EditIcon.vue';
+import { useLanguage, languages } from '../configs/LanguageConfig.ts';
 
 const { languageTexts } = useLanguage();
 

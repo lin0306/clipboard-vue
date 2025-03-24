@@ -193,7 +193,7 @@ class ClipboardDB {
         try {
             // 先获取要删除的内容信息
             const row = this.db.prepare('SELECT type, file_path FROM clipboard_items WHERE id = ?').get(id) as { type: string, file_path: string } | undefined;
-            console.log('[数据库进程] 要删除的内容信息:', row);
+            log.info('[数据库进程] 要删除的内容信息:', row);
             // 如果是图片类型，删除对应的临时文件
             if (row && row.file_path) {
                 try {

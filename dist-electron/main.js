@@ -39591,7 +39591,7 @@ const _ClipboardDB = class _ClipboardDB {
   deleteItem(id) {
     try {
       const row = this.db.prepare("SELECT type, file_path FROM clipboard_items WHERE id = ?").get(id);
-      console.log("[数据库进程] 要删除的内容信息:", row);
+      log.info("[数据库进程] 要删除的内容信息:", row);
       if (row && row.file_path) {
         try {
           fs$5.unlinkSync(row.file_path);
@@ -39832,11 +39832,15 @@ function createMainWindow() {
   }
   const savedTheme = config.value.theme || "light";
   log.info("[主进程] 读取到的主题配置:", savedTheme);
+  const savedLanguage = config.value.languages || "chinese";
+  log.info("[主进程] 读取到的语言配置:", savedLanguage);
   win.webContents.on("did-finish-load", () => {
     log.info("[主进程] 发送窗口类型到渲染进程：list");
     win == null ? void 0 : win.webContents.send("window-type", "list");
     log.info("[主进程] 发送主题设置到渲染进程");
     win == null ? void 0 : win.webContents.send("init-themes", savedTheme);
+    log.info("[主进程] 发送程序语言到渲染进程");
+    win == null ? void 0 : win.webContents.send("init-language", savedLanguage);
     log.info("[主进程] 发送标签列表到渲染进程");
     const db = ClipboardDB.getInstance();
     const tags = db.getAllTags();

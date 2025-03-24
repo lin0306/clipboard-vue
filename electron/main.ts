@@ -118,6 +118,8 @@ function createMainWindow() {
 
     const savedTheme = config.value.theme || 'light';
     log.info('[主进程] 读取到的主题配置:', savedTheme);
+    const savedLanguage = config.value.languages || 'chinese';
+    log.info('[主进程] 读取到的语言配置:', savedLanguage);
 
     // 在页面加载完成后发送主题设置
     win.webContents.on('did-finish-load', () => {
@@ -125,6 +127,8 @@ function createMainWindow() {
         win?.webContents.send('window-type', 'list');
         log.info('[主进程] 发送主题设置到渲染进程');
         win?.webContents.send('init-themes', savedTheme);
+        log.info('[主进程] 发送程序语言到渲染进程');
+        win?.webContents.send('init-language', savedLanguage);
         log.info('[主进程] 发送标签列表到渲染进程');
         const db = ClipboardDB.getInstance()
         const tags = db.getAllTags();
@@ -505,6 +509,7 @@ ipcMain.on('close-app', () => {
 ipcMain.on('open-settings', createSettingsWindow);
 
 // 监听重启应用的请求
+// todo：测试环境重启有bug，重启后会白屏，原因：测试环境会停止vue端口服务，重新启动时没有重启vue服务，导致地址无法访问
 ipcMain.on('restart-app', () => {
     // 重置窗口状态变量，确保重启后能正确创建窗口
     isOpenWindow = false;

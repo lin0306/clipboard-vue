@@ -4,6 +4,9 @@ import titleBar from './TitleBar.vue';
 import { Menu, Switch, Input, Button, Select, InputNumber, message, Modal } from 'ant-design-vue';
 import RightArrowIcon from '../assets/icon/RightArrowIcon.vue';
 import EditIcon from '../assets/icon/EditIcon.vue';
+import { useLanguage, languages } from '../locales/LocalesConfig';
+
+const { languageTexts } = useLanguage();
 
 // 重启确认弹窗状态
 const restartModalVisible = ref(false);
@@ -11,9 +14,9 @@ const restartModalVisible = ref(false);
 // 菜单相关
 const selectedKeys = ref(['general']);
 const menuItems = [
-  { key: 'general', label: '通用设置' },
-  { key: 'storage', label: '存储设置' },
-  { key: 'shortcut', label: '快捷键' },
+  { key: 'general', label: languageTexts.settings.generalMenu },
+  { key: 'storage', label: languageTexts.settings.storageMenu },
+  { key: 'shortcut', label: languageTexts.settings.storageMenu },
 ];
 
 // 配置相关
@@ -39,14 +42,13 @@ const originalShortcutKeys = reactive({});
 const currentShortcutKeys = reactive<any>({ ...originalShortcutKeys });
 
 // 语言选项
-const languageOptions = [
-  { value: 'chinese', label: '中文' },
-  { value: 'english', label: 'English' }
-];
+const languageOptions = languages.map(lang => ({
+  value: lang.id,
+  label: lang.name
+}));
 
 // 是否有修改
 const hasChanges = computed(() => {
-  console.log('校验', originalShortcutKeys, currentShortcutKeys)
   if (selectedKeys.value[0] === 'shortcut') {
     // 检查是否在编辑快捷键，或者原始快捷键和当前快捷键是否不同
     return JSON.stringify(originalShortcutKeys) !== JSON.stringify(currentShortcutKeys);
@@ -108,7 +110,6 @@ function formatKeyDisplay(key: string): string {
 
 // 处理按键事件
 function handleKeyDown(event: any) {
-  console.log('按下按键:', event);
   event.preventDefault();
 
   // 清除之前的按键
@@ -133,7 +134,7 @@ const saveConfig = async () => {
     return; // 如果没有修改，不做任何处理
   }
   if (selectedKeys.value[0] === 'general') {
-    console.log('保存配置:', currentConfig);
+    console.log('保存通用设置:', currentConfig);
 
     // 是否修改了【固定窗口大小】
     const isUpdateFixedWindowSize = currentConfig.fixedWindowSize !== originalConfig.fixedWindowSize;
@@ -161,16 +162,15 @@ const saveConfig = async () => {
         || isUpdateWindowWidth
         || isUpdateWindowHeight
       ) {
-        message.success('设置已保存，部分设置需要重启程序后生效');
         // 显示重启确认弹窗
         restartModalVisible.value = true;
       } else {
-        message.success('设置已保存');
+        message.success(languageTexts.settings.saveSuccessMsg);
       }
       // 更新原始配置
       Object.assign(originalConfig, currentConfig);
     } else {
-      message.error('保存设置失败');
+      message.error(languageTexts.settings.saveFailedMsg);
     }
   }
   if (selectedKeys.value[0] === 'shortcut') {
@@ -183,17 +183,17 @@ const saveConfig = async () => {
     try {
       const isSuccess = await window.ipcRenderer.invoke('update-shortcut-keys', shortcutKeysJson);
       if (isSuccess) {
-        message.success('快捷键设置已保存');
+        message.success(languageTexts.settings.saveSuccessMsg);
         // 更新原始快捷键配置，使用深拷贝确保两个对象不共享引用
         Object.assign(originalShortcutKeys, JSON.parse(JSON.stringify(currentShortcutKeys)));
         // 关闭编辑模式
         editingShortcut.value = null;
       } else {
-        message.error('保存快捷键设置失败');
+        message.error(languageTexts.settings.saveFailedMsg);
       }
     } catch (error: any) {
       console.error('保存快捷键设置出错:', error);
-      message.error('保存快捷键设置失败: ' + error.message);
+      message.error(languageTexts.settings.shortcutSaveErrorMsg + error.message);
     }
   }
 };
@@ -204,17 +204,18 @@ const resetConfig = () => {
     Object.assign(currentShortcutKeys, originalShortcutKeys);
     // 关闭编辑模式
     editingShortcut.value = null;
-  } else {
-    Object.assign(currentConfig, originalConfig);
+    message.info(languageTexts.settings.resetSuccessMsg);
   }
-  message.info('已重置为上次保存的设置');
+  if (selectedKeys.value[0] === 'general') {
+    Object.assign(currentConfig, originalConfig);
+    message.info(languageTexts.settings.resetSuccessMsg);
+  }
 };
 
 function openDevTools() {
   window.ipcRenderer.send('open-settings-devtools');
 }
 // 处理重启应用
-// todo：测试环境重启有bug，会白屏
 const handleRestart = () => {
   restartModalVisible.value = false;
   // 触发重启应用
@@ -230,7 +231,7 @@ const closeRestartModal = () => {
 onMounted(() => {
   // 监听主进程发送的配置信息
   window.ipcRenderer.on('load-config', (_event, config) => {
-    console.log('接收到配置信息:', config);
+    console.log('接收到通用设置配置:', config);
     Object.assign(originalConfig, config);
     Object.assign(currentConfig, config);
   });
@@ -247,7 +248,7 @@ onMounted(() => {
 
 <template>
   <div class="settings-container">
-    <titleBar :title="`设置`" :closeWindow="`close-settings`" />
+    <titleBar :title="languageTexts.settings.title" :closeWindow="`close-settings`" />
 
     <div class="settings-content">
       <!-- 左侧菜单 -->
@@ -264,43 +265,43 @@ onMounted(() => {
       <div class="settings-panel">
         <!-- 通用设置 -->
         <div v-show="selectedKeys.includes('general')" class="settings-section">
-          <h2>通用设置</h2>
+          <h2>{{ languageTexts.settings.generalTitle }}</h2>
 
           <div class="setting-item">
-            <span class="setting-label">开机自启</span>
+            <span class="setting-label">{{ languageTexts.settings.generalTitle }}</span>
             <Switch v-model:checked="currentConfig.powerOnSelfStart" />
           </div>
 
           <div class="setting-item">
-            <span class="setting-label">替换全局热键 (Windows适用)</span>
+            <span class="setting-label">{{ languageTexts.settings.replaceGlobalHotkey }}</span>
             <Switch v-model:checked="currentConfig.replaceGlobalHotkey" />
           </div>
 
           <div class="setting-item">
-            <span class="setting-label">关闭窗口时隐藏到任务栏托盘</span>
+            <span class="setting-label">{{ languageTexts.settings.colsingHideToTaskbar }}</span>
             <Switch v-model:checked="currentConfig.colsingHideToTaskbar" />
           </div>
 
           <div class="setting-item">
-            <span class="setting-label">窗口大小固定</span>
+            <span class="setting-label">{{ languageTexts.settings.fixedWindowSize }}</span>
             <Switch v-model:checked="currentConfig.fixedWindowSize" />
           </div>
 
           <div class="setting-item right" v-if="currentConfig.fixedWindowSize">
             <div class="window-size-inputs">
               <div class="size-input-group">
-                <span class="setting-label">高:</span>
+                <span class="setting-label">{{ languageTexts.settings.windowHeight }}</span>
                 <InputNumber v-model:value="currentConfig.windowHeight" :min="300" :max="1000" />
               </div>
               <div class="size-input-group">
-                <span class="setting-label">宽:</span>
+                <span class="setting-label">{{ languageTexts.settings.windowWidth }}</span>
                 <InputNumber v-model:value="currentConfig.windowWidth" :min="300" :max="1000" />
               </div>
             </div>
           </div>
 
           <div class="setting-item">
-            <span class="setting-label">语言</span>
+            <span class="setting-label">{{ languageTexts.settings.languages }}</span>
             <Select v-model:value="currentConfig.languages" style="width: 120px">
               <Select.Option v-for="option in languageOptions" :key="option.value" :value="option.value">
                 {{ option.label }}
@@ -309,16 +310,16 @@ onMounted(() => {
           </div>
 
           <div class="setting-item">
-            <span class="setting-label">调试工具</span>
+            <span class="setting-label">{{ languageTexts.settings.devTools }}</span>
             <RightArrowIcon class="right-arrow-btn" @click="openDevTools" />
           </div>
         </div>
 
         <!-- 存储设置 -->
         <div v-show="selectedKeys.includes('storage')" class="settings-section">
-          <h2>存储设置</h2>
+          <h2>{{ languageTexts.settings.storageTitle }}</h2>
           <div class="setting-item">
-            <span class="setting-label">临时文件路径</span>
+            <span class="setting-label">{{ languageTexts.settings.tempPath }}</span>
             <Input v-model:value="currentConfig.tempPath" placeholder="请输入临时文件路径" />
           </div>
           <p class="setting-description">更多存储设置功能开发中...</p>
@@ -326,11 +327,10 @@ onMounted(() => {
 
         <!-- 快捷键设置 -->
         <div v-show="selectedKeys.includes('shortcut')" class="settings-section">
-          <h2>快捷键设置</h2>
+          <h2>{{ languageTexts.settings.shortcutTitle }}</h2>
 
           <div v-for="(shortcut, key) in currentShortcutKeys" :key="key" class="setting-item shortcut-item">
-            <span class="setting-label">{{ shortcut.name }}</span>
-
+            <span class="setting-label">{{ languageTexts.settings[key] }}</span>
             <!-- 显示当前快捷键 -->
             <div class="shortcut-display" @click="startEditShortcut(key)">
               <div class="shortcut-keys">
@@ -345,37 +345,46 @@ onMounted(() => {
             </div>
           </div>
 
-          <p v-if="Object.keys(currentShortcutKeys).length === 0" class="setting-description">暂无快捷键配置</p>
+          <p v-if="Object.keys(currentShortcutKeys).length === 0" class="setting-description">
+            {{ languageTexts.settings.emptyShortcutConfig }}
+          </p>
         </div>
 
         <!-- 底部按钮 -->
         <div class="settings-actions">
-          <Button @click="resetConfig" :disabled="!hasChanges">重置</Button>
-          <Button type="primary" @click="saveConfig" :disabled="!hasChanges">保存</Button>
+          <Button @click="resetConfig" :disabled="!hasChanges">{{ languageTexts.settings.resetBtn }}</Button>
+          <Button type="primary" @click="saveConfig" :disabled="!hasChanges">{{ languageTexts.settings.saveBtn
+            }}</Button>
         </div>
       </div>
     </div>
 
     <!-- 重启确认弹窗 -->
-    <Modal v-model:visible="restartModalVisible" title="重启确认" :maskClosable="false" :closable="true">
-      <p>部分设置需要重启程序后生效，是否现在重启？</p>
+    <Modal v-model:open="restartModalVisible" :title="languageTexts.settings.restartModalTitle" :maskClosable="false"
+      :closable="true">
+      <p>{{ languageTexts.settings.restartModalContent }}</p>
       <template #footer>
-        <Button @click="closeRestartModal">稍后重启</Button>
-        <Button type="primary" @click="handleRestart">现在重启</Button>
+        <Button @click="closeRestartModal">{{ languageTexts.settings.restartModalCancelBtn }}</Button>
+        <Button type="primary" @click="handleRestart">{{ languageTexts.settings.restartModalConfirmBtn }}</Button>
       </template>
     </Modal>
 
     <!-- 快捷键编辑弹窗 -->
-    <Modal v-model:visible="shortcutModalVisible" title="编辑快捷键" :maskClosable="false" :closable="true">
+    <Modal v-model:open="shortcutModalVisible" :title="languageTexts.settings.editHotkeyModalTitle"
+      :maskClosable="false" :closable="true">
       <div class="shortcut-modal-content">
         <div class="shortcut-input" tabindex="0">
-          {{ tempKeys.map(k => formatKeyDisplay(k)).join(' + ') || '按下快捷键...' }}
+          {{ tempKeys.map(k => formatKeyDisplay(k)).join(' + ') || languageTexts.settings.editHotkeyModalHint }}
         </div>
-        <p class="shortcut-hint">请按下您想要设置的快捷键组合</p>
+        <p class="shortcut-hint">{{ languageTexts.settings.editHotkeyModalContent }}</p>
       </div>
       <template #footer>
-        <Button @click="cancelEditShortcut">取消</Button>
-        <Button type="primary" @click="confirmEditShortcut">确认</Button>
+        <Button @click="cancelEditShortcut">
+          {{ languageTexts.settings.editHotkeyModalCancelBtn }}
+        </Button>
+        <Button type="primary" @click="confirmEditShortcut">
+          {{ languageTexts.settings.editHotkeyModalConfirmBtn }}
+        </Button>
       </template>
     </Modal>
   </div>
@@ -402,12 +411,12 @@ onMounted(() => {
     background-color: var(--theme-background-secondary);
     transition: background-color 0.2s;
   }
-  
+
   .shortcut-keys {
     display: flex;
     align-items: center;
   }
-  
+
   .key-plus {
     margin: 0 4px;
     font-weight: bold;

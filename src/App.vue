@@ -4,6 +4,7 @@ import { ConfigProvider } from 'ant-design-vue';
 import { theme } from 'ant-design-vue';
 
 import { createThemeContext } from './themes/ThemeConfig';
+import { createLanguageContext } from './locales/LocalesConfig';
 
 import ClipboardList from './components/ClipboardList.vue'
 import Settings from './components/Settings.vue'
@@ -11,6 +12,7 @@ import TagManager from './components/TagManager.vue'
 
 // 创建主题上下文
 const { currentTheme } = createThemeContext();
+const { currentLanguage } = createLanguageContext();
 
 // 计算Ant Design Vue的主题配置
 const antdTheme = computed(() => {
@@ -26,7 +28,7 @@ const antdTheme = computed(() => {
   };
 });
 
-const locale = computed(() => zhCN);
+const locale = computed(() => currentLanguage.value.locale);
 
 // 窗口组件 map<key:组件唯一标识, value:窗口组件>
 const componentMap: any = {

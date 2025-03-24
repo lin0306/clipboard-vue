@@ -183,6 +183,10 @@ const shortcutKeyConfig = ref<any>(null)
 // 图片缓存，用于存储图片的base64数据
 const imageCache = reactive(new Map<string, string>())
 
+// 图片懒加载观察器
+let imageObserver: IntersectionObserver | null = null;
+
+
 // 下拉菜单状态
 const dropdownState = reactive({
   visible: false,
@@ -332,6 +336,60 @@ async function loadImageBase64(filePath: string) {
  */
 function getImageSrc(filePath: string): string {
   return imageCache.get(filePath) || '';
+}
+
+/**
+ * 初始化图片懒加载
+ */
+function initImageLazyLoad() {
+  // 如果浏览器支持IntersectionObserver
+  if ('IntersectionObserver' in window) {
+    // 先断开之前的观察器
+    if (imageObserver) {
+      imageObserver.disconnect();
+    }
+
+    imageObserver = new IntersectionObserver((entries, observer) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const img = entry.target as HTMLImageElement;
+          const src = img.getAttribute('data-src');
+          if (src) {
+            // 设置图片源
+            img.src = src;
+            // 图片加载完成后添加动画类
+            img.onload = () => {
+              img.classList.add('fade-in');
+              img.classList.remove('image-loading');
+            };
+            observer.unobserve(img);
+          }
+        }
+      });
+    });
+
+    // 观察所有带有data-src属性的图片
+    setTimeout(() => {
+      const lazyImages = document.querySelectorAll('img[data-src]');
+      lazyImages.forEach(img => {
+        // 确保图片有data-src属性且值不为空
+        if (img.getAttribute('data-src')) {
+          imageObserver?.observe(img);
+        }
+      });
+    }, 100);
+  } else {
+    // 如果浏览器不支持IntersectionObserver，则直接加载所有图片
+    const lazyImages = document.querySelectorAll('img[data-src]');
+    lazyImages.forEach(img => {
+      const src = img.getAttribute('data-src');
+      if (src) {
+        (img as HTMLImageElement).src = src;
+        img.classList.add('fade-in');
+        img.classList.remove('image-loading');
+      }
+    });
+  }
 }
 
 /**
@@ -500,12 +558,21 @@ onMounted(() => {
   filterClipboardItems();
   document.addEventListener('click', handleClickOutside);
   document.addEventListener('keydown', handleKeyDown);
+  // 初始化图片懒加载
+  setTimeout(() => {
+    initImageLazyLoad();
+  }, 100);
 })
 
 // 组件卸载时移除事件监听
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside);
   document.removeEventListener('keydown', handleKeyDown);
+  // 清除图片观察器
+  if (imageObserver) {
+    imageObserver.disconnect();
+    imageObserver = null;
+  }
 })
 </script>
 
@@ -555,7 +622,8 @@ onUnmounted(() => {
           <div class="content-wrapper">
             <p v-if="item.type === 'text'">{{ item.content }}</p>
             <p v-else-if="item.type === 'image'">
-              <img :src="getImageSrc(item.file_path)" alt="Image" class="image-item" />
+              <img :data-src="getImageSrc(item.file_path)" alt="Image" class="image-item image-loading"
+                src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E" />
             </p>
             <p v-else-if="item.type === 'file'">
               <i class="fas fa-file"></i>
@@ -988,5 +1056,27 @@ onUnmounted(() => {
 .search-container .ant-input {
   background-color: var(--theme-cardBackground);
   color: var(--theme-text);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    filter: blur(10px);
+  }
+
+  to {
+    opacity: 1;
+    filter: blur(0px);
+  }
+}
+
+.image-loading {
+  background-color: var(--theme-border);
+  min-height: 50px;
+  border-radius: 6px;
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in forwards;
 }
 </style>

@@ -14,8 +14,6 @@ import { getTextColorForBackground } from '../utils/colorUtils.ts';
 import { Chrome } from '@ckpack/vue-color';
 import { message } from 'ant-design-vue';
 
-const msg: any = inject('message')
-
 // 获取主题上下文
 const { currentTheme, setTheme, themeColors } = useTheme();
 

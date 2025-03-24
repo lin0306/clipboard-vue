@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, ref, onMounted, onUnmounted, computed, reactive } from 'vue'
+import { ref, onMounted, onUnmounted, computed, reactive } from 'vue'
 import TitleBar from './TitleBar.vue';
 import CustomNavBar from './CustomNavBar.vue';
 import { useTheme, themes } from '../configs/ThemeConfig';
@@ -12,6 +12,7 @@ import DragIcon from '../assets/icons/DragIcon.vue';
 import convertType from '../utils/convert.ts';
 import { getTextColorForBackground } from '../utils/colorUtils.ts';
 import { Chrome } from '@ckpack/vue-color';
+import { message } from 'ant-design-vue';
 
 const msg: any = inject('message')
 
@@ -44,7 +45,7 @@ const MenuItems = computed((): NavBarItem[] => [
         key: '重新加载',
         label: '重新加载',
         onClick: () => {
-          msg.loading('正在重新加载应用程序...');
+          message.loading('正在重新加载应用程序...');
           // 重新加载应用程序
           window.ipcRenderer.send('reload-app');
         }
@@ -56,7 +57,7 @@ const MenuItems = computed((): NavBarItem[] => [
         key: '关闭',
         label: '关闭',
         onClick: () => {
-          msg.loading('正在关闭应用程序...');
+          message.loading('正在关闭应用程序...');
           // 关闭应用程序
           window.ipcRenderer.send('quit-app');
         }
@@ -100,9 +101,9 @@ const MenuItems = computed((): NavBarItem[] => [
       try {
         window.ipcRenderer.invoke('clear-items')
         itemList.value = []
-        msg.success('清空历史记录成功')
+        message.success('清空历史记录成功')
       } catch (error) {
-        msg.error('清空历史记录失败')
+        message.error('清空历史记录失败')
       }
     },
   },
@@ -247,7 +248,7 @@ async function onCopy(info: any) {
   if (isSuccess) {
     filterClipboardItems();
   } else {
-    msg.error('复制失败');
+    message.error('复制失败');
   }
 }
 
@@ -357,9 +358,9 @@ async function onUntop(id: number) {
 async function addTag(name: string, color: string) {
   try {
     await window.ipcRenderer.invoke('add-tag', name, color);
-    msg.success('添加标签成功');
+    message.success('添加标签成功');
   } catch (error) {
-    msg.error('添加标签失败');
+    message.error('添加标签失败');
     console.error(error);
   }
 }
@@ -370,7 +371,7 @@ async function addTag(name: string, color: string) {
 async function handleAddTagConfirm() {
   console.log(tagModalState.tagColor)
   if (!tagModalState.tagName.trim()) {
-    msg.warning('标签名称不能为空');
+    message.warning('标签名称不能为空');
     return;
   }
   const rgba: any = tagModalState.tagColor;

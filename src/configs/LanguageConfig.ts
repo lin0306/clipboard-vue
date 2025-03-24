@@ -55,6 +55,38 @@ export interface PageConfig {
         saveFailedMsg: string;
         shortcutSaveErrorMsg: string;
         resetSuccessMsg: string;
+    },
+    list: {
+        title: string;
+        copyFailedMsg: string;
+        searchHint: string;
+        deleteBtn: string;
+        bindTagBtn: string;
+        menu: {
+            program: string;
+            settings: string;
+            devTools: string;
+            reload: string;
+            exit: string;
+            data: string;
+            tagManger: string;
+            dataView: string;
+            dataImport: string;
+            dataExport: string;
+            clearData: string;
+            clearDataSuccessMsg: string;
+            clearDataFailedMsg: string;
+            themes: string;
+            light: string;
+            dark: string;
+            blue: string;
+            pink: string;
+            help: string;
+            instructions: string;
+            updateLog: string;
+            checkForUpdate: string;
+            about: string;
+        },
     }
 }
 
@@ -98,8 +130,40 @@ export const zhCN: LanguageConfig = {
             saveFailedMsg: '保存失败',
             shortcutSaveErrorMsg: '保存快捷键设置失败: ',
             resetSuccessMsg: '已重置',
+        },
+        list: {
+            title: '剪贴板', 
+            copyFailedMsg: '复制失败',
+            searchHint: '输入关键词搜索',
+            deleteBtn: '删除',
+            bindTagBtn: '绑定标签',
+            menu: {
+                program: '程序',
+                settings: '偏好设置',
+                devTools: '调试工具',
+                reload: '重新加载',
+                exit: '关闭',
+                data: '数据',
+                tagManger: '标签管理',
+                dataView: '数据视图',
+                dataImport: '数据导入',
+                dataExport: '数据导出',
+                clearData: '清空剪贴板',
+                clearDataSuccessMsg: '清空历史记录成功',
+                clearDataFailedMsg: '清空历史记录失败',
+                themes: '主题',
+                light: '浅色',
+                dark: '深色',
+                blue: '蓝色',
+                pink: '粉色',
+                help: '帮助',
+                instructions: '使用说明',
+                updateLog: '更新日志',
+                checkForUpdate: '检查更新',
+                about: '关于', 
+            }
         }
-    }
+    },
 }
 
 // 英文配置
@@ -142,6 +206,38 @@ export const enUS: LanguageConfig = {
             saveFailedMsg: 'Save Failed',
             shortcutSaveErrorMsg: 'Save Shortcut Settings Failed: ',
             resetSuccessMsg: 'Reset Success',
+        },
+        list: {
+            title: 'Clipboard',
+            copyFailedMsg: 'Copy Failed',
+            searchHint: 'Input keywords to search',
+            deleteBtn: 'Delete',
+            bindTagBtn: 'Bind Tag', 
+            menu: {
+                program: 'Program',
+                settings: 'Settings',
+                devTools: 'Developer Tools',
+                reload: 'Reload',
+                exit: 'Exit',
+                data: 'Data',
+                tagManger: 'Tag Manager',
+                dataView: 'Data View',
+                dataImport: 'Data Import',
+                dataExport: 'Data Export',
+                clearData: 'Clear Data',
+                clearDataSuccessMsg: 'Clear Data Success',
+                clearDataFailedMsg: 'Clear Data Failed',
+                themes: 'Themes',
+                light: 'Light',
+                dark: 'Dark',
+                blue: 'Blue',
+                pink: 'Pink',
+                help: 'Help',
+                instructions: 'Instructions',
+                updateLog: 'Update Log',
+                checkForUpdate: 'Check For Update',
+                about: 'About', 
+            }
         }
     }
 }

@@ -14,6 +14,10 @@ import { getTextColorForBackground } from '../utils/colorUtils.ts';
 import { Chrome } from '@ckpack/vue-color';
 import { message } from 'ant-design-vue';
 
+import { useLanguage } from '../configs/LanguageConfig.ts';
+
+const { languageTexts } = useLanguage();
+
 // 获取主题上下文
 const { currentTheme, setTheme, themeColors } = useTheme();
 
@@ -21,11 +25,11 @@ const { currentTheme, setTheme, themeColors } = useTheme();
 const MenuItems = computed((): NavBarItem[] => [
   {
     key: '程序',
-    label: '程序',
+    label: languageTexts.list.menu.program,
     children: [
       {
         key: '偏好设置',
-        label: '偏好设置',
+        label: languageTexts.list.menu.settings,
         onClick: () => {
           // 打开开发者工具
           window.ipcRenderer.send('open-settings');
@@ -33,7 +37,7 @@ const MenuItems = computed((): NavBarItem[] => [
       },
       {
         key: '调试工具',
-        label: '调试工具',
+        label: languageTexts.list.menu.devTools,
         onClick: () => {
           // 打开开发者工具
           window.ipcRenderer.send('toggle-dev-tools');
@@ -41,7 +45,7 @@ const MenuItems = computed((): NavBarItem[] => [
       },
       {
         key: '重新加载',
-        label: '重新加载',
+        label: languageTexts.list.menu.reload,
         onClick: () => {
           message.loading('正在重新加载应用程序...');
           // 重新加载应用程序
@@ -53,7 +57,7 @@ const MenuItems = computed((): NavBarItem[] => [
       },
       {
         key: '关闭',
-        label: '关闭',
+        label: languageTexts.list.menu.exit,
         onClick: () => {
           message.loading('正在关闭应用程序...');
           // 关闭应用程序
@@ -64,11 +68,11 @@ const MenuItems = computed((): NavBarItem[] => [
   },
   {
     key: '数据',
-    label: '数据',
+    label: languageTexts.list.menu.data,
     children: [
       {
         key: '标签管理',
-        label: '标签管理',
+        label: languageTexts.list.menu.tagManger,
         onClick: () => {
           // 打开开发者工具
           window.ipcRenderer.send('open-tags');
@@ -76,41 +80,41 @@ const MenuItems = computed((): NavBarItem[] => [
       },
       {
         key: '数据视图',
-        label: '数据视图',
+        label: languageTexts.list.menu.dataView,
       },
       {
         type: 'divider',
       },
       {
         key: '数据导入',
-        label: '数据导入',
+        label: languageTexts.list.menu.dataImport,
       },
       {
         key: '数据导出',
-        label: '数据导出',
+        label: languageTexts.list.menu.dataExport,
       },
     ],
   },
   {
     key: '清空剪贴板',
-    label: '清空剪贴板',
+    label: languageTexts.list.menu.clearData,
     onClick: () => {
       // 清空历史记录
       try {
         window.ipcRenderer.invoke('clear-items')
         itemList.value = []
-        message.success('清空历史记录成功')
+        message.success(languageTexts.list.menu.clearDataSuccessMsg)
       } catch (error) {
-        message.error('清空历史记录失败')
+        message.error(languageTexts.list.menu.clearDataFailedMsg)
       }
     },
   },
   {
     key: '主题',
-    label: '主题',
+    label: languageTexts.list.menu.themes,
     children: themes.map(theme => ({
       key: `theme-${theme.id}`,
-      label: theme.name,
+      label: languageTexts.list.menu[theme.id],
       type: 'theme',
       onClick: () => {
         console.log('切换主题:', theme);
@@ -124,23 +128,23 @@ const MenuItems = computed((): NavBarItem[] => [
   },
   {
     key: '帮助',
-    label: '帮助',
+    label: languageTexts.list.menu.help,
     children: [
       {
         key: '使用说明',
-        label: '使用说明',
+        label: languageTexts.list.menu.instructions,
       },
       {
         key: '更新日志',
-        label: '更新日志',
+        label: languageTexts.list.menu.updateLog,
       },
       {
         key: '检查更新',
-        label: '检查更新',
+        label: languageTexts.list.menu.checkForUpdate,
       },
       {
         key: '关于',
-        label: '关于',
+        label: languageTexts.list.menu.about,
       },
     ],
   },
@@ -246,7 +250,7 @@ async function onCopy(info: any) {
   if (isSuccess) {
     filterClipboardItems();
   } else {
-    message.error('复制失败');
+    message.error(languageTexts.list.copyFailedMsg);
   }
 }
 
@@ -506,13 +510,13 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <TitleBar :title="`剪贴板`" :showFixedBtn="true" :closeWindow="`close-app`" />
+  <TitleBar :title="languageTexts.list.title" :showFixedBtn="true" :closeWindow="`close-app`" />
   <CustomNavBar :menuItems="MenuItems" />
   <div style="width: 100%;height: 60px;"></div>
 
   <!-- 搜索框 -->
   <div class="search-container" v-show="searchBoxState.visible">
-    <a-input-search id="search-input" v-model:value="searchText" placeholder="输入关键词搜索"
+    <a-input-search id="search-input" v-model:value="searchText" :placeholder="languageTexts.list.searchHint"
       @pressEnter="filterClipboardItems" @keydown.esc="toggleSearchBox" @search="filterClipboardItems">
       <template #prefix>
         <i class="fas fa-search"></i>
@@ -573,12 +577,12 @@ onUnmounted(() => {
                 <div v-if="dropdownState.visible && dropdownState.currentItemId === item.id" class="dropdown-menu">
                   <div class="dropdown-item" @click="removeItem(item.id)">
                     <TrashIcon class="dropdown-icon" />
-                    <span>删除</span>
+                    <span>{{ languageTexts.list.deleteBtn }}</span>
                   </div>
                   <div class="dropdown-item drag" draggable="true" @dragstart="handleDragStart(item.id, $event)"
                     @dragend="handleDragEnd">
                     <DragIcon class="dropdown-icon" />
-                    <span>绑定标签</span>
+                    <span>{{ languageTexts.list.bindTagBtn }}</span>
                   </div>
                 </div>
               </div>

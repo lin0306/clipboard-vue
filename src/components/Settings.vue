@@ -268,7 +268,7 @@ onMounted(() => {
           <h2>{{ languageTexts.settings.generalTitle }}</h2>
 
           <div class="setting-item">
-            <span class="setting-label">{{ languageTexts.settings.generalTitle }}</span>
+            <span class="setting-label">{{ languageTexts.settings.powerOnSelfStart }}</span>
             <Switch v-model:checked="currentConfig.powerOnSelfStart" />
           </div>
 

@@ -34,6 +34,7 @@ export interface PageConfig {
         tempPath: string;
         // 快捷键设置页面文字
         search: string;
+        wakeUpRoutine: string;
         emptyShortcutConfig: string;
         // 设置页面底部按钮
         resetBtn: string;
@@ -114,6 +115,7 @@ export const zhCN: LanguageConfig = {
             devTools: '调试工具',
             tempPath: '临时文件路径',
             search: '搜索',
+            wakeUpRoutine: '唤醒程序',
             emptyShortcutConfig: '暂无快捷键配置',
             resetBtn: '重置',
             saveBtn: '保存',
@@ -190,6 +192,7 @@ export const enUS: LanguageConfig = {
             devTools: 'Developer Tools',
             tempPath: 'Temporary File Path',
             search: 'Search',
+            wakeUpRoutine: 'Wake Up Routine',
             emptyShortcutConfig: 'No Shortcut Config',
             resetBtn: 'Reset',
             saveBtn: 'Save',

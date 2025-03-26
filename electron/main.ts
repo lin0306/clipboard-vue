@@ -6,7 +6,7 @@ import ClipboardDB from './db.js'
 import log from './log.js'
 import { getSettings, updateSettings, getShortcutKeys, updateShortcutKeys } from './ConfigFileManager.js'
 import { computed } from 'vue'
-
+import ShortcutManager from './shortcutManager.js'
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
 
 let __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -41,8 +41,10 @@ let isOpenWindow = false;
 let isHideWindow = false;
 let x: number | undefined = undefined;
 let y: number | undefined = undefined;
+let wakeUpRoutineShortcut: ShortcutManager; // 唤醒程序快捷键
 
 const config: any = computed(() => getSettings());
+const shortcutKeys: any = computed(() => getShortcutKeys());
 
 function createMainWindow() {
     log.info("是否打开了主窗口：" + isOpenWindow);
@@ -112,6 +114,12 @@ function createMainWindow() {
         log.info("[主进程] 加载index.html页面", path.join(RENDERER_DIST, 'index.html'))
     }
 
+    if (shortcutKeys.value.wakeUpRoutine) {
+        log.info('[主进程] 注册唤醒程序快捷键:', shortcutKeys.value.wakeUpRoutine.key.join("+"));
+        wakeUpRoutineShortcut = new ShortcutManager(win, shortcutKeys.value.wakeUpRoutine.key.join("+"));
+        wakeUpRoutineShortcut.loadShortcuts();
+    }
+
     // 打开调试工具，设置为单独窗口
     // win.webContents.openDevTools({ mode: 'detach' });
 
@@ -135,7 +143,7 @@ function createMainWindow() {
         win?.webContents.send('load-tag-items', tags);
         // 发送快捷键配置
         log.info('[主进程] 发送快捷键配置到渲染进程');
-        win?.webContents.send('load-shortcut-keys', getShortcutKeys());
+        win?.webContents.send('load-shortcut-keys', shortcutKeys.value);
         // 启动剪贴板监听
         log.info('[主进程] 窗口加载完成，开始监听剪贴板');
         watchClipboard();
@@ -161,9 +169,9 @@ function createMainWindow() {
 
     // 临时文件位置没有设置，设置成当前程序的根目录为临时文件夹位置
     if (!config.value.tempPath) {
-    const tempDir = path.join(__dirname, '../temp');
-    config.value.tempPath = tempDir;
-    updateSettings(config.value);
+        const tempDir = path.join(__dirname, '../temp');
+        config.value.tempPath = tempDir;
+        updateSettings(config.value);
     }
 }
 
@@ -206,7 +214,7 @@ function createSettingsWindow() {
     settingsWindow.webContents.on('did-finish-load', () => {
         settingsWindow.webContents.send('window-type', 'settings');
         settingsWindow.webContents.send('load-config', getSettings());
-        settingsWindow.webContents.send('load-shortcut-keys', getShortcutKeys());
+        settingsWindow.webContents.send('load-shortcut-keys', shortcutKeys.value);
     });
 
     ipcMain.on('close-settings', () => {
@@ -451,9 +459,9 @@ ipcMain.handle('item-copy', async (_event, id: number) => {
 });
 
 // 监听配置文件更新
-ipcMain.handle('update-config', async (_event, config) => {
+ipcMain.handle('update-config', async (_event, conf) => {
     log.info('[主进程] 更新配置', config);
-    updateSettings(config);
+    updateSettings(conf);
     return true;
 });
 
@@ -537,6 +545,11 @@ app.on('window-all-closed', () => {
         app.quit()
         win = undefined
     }
+    // 对于 Mac 系统， 关闭窗口时并不会直接退出应用， 此时需要我们来手动处理
+    if (process.platform === 'darwin') {
+        log.info('[主进程] 关闭程序')
+        app.quit()
+    }
 })
 
 // 限制只能同时存在启动一个程序
@@ -558,14 +571,6 @@ if (!gotTheLock) {
         })
     })
 }
-
-app.on('window-all-closed', () => {
-    // 对于 Mac 系统， 关闭窗口时并不会直接退出应用， 此时需要我们来手动处理
-    if (process.platform === 'darwin') {
-        log.info('[主进程] 关闭程序')
-        app.quit()
-    }
-})
 
 let lastText = clipboard.readText();
 let lastImage = clipboard.readImage().isEmpty() ? null : clipboard.readImage().toPNG();

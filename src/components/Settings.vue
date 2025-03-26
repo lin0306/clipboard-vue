@@ -271,11 +271,11 @@ onMounted(() => {
             <span class="setting-label">{{ languageTexts.settings.powerOnSelfStart }}</span>
             <Switch v-model:checked="currentConfig.powerOnSelfStart" />
           </div>
-
-          <div class="setting-item">
+          <!-- todo 暂时没有办法替换Windows默认的剪贴板程序 -->
+          <!-- <div class="setting-item">
             <span class="setting-label">{{ languageTexts.settings.replaceGlobalHotkey }}</span>
             <Switch v-model:checked="currentConfig.replaceGlobalHotkey" />
-          </div>
+          </div> -->
 
           <div class="setting-item">
             <span class="setting-label">{{ languageTexts.settings.colsingHideToTaskbar }}</span>

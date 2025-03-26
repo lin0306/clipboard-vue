@@ -2,6 +2,7 @@
 var __defProp = Object.defineProperty;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
+var _a;
 Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 const require$$0$5 = require("electron");
 const node_url = require("node:url");
@@ -79,9 +80,9 @@ function extractPathFromArgs() {
   return userDataDir.replace("--user-data-dir=", "");
 }
 function getMainModulePath() {
-  var _a;
+  var _a2;
   try {
-    return (_a = require.main) == null ? void 0 : _a.filename;
+    return (_a2 = require.main) == null ? void 0 : _a2.filename;
   } catch {
     return void 0;
   }
@@ -103,8 +104,8 @@ let NodeExternalApi$1 = class NodeExternalApi {
     return path$4.join(this.getAppUserDataPath(appName), "logs");
   }
   getAppName() {
-    var _a;
-    const appName = this.appName || ((_a = this.getAppPackageJson()) == null ? void 0 : _a.name);
+    var _a2;
+    const appName = this.appName || ((_a2 = this.getAppPackageJson()) == null ? void 0 : _a2.name);
     if (!appName) {
       throw new Error(
         "electron-log can't determine the app name. It tried these methods:\n1. Use `electron.app.name`\n2. Use productName or name from the nearest package.json`\nYou can also set it through log.transports.file.setAppName()"
@@ -126,8 +127,8 @@ let NodeExternalApi$1 = class NodeExternalApi {
     return appName ? path$4.join(this.getSystemPathAppData(), appName) : void 0;
   }
   getAppVersion() {
-    var _a;
-    return (_a = this.getAppPackageJson()) == null ? void 0 : _a.version;
+    var _a2;
+    return (_a2 = this.getAppPackageJson()) == null ? void 0 : _a2.version;
   }
   getElectronLogPath() {
     return this.getAppLogPath();
@@ -188,8 +189,8 @@ let NodeExternalApi$1 = class NodeExternalApi {
     }
   }
   getSystemPathHome() {
-    var _a;
-    return ((_a = os$3.homedir) == null ? void 0 : _a.call(os$3)) || process.env.HOME;
+    var _a2;
+    return ((_a2 = os$3.homedir) == null ? void 0 : _a2.call(os$3)) || process.env.HOME;
   }
   getSystemPathTemp() {
     return os$3.tmpdir();
@@ -278,10 +279,10 @@ let ElectronExternalApi$1 = class ElectronExternalApi extends NodeExternalApi2 {
     this.electron = electron2;
   }
   getAppName() {
-    var _a, _b;
+    var _a2, _b;
     let appName;
     try {
-      appName = this.appName || ((_a = this.electron.app) == null ? void 0 : _a.name) || ((_b = this.electron.app) == null ? void 0 : _b.getName());
+      appName = this.appName || ((_a2 = this.electron.app) == null ? void 0 : _a2.name) || ((_b = this.electron.app) == null ? void 0 : _b.getName());
     } catch {
     }
     return appName || super.getAppName();
@@ -290,10 +291,10 @@ let ElectronExternalApi$1 = class ElectronExternalApi extends NodeExternalApi2 {
     return this.getPath("userData") || super.getAppUserDataPath(appName);
   }
   getAppVersion() {
-    var _a;
+    var _a2;
     let appVersion;
     try {
-      appVersion = (_a = this.electron.app) == null ? void 0 : _a.getVersion();
+      appVersion = (_a2 = this.electron.app) == null ? void 0 : _a2.getVersion();
     } catch {
     }
     return appVersion || super.getAppVersion();
@@ -307,9 +308,9 @@ let ElectronExternalApi$1 = class ElectronExternalApi extends NodeExternalApi2 {
    * @returns {string|undefined}
    */
   getPath(name) {
-    var _a;
+    var _a2;
     try {
-      return (_a = this.electron.app) == null ? void 0 : _a.getPath(name);
+      return (_a2 = this.electron.app) == null ? void 0 : _a2.getPath(name);
     } catch {
       return void 0;
     }
@@ -325,8 +326,8 @@ let ElectronExternalApi$1 = class ElectronExternalApi extends NodeExternalApi2 {
     return this.getPath("appData") || super.getSystemPathAppData();
   }
   isDev() {
-    var _a;
-    if (((_a = this.electron.app) == null ? void 0 : _a.isPackaged) !== void 0) {
+    var _a2;
+    if (((_a2 = this.electron.app) == null ? void 0 : _a2.isPackaged) !== void 0) {
       return !this.electron.app.isPackaged;
     }
     if (typeof process.execPath === "string") {
@@ -336,16 +337,16 @@ let ElectronExternalApi$1 = class ElectronExternalApi extends NodeExternalApi2 {
     return super.isDev();
   }
   onAppEvent(eventName, handler) {
-    var _a;
-    (_a = this.electron.app) == null ? void 0 : _a.on(eventName, handler);
+    var _a2;
+    (_a2 = this.electron.app) == null ? void 0 : _a2.on(eventName, handler);
     return () => {
-      var _a2;
-      (_a2 = this.electron.app) == null ? void 0 : _a2.off(eventName, handler);
+      var _a3;
+      (_a3 = this.electron.app) == null ? void 0 : _a3.off(eventName, handler);
     };
   }
   onAppReady(handler) {
-    var _a, _b, _c;
-    if ((_a = this.electron.app) == null ? void 0 : _a.isReady()) {
+    var _a2, _b, _c;
+    if ((_a2 = this.electron.app) == null ? void 0 : _a2.isReady()) {
       handler();
     } else if ((_b = this.electron.app) == null ? void 0 : _b.once) {
       (_c = this.electron.app) == null ? void 0 : _c.once("ready", handler);
@@ -354,14 +355,14 @@ let ElectronExternalApi$1 = class ElectronExternalApi extends NodeExternalApi2 {
     }
   }
   onEveryWebContentsEvent(eventName, handler) {
-    var _a, _b, _c;
-    (_b = (_a = this.electron.webContents) == null ? void 0 : _a.getAllWebContents()) == null ? void 0 : _b.forEach((webContents) => {
+    var _a2, _b, _c;
+    (_b = (_a2 = this.electron.webContents) == null ? void 0 : _a2.getAllWebContents()) == null ? void 0 : _b.forEach((webContents) => {
       webContents.on(eventName, handler);
     });
     (_c = this.electron.app) == null ? void 0 : _c.on("web-contents-created", onWebContentsCreated);
     return () => {
-      var _a2, _b2;
-      (_a2 = this.electron.webContents) == null ? void 0 : _a2.getAllWebContents().forEach((webContents) => {
+      var _a3, _b2;
+      (_a3 = this.electron.webContents) == null ? void 0 : _a3.getAllWebContents().forEach((webContents) => {
         webContents.off(eventName, handler);
       });
       (_b2 = this.electron.app) == null ? void 0 : _b2.off("web-contents-created", onWebContentsCreated);
@@ -376,27 +377,27 @@ let ElectronExternalApi$1 = class ElectronExternalApi extends NodeExternalApi2 {
    * @param {function} listener
    */
   onIpc(channel, listener) {
-    var _a;
-    (_a = this.electron.ipcMain) == null ? void 0 : _a.on(channel, listener);
+    var _a2;
+    (_a2 = this.electron.ipcMain) == null ? void 0 : _a2.on(channel, listener);
   }
   onIpcInvoke(channel, listener) {
-    var _a, _b;
-    (_b = (_a = this.electron.ipcMain) == null ? void 0 : _a.handle) == null ? void 0 : _b.call(_a, channel, listener);
+    var _a2, _b;
+    (_b = (_a2 = this.electron.ipcMain) == null ? void 0 : _a2.handle) == null ? void 0 : _b.call(_a2, channel, listener);
   }
   /**
    * @param {string} url
    * @param {Function} [logFunction]
    */
   openUrl(url, logFunction = console.error) {
-    var _a;
-    (_a = this.electron.shell) == null ? void 0 : _a.openExternal(url).catch(logFunction);
+    var _a2;
+    (_a2 = this.electron.shell) == null ? void 0 : _a2.openExternal(url).catch(logFunction);
   }
   setPreloadFileForSessions({
     filePath,
     includeFutureSession = true,
     getSessions = () => {
-      var _a;
-      return [(_a = this.electron.session) == null ? void 0 : _a.defaultSession];
+      var _a2;
+      return [(_a2 = this.electron.session) == null ? void 0 : _a2.defaultSession];
     }
   }) {
     for (const session of getSessions().filter(Boolean)) {
@@ -425,89 +426,84 @@ let ElectronExternalApi$1 = class ElectronExternalApi extends NodeExternalApi2 {
    * @param {any} message
    */
   sendIpc(channel, message) {
-    var _a, _b;
-    (_b = (_a = this.electron.BrowserWindow) == null ? void 0 : _a.getAllWindows()) == null ? void 0 : _b.forEach((wnd) => {
-      var _a2, _b2;
-      if (((_a2 = wnd.webContents) == null ? void 0 : _a2.isDestroyed()) === false && ((_b2 = wnd.webContents) == null ? void 0 : _b2.isCrashed()) === false) {
+    var _a2, _b;
+    (_b = (_a2 = this.electron.BrowserWindow) == null ? void 0 : _a2.getAllWindows()) == null ? void 0 : _b.forEach((wnd) => {
+      var _a3, _b2;
+      if (((_a3 = wnd.webContents) == null ? void 0 : _a3.isDestroyed()) === false && ((_b2 = wnd.webContents) == null ? void 0 : _b2.isCrashed()) === false) {
         wnd.webContents.send(channel, message);
       }
     });
   }
   showErrorBox(title, message) {
-    var _a;
-    (_a = this.electron.dialog) == null ? void 0 : _a.showErrorBox(title, message);
+    var _a2;
+    (_a2 = this.electron.dialog) == null ? void 0 : _a2.showErrorBox(title, message);
   }
 };
 var ElectronExternalApi_1 = ElectronExternalApi$1;
 var electronLogPreload = { exports: {} };
-var hasRequiredElectronLogPreload;
-function requireElectronLogPreload() {
-  if (hasRequiredElectronLogPreload) return electronLogPreload.exports;
-  hasRequiredElectronLogPreload = 1;
-  (function(module2) {
-    let electron2 = {};
-    try {
-      electron2 = require("electron");
-    } catch (e) {
+(function(module2) {
+  let electron2 = {};
+  try {
+    electron2 = require("electron");
+  } catch (e) {
+  }
+  if (electron2.ipcRenderer) {
+    initialize2(electron2);
+  }
+  {
+    module2.exports = initialize2;
+  }
+  function initialize2({ contextBridge, ipcRenderer }) {
+    if (!ipcRenderer) {
+      return;
     }
-    if (electron2.ipcRenderer) {
-      initialize2(electron2);
-    }
-    {
-      module2.exports = initialize2;
-    }
-    function initialize2({ contextBridge, ipcRenderer }) {
-      if (!ipcRenderer) {
-        return;
-      }
-      ipcRenderer.on("__ELECTRON_LOG_IPC__", (_, message) => {
-        window.postMessage({ cmd: "message", ...message });
-      });
-      ipcRenderer.invoke("__ELECTRON_LOG__", { cmd: "getOptions" }).catch((e) => console.error(new Error(
-        `electron-log isn't initialized in the main process. Please call log.initialize() before. ${e.message}`
-      )));
-      const electronLog = {
-        sendToMain(message) {
-          try {
-            ipcRenderer.send("__ELECTRON_LOG__", message);
-          } catch (e) {
-            console.error("electronLog.sendToMain ", e, "data:", message);
-            ipcRenderer.send("__ELECTRON_LOG__", {
-              cmd: "errorHandler",
-              error: { message: e == null ? void 0 : e.message, stack: e == null ? void 0 : e.stack },
-              errorName: "sendToMain"
-            });
-          }
-        },
-        log(...data) {
-          electronLog.sendToMain({ data, level: "info" });
-        }
-      };
-      for (const level of ["error", "warn", "info", "verbose", "debug", "silly"]) {
-        electronLog[level] = (...data) => electronLog.sendToMain({
-          data,
-          level
-        });
-      }
-      if (contextBridge && process.contextIsolated) {
+    ipcRenderer.on("__ELECTRON_LOG_IPC__", (_, message) => {
+      window.postMessage({ cmd: "message", ...message });
+    });
+    ipcRenderer.invoke("__ELECTRON_LOG__", { cmd: "getOptions" }).catch((e) => console.error(new Error(
+      `electron-log isn't initialized in the main process. Please call log.initialize() before. ${e.message}`
+    )));
+    const electronLog = {
+      sendToMain(message) {
         try {
-          contextBridge.exposeInMainWorld("__electronLog", electronLog);
-        } catch {
+          ipcRenderer.send("__ELECTRON_LOG__", message);
+        } catch (e) {
+          console.error("electronLog.sendToMain ", e, "data:", message);
+          ipcRenderer.send("__ELECTRON_LOG__", {
+            cmd: "errorHandler",
+            error: { message: e == null ? void 0 : e.message, stack: e == null ? void 0 : e.stack },
+            errorName: "sendToMain"
+          });
         }
+      },
+      log(...data) {
+        electronLog.sendToMain({ data, level: "info" });
       }
-      if (typeof window === "object") {
-        window.__electronLog = electronLog;
-      } else {
-        __electronLog = electronLog;
+    };
+    for (const level of ["error", "warn", "info", "verbose", "debug", "silly"]) {
+      electronLog[level] = (...data) => electronLog.sendToMain({
+        data,
+        level
+      });
+    }
+    if (contextBridge && process.contextIsolated) {
+      try {
+        contextBridge.exposeInMainWorld("__electronLog", electronLog);
+      } catch {
       }
     }
-  })(electronLogPreload);
-  return electronLogPreload.exports;
-}
+    if (typeof window === "object") {
+      window.__electronLog = electronLog;
+    } else {
+      __electronLog = electronLog;
+    }
+  }
+})(electronLogPreload);
+var electronLogPreloadExports = electronLogPreload.exports;
 const fs$3 = require$$0;
 const os$2 = require$$1;
 const path$2 = require$$2;
-const preloadInitializeFn = requireElectronLogPreload();
+const preloadInitializeFn = electronLogPreloadExports;
 var initialize$1 = {
   initialize({
     externalApi: externalApi2,
@@ -583,250 +579,227 @@ function initializeSpyRendererConsole({ externalApi: externalApi2, logger }) {
     }
   );
 }
-var scope;
-var hasRequiredScope;
-function requireScope() {
-  if (hasRequiredScope) return scope;
-  hasRequiredScope = 1;
-  scope = scopeFactory;
-  function scopeFactory(logger) {
-    return Object.defineProperties(scope2, {
-      defaultLabel: { value: "", writable: true },
-      labelPadding: { value: true, writable: true },
-      maxLabelLength: { value: 0, writable: true },
-      labelLength: {
-        get() {
-          switch (typeof scope2.labelPadding) {
-            case "boolean":
-              return scope2.labelPadding ? scope2.maxLabelLength : 0;
-            case "number":
-              return scope2.labelPadding;
-            default:
-              return 0;
-          }
-        }
-      }
-    });
-    function scope2(label) {
-      scope2.maxLabelLength = Math.max(scope2.maxLabelLength, label.length);
-      const newScope = {};
-      for (const level of logger.levels) {
-        newScope[level] = (...d) => logger.logData(d, { level, scope: label });
-      }
-      newScope.log = newScope.info;
-      return newScope;
-    }
-  }
-  return scope;
-}
-var Buffering_1;
-var hasRequiredBuffering;
-function requireBuffering() {
-  if (hasRequiredBuffering) return Buffering_1;
-  hasRequiredBuffering = 1;
-  class Buffering {
-    constructor({ processMessage: processMessage2 }) {
-      this.processMessage = processMessage2;
-      this.buffer = [];
-      this.enabled = false;
-      this.begin = this.begin.bind(this);
-      this.commit = this.commit.bind(this);
-      this.reject = this.reject.bind(this);
-    }
-    addMessage(message) {
-      this.buffer.push(message);
-    }
-    begin() {
-      this.enabled = [];
-    }
-    commit() {
-      this.enabled = false;
-      this.buffer.forEach((item) => this.processMessage(item));
-      this.buffer = [];
-    }
-    reject() {
-      this.enabled = false;
-      this.buffer = [];
-    }
-  }
-  Buffering_1 = Buffering;
-  return Buffering_1;
-}
-var Logger_1;
-var hasRequiredLogger;
-function requireLogger() {
-  if (hasRequiredLogger) return Logger_1;
-  hasRequiredLogger = 1;
-  const scopeFactory = requireScope();
-  const Buffering = requireBuffering();
-  const _Logger = class _Logger {
-    constructor({
-      allowUnknownLevel = false,
-      dependencies = {},
-      errorHandler,
-      eventLogger,
-      initializeFn,
-      isDev = false,
-      levels = ["error", "warn", "info", "verbose", "debug", "silly"],
-      logId,
-      transportFactories = {},
-      variables
-    } = {}) {
-      __publicField(this, "dependencies", {});
-      __publicField(this, "errorHandler", null);
-      __publicField(this, "eventLogger", null);
-      __publicField(this, "functions", {});
-      __publicField(this, "hooks", []);
-      __publicField(this, "isDev", false);
-      __publicField(this, "levels", null);
-      __publicField(this, "logId", null);
-      __publicField(this, "scope", null);
-      __publicField(this, "transports", {});
-      __publicField(this, "variables", {});
-      this.addLevel = this.addLevel.bind(this);
-      this.create = this.create.bind(this);
-      this.initialize = this.initialize.bind(this);
-      this.logData = this.logData.bind(this);
-      this.processMessage = this.processMessage.bind(this);
-      this.allowUnknownLevel = allowUnknownLevel;
-      this.buffering = new Buffering(this);
-      this.dependencies = dependencies;
-      this.initializeFn = initializeFn;
-      this.isDev = isDev;
-      this.levels = levels;
-      this.logId = logId;
-      this.scope = scopeFactory(this);
-      this.transportFactories = transportFactories;
-      this.variables = variables || {};
-      for (const name of this.levels) {
-        this.addLevel(name, false);
-      }
-      this.log = this.info;
-      this.functions.log = this.log;
-      this.errorHandler = errorHandler;
-      errorHandler == null ? void 0 : errorHandler.setOptions({ ...dependencies, logFn: this.error });
-      this.eventLogger = eventLogger;
-      eventLogger == null ? void 0 : eventLogger.setOptions({ ...dependencies, logger: this });
-      for (const [name, factory] of Object.entries(transportFactories)) {
-        this.transports[name] = factory(this, dependencies);
-      }
-      _Logger.instances[logId] = this;
-    }
-    static getInstance({ logId }) {
-      return this.instances[logId] || this.instances.default;
-    }
-    addLevel(level, index = this.levels.length) {
-      if (index !== false) {
-        this.levels.splice(index, 0, level);
-      }
-      this[level] = (...args) => this.logData(args, { level });
-      this.functions[level] = this[level];
-    }
-    catchErrors(options) {
-      this.processMessage(
-        {
-          data: ["log.catchErrors is deprecated. Use log.errorHandler instead"],
-          level: "warn"
-        },
-        { transports: ["console"] }
-      );
-      return this.errorHandler.startCatching(options);
-    }
-    create(options) {
-      if (typeof options === "string") {
-        options = { logId: options };
-      }
-      return new _Logger({
-        dependencies: this.dependencies,
-        errorHandler: this.errorHandler,
-        initializeFn: this.initializeFn,
-        isDev: this.isDev,
-        transportFactories: this.transportFactories,
-        variables: { ...this.variables },
-        ...options
-      });
-    }
-    compareLevels(passLevel, checkLevel, levels = this.levels) {
-      const pass = levels.indexOf(passLevel);
-      const check = levels.indexOf(checkLevel);
-      if (check === -1 || pass === -1) {
-        return true;
-      }
-      return check <= pass;
-    }
-    initialize(options = {}) {
-      this.initializeFn({ logger: this, ...this.dependencies, ...options });
-    }
-    logData(data, options = {}) {
-      if (this.buffering.enabled) {
-        this.buffering.addMessage({ data, ...options });
-      } else {
-        this.processMessage({ data, ...options });
-      }
-    }
-    processMessage(message, { transports = this.transports } = {}) {
-      if (message.cmd === "errorHandler") {
-        this.errorHandler.handle(message.error, {
-          errorName: message.errorName,
-          processType: "renderer",
-          showDialog: Boolean(message.showDialog)
-        });
-        return;
-      }
-      let level = message.level;
-      if (!this.allowUnknownLevel) {
-        level = this.levels.includes(message.level) ? message.level : "info";
-      }
-      const normalizedMessage = {
-        date: /* @__PURE__ */ new Date(),
-        logId: this.logId,
-        ...message,
-        level,
-        variables: {
-          ...this.variables,
-          ...message.variables
-        }
-      };
-      for (const [transName, transFn] of this.transportEntries(transports)) {
-        if (typeof transFn !== "function" || transFn.level === false) {
-          continue;
-        }
-        if (!this.compareLevels(transFn.level, message.level)) {
-          continue;
-        }
-        try {
-          const transformedMsg = this.hooks.reduce((msg, hook) => {
-            return msg ? hook(msg, transFn, transName) : msg;
-          }, normalizedMessage);
-          if (transformedMsg) {
-            transFn({ ...transformedMsg, data: [...transformedMsg.data] });
-          }
-        } catch (e) {
-          this.processInternalErrorFn(e);
-        }
-      }
-    }
-    processInternalErrorFn(_e) {
-    }
-    transportEntries(transports = this.transports) {
-      const transportArray = Array.isArray(transports) ? transports : Object.entries(transports);
-      return transportArray.map((item) => {
-        switch (typeof item) {
-          case "string":
-            return this.transports[item] ? [item, this.transports[item]] : null;
-          case "function":
-            return [item.name, item];
+var scope = scopeFactory$1;
+function scopeFactory$1(logger) {
+  return Object.defineProperties(scope2, {
+    defaultLabel: { value: "", writable: true },
+    labelPadding: { value: true, writable: true },
+    maxLabelLength: { value: 0, writable: true },
+    labelLength: {
+      get() {
+        switch (typeof scope2.labelPadding) {
+          case "boolean":
+            return scope2.labelPadding ? scope2.maxLabelLength : 0;
+          case "number":
+            return scope2.labelPadding;
           default:
-            return Array.isArray(item) ? item : null;
+            return 0;
         }
-      }).filter(Boolean);
+      }
     }
-  };
-  __publicField(_Logger, "instances", {});
-  let Logger2 = _Logger;
-  Logger_1 = Logger2;
-  return Logger_1;
+  });
+  function scope2(label) {
+    scope2.maxLabelLength = Math.max(scope2.maxLabelLength, label.length);
+    const newScope = {};
+    for (const level of logger.levels) {
+      newScope[level] = (...d) => logger.logData(d, { level, scope: label });
+    }
+    newScope.log = newScope.info;
+    return newScope;
+  }
 }
+let Buffering$1 = class Buffering {
+  constructor({ processMessage: processMessage2 }) {
+    this.processMessage = processMessage2;
+    this.buffer = [];
+    this.enabled = false;
+    this.begin = this.begin.bind(this);
+    this.commit = this.commit.bind(this);
+    this.reject = this.reject.bind(this);
+  }
+  addMessage(message) {
+    this.buffer.push(message);
+  }
+  begin() {
+    this.enabled = [];
+  }
+  commit() {
+    this.enabled = false;
+    this.buffer.forEach((item) => this.processMessage(item));
+    this.buffer = [];
+  }
+  reject() {
+    this.enabled = false;
+    this.buffer = [];
+  }
+};
+var Buffering_1 = Buffering$1;
+const scopeFactory = scope;
+const Buffering2 = Buffering_1;
+let Logger$1 = (_a = class {
+  constructor({
+    allowUnknownLevel = false,
+    dependencies = {},
+    errorHandler,
+    eventLogger,
+    initializeFn,
+    isDev = false,
+    levels = ["error", "warn", "info", "verbose", "debug", "silly"],
+    logId,
+    transportFactories = {},
+    variables
+  } = {}) {
+    __publicField(this, "dependencies", {});
+    __publicField(this, "errorHandler", null);
+    __publicField(this, "eventLogger", null);
+    __publicField(this, "functions", {});
+    __publicField(this, "hooks", []);
+    __publicField(this, "isDev", false);
+    __publicField(this, "levels", null);
+    __publicField(this, "logId", null);
+    __publicField(this, "scope", null);
+    __publicField(this, "transports", {});
+    __publicField(this, "variables", {});
+    this.addLevel = this.addLevel.bind(this);
+    this.create = this.create.bind(this);
+    this.initialize = this.initialize.bind(this);
+    this.logData = this.logData.bind(this);
+    this.processMessage = this.processMessage.bind(this);
+    this.allowUnknownLevel = allowUnknownLevel;
+    this.buffering = new Buffering2(this);
+    this.dependencies = dependencies;
+    this.initializeFn = initializeFn;
+    this.isDev = isDev;
+    this.levels = levels;
+    this.logId = logId;
+    this.scope = scopeFactory(this);
+    this.transportFactories = transportFactories;
+    this.variables = variables || {};
+    for (const name of this.levels) {
+      this.addLevel(name, false);
+    }
+    this.log = this.info;
+    this.functions.log = this.log;
+    this.errorHandler = errorHandler;
+    errorHandler == null ? void 0 : errorHandler.setOptions({ ...dependencies, logFn: this.error });
+    this.eventLogger = eventLogger;
+    eventLogger == null ? void 0 : eventLogger.setOptions({ ...dependencies, logger: this });
+    for (const [name, factory] of Object.entries(transportFactories)) {
+      this.transports[name] = factory(this, dependencies);
+    }
+    _a.instances[logId] = this;
+  }
+  static getInstance({ logId }) {
+    return this.instances[logId] || this.instances.default;
+  }
+  addLevel(level, index = this.levels.length) {
+    if (index !== false) {
+      this.levels.splice(index, 0, level);
+    }
+    this[level] = (...args) => this.logData(args, { level });
+    this.functions[level] = this[level];
+  }
+  catchErrors(options) {
+    this.processMessage(
+      {
+        data: ["log.catchErrors is deprecated. Use log.errorHandler instead"],
+        level: "warn"
+      },
+      { transports: ["console"] }
+    );
+    return this.errorHandler.startCatching(options);
+  }
+  create(options) {
+    if (typeof options === "string") {
+      options = { logId: options };
+    }
+    return new _a({
+      dependencies: this.dependencies,
+      errorHandler: this.errorHandler,
+      initializeFn: this.initializeFn,
+      isDev: this.isDev,
+      transportFactories: this.transportFactories,
+      variables: { ...this.variables },
+      ...options
+    });
+  }
+  compareLevels(passLevel, checkLevel, levels = this.levels) {
+    const pass = levels.indexOf(passLevel);
+    const check = levels.indexOf(checkLevel);
+    if (check === -1 || pass === -1) {
+      return true;
+    }
+    return check <= pass;
+  }
+  initialize(options = {}) {
+    this.initializeFn({ logger: this, ...this.dependencies, ...options });
+  }
+  logData(data, options = {}) {
+    if (this.buffering.enabled) {
+      this.buffering.addMessage({ data, ...options });
+    } else {
+      this.processMessage({ data, ...options });
+    }
+  }
+  processMessage(message, { transports = this.transports } = {}) {
+    if (message.cmd === "errorHandler") {
+      this.errorHandler.handle(message.error, {
+        errorName: message.errorName,
+        processType: "renderer",
+        showDialog: Boolean(message.showDialog)
+      });
+      return;
+    }
+    let level = message.level;
+    if (!this.allowUnknownLevel) {
+      level = this.levels.includes(message.level) ? message.level : "info";
+    }
+    const normalizedMessage = {
+      date: /* @__PURE__ */ new Date(),
+      logId: this.logId,
+      ...message,
+      level,
+      variables: {
+        ...this.variables,
+        ...message.variables
+      }
+    };
+    for (const [transName, transFn] of this.transportEntries(transports)) {
+      if (typeof transFn !== "function" || transFn.level === false) {
+        continue;
+      }
+      if (!this.compareLevels(transFn.level, message.level)) {
+        continue;
+      }
+      try {
+        const transformedMsg = this.hooks.reduce((msg, hook) => {
+          return msg ? hook(msg, transFn, transName) : msg;
+        }, normalizedMessage);
+        if (transformedMsg) {
+          transFn({ ...transformedMsg, data: [...transformedMsg.data] });
+        }
+      } catch (e) {
+        this.processInternalErrorFn(e);
+      }
+    }
+  }
+  processInternalErrorFn(_e) {
+  }
+  transportEntries(transports = this.transports) {
+    const transportArray = Array.isArray(transports) ? transports : Object.entries(transports);
+    return transportArray.map((item) => {
+      switch (typeof item) {
+        case "string":
+          return this.transports[item] ? [item, this.transports[item]] : null;
+        case "function":
+          return [item.name, item];
+        default:
+          return Array.isArray(item) ? item : null;
+      }
+    }).filter(Boolean);
+  }
+}, __publicField(_a, "instances", {}), _a);
+var Logger_1 = Logger$1;
 let ErrorHandler$1 = class ErrorHandler {
   constructor({
     externalApi: externalApi2,
@@ -853,11 +826,11 @@ let ErrorHandler$1 = class ErrorHandler {
     showDialog = this.showDialog,
     errorName = ""
   } = {}) {
-    var _a;
+    var _a2;
     error = normalizeError(error);
     try {
       if (typeof onError === "function") {
-        const versions = ((_a = this.externalApi) == null ? void 0 : _a.getVersions()) || {};
+        const versions = ((_a2 = this.externalApi) == null ? void 0 : _a2.getVersions()) || {};
         const createIssue = this.createIssue;
         const result = onError({
           createIssue,
@@ -910,8 +883,8 @@ let ErrorHandler$1 = class ErrorHandler {
     process.removeListener("unhandledRejection", this.handleRejection);
   }
   createIssue(pageUrl, queryParams) {
-    var _a;
-    (_a = this.externalApi) == null ? void 0 : _a.openUrl(
+    var _a2;
+    (_a2 = this.externalApi) == null ? void 0 : _a2.openUrl(
       `${pageUrl}?${new URLSearchParams(queryParams).toString()}`
     );
   }
@@ -1087,12 +1060,12 @@ let EventLogger$1 = class EventLogger {
     this.disposers = [];
   }
   formatEventLog({ eventName, eventSource, handlerArgs }) {
-    var _a;
+    var _a2;
     const [event, ...args] = handlerArgs;
     if (typeof this.format === "function") {
       return this.format({ args, event, eventName, eventSource });
     }
-    const formatter = (_a = this.formatters[eventSource]) == null ? void 0 : _a[eventName];
+    const formatter = (_a2 = this.formatters[eventSource]) == null ? void 0 : _a2[eventName];
     let formattedArgs = args;
     if (typeof formatter === "function") {
       formattedArgs = formatter({ args, event, eventName, eventSource });
@@ -1134,11 +1107,11 @@ let EventLogger$1 = class EventLogger {
     }
   }
   handleEvent({ eventName, eventSource, handlerArgs }) {
-    var _a;
+    var _a2;
     const log2 = this.formatEventLog({ eventName, eventSource, handlerArgs });
     if (log2) {
       const logFns = this.scope ? this.logger.scope(this.scope) : this.logger;
-      (_a = logFns == null ? void 0 : logFns[this.level]) == null ? void 0 : _a.call(logFns, ...log2);
+      (_a2 = logFns == null ? void 0 : logFns[this.level]) == null ? void 0 : _a2.call(logFns, ...log2);
     }
   }
 };
@@ -1229,7 +1202,7 @@ function formatVariables({ data, message }) {
   template = template.replace("{level}]", `${message.level}]`.padEnd(6, " "));
   const date = message.date || /* @__PURE__ */ new Date();
   data[0] = template.replace(/\{(\w+)}/g, (substring, name) => {
-    var _a;
+    var _a2;
     switch (name) {
       case "level":
         return message.level || "info";
@@ -1254,7 +1227,7 @@ function formatVariables({ data, message }) {
       case "iso":
         return date.toISOString();
       default: {
-        return ((_a = message.variables) == null ? void 0 : _a[name]) || substring;
+        return ((_a2 = message.variables) == null ? void 0 : _a2[name]) || substring;
       }
     }
   }).trim();
@@ -1456,7 +1429,7 @@ const consoleMethods = {
   silly: console.debug,
   log: console.log
 };
-var console_1$1 = consoleTransportFactory;
+var console_1 = consoleTransportFactory;
 const separator = process.platform === "win32" ? ">" : "›";
 const DEFAULT_FORMAT = `%c{h}:{i}:{s}.{ms}{scope}%c ${separator} {text}`;
 Object.assign(consoleTransportFactory, {
@@ -1852,7 +1825,7 @@ function getDefaultFileName(processType = process.type) {
 }
 const { maxDepth: maxDepth$1, toJSON: toJSON$1 } = objectExports;
 const { transform: transform$1 } = transform_1;
-var ipc$1 = ipcTransportFactory;
+var ipc = ipcTransportFactory;
 function ipcTransportFactory(logger, { externalApi: externalApi2 }) {
   Object.assign(transport, {
     depth: 3,
@@ -1862,8 +1835,8 @@ function ipcTransportFactory(logger, { externalApi: externalApi2 }) {
   });
   return (externalApi2 == null ? void 0 : externalApi2.isElectron()) ? transport : void 0;
   function transport(message) {
-    var _a;
-    if (((_a = message == null ? void 0 : message.variables) == null ? void 0 : _a.processType) === "renderer") {
+    var _a2;
+    if (((_a2 = message == null ? void 0 : message.variables) == null ? void 0 : _a2.processType) === "renderer") {
       return;
     }
     externalApi2 == null ? void 0 : externalApi2.sendIpc(transport.eventId, {
@@ -1943,22 +1916,22 @@ function remoteTransportFactory(logger) {
     }));
   }
 }
-const Logger = requireLogger();
+const Logger = Logger_1;
 const ErrorHandler2 = ErrorHandler_1;
 const EventLogger2 = EventLogger_1;
-const transportConsole = console_1$1;
+const transportConsole = console_1;
 const transportFile = file;
-const transportIpc = ipc$1;
+const transportIpc = ipc;
 const transportRemote = remote;
 var createDefaultLogger_1 = createDefaultLogger$1;
 function createDefaultLogger$1({ dependencies, initializeFn }) {
-  var _a;
+  var _a2;
   const defaultLogger2 = new Logger({
     dependencies,
     errorHandler: new ErrorHandler2(),
     eventLogger: new EventLogger2(),
     initializeFn,
-    isDev: (_a = dependencies.externalApi) == null ? void 0 : _a.isDev(),
+    isDev: (_a2 = dependencies.externalApi) == null ? void 0 : _a2.isDev(),
     logId: "default",
     transportFactories: {
       console: transportConsole,
@@ -2018,21 +1991,21 @@ externalApi.onIpcInvoke("__ELECTRON_LOG__", (_, { cmd = "", logId }) => {
   }
 });
 function processMessage(message) {
-  var _a;
-  (_a = defaultLogger.Logger.getInstance(message)) == null ? void 0 : _a.processMessage(message);
+  var _a2;
+  (_a2 = defaultLogger.Logger.getInstance(message)) == null ? void 0 : _a2.processMessage(message);
 }
 const main = main$1;
 var main_1 = main;
-const log$1 = /* @__PURE__ */ getDefaultExportFromCjs(main_1);
-log$1.initialize();
+const log = /* @__PURE__ */ getDefaultExportFromCjs(main_1);
+log.initialize();
 let __dirname$4 = path$6.dirname(node_url.fileURLToPath(typeof document === "undefined" ? require("url").pathToFileURL(__filename).href : _documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === "SCRIPT" && _documentCurrentScript.src || new URL("main.js", document.baseURI).href));
 const env$3 = process.env.NODE_ENV;
 if (env$3 !== "development") {
   __dirname$4 = __dirname$4.replace("\\app.asar\\dist-electron", "");
 }
 let logPath = path$6.join(__dirname$4, "../logs");
-log$1.info("[日志配置] 日志文件位置：", logPath);
-log$1.transports.file.resolvePathFn = () => path$6.join(logPath, "main.log");
+log.info("[日志配置] 日志文件位置：", logPath);
+log.transports.file.resolvePathFn = () => path$6.join(logPath, "main.log");
 var vue = { exports: {} };
 var vue_cjs_prod = {};
 var compilerDom_cjs = {};
@@ -2451,8 +2424,8 @@ function requireShared_cjs() {
     return lastIndex !== index ? html + str.slice(lastIndex, index) : html;
   }
   const commentStripRE = /^-?>|<!--|-->|--!>|<!-$/g;
-  function escapeHtmlComment(src2) {
-    return src2.replace(commentStripRE, "");
+  function escapeHtmlComment(src) {
+    return src.replace(commentStripRE, "");
   }
   const cssVarNameEscapeSymbolsRE = /[ !"#$%&'()*+,./:;<=>?@[\\\]^`{|}~]/g;
   function getEscapedCssVarName(key, doubleEscape) {
@@ -2541,11 +2514,11 @@ function requireShared_cjs() {
     return val;
   };
   const stringifySymbol = (v, i = "") => {
-    var _a;
+    var _a2;
     return (
       // Symbol.description in es2019+ so we need to cast here to pass
       // the lib: es2016 check
-      isSymbol(v) ? `Symbol(${(_a = v.description) != null ? _a : i})` : v
+      isSymbol(v) ? `Symbol(${(_a2 = v.description) != null ? _a2 : i})` : v
     );
   };
   shared_cjs.EMPTY_ARR = EMPTY_ARR;
@@ -2657,7 +2630,7 @@ function requireDecode_codepoint() {
   if (hasRequiredDecode_codepoint) return decode_codepoint;
   hasRequiredDecode_codepoint = 1;
   (function(exports2) {
-    var _a;
+    var _a2;
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.replaceCodePoint = exports2.fromCodePoint = void 0;
     var decodeMap = /* @__PURE__ */ new Map([
@@ -2692,7 +2665,7 @@ function requireDecode_codepoint() {
       [159, 376]
     ]);
     exports2.fromCodePoint = // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, node/no-unsupported-features/es-builtins
-    (_a = String.fromCodePoint) !== null && _a !== void 0 ? _a : function(codePoint) {
+    (_a2 = String.fromCodePoint) !== null && _a2 !== void 0 ? _a2 : function(codePoint) {
       var output = "";
       if (codePoint > 65535) {
         codePoint -= 65536;
@@ -2703,11 +2676,11 @@ function requireDecode_codepoint() {
       return output;
     };
     function replaceCodePoint(codePoint) {
-      var _a2;
+      var _a3;
       if (codePoint >= 55296 && codePoint <= 57343 || codePoint > 1114111) {
         return 65533;
       }
-      return (_a2 = decodeMap.get(codePoint)) !== null && _a2 !== void 0 ? _a2 : codePoint;
+      return (_a3 = decodeMap.get(codePoint)) !== null && _a3 !== void 0 ? _a3 : codePoint;
     }
     exports2.replaceCodePoint = replaceCodePoint;
     function decodeCodePoint(codePoint) {
@@ -2910,9 +2883,9 @@ function requireDecode() {
           return -1;
         };
         EntityDecoder2.prototype.emitNumericEntity = function(lastCp, expectedLength) {
-          var _a;
+          var _a2;
           if (this.consumed <= expectedLength) {
-            (_a = this.errors) === null || _a === void 0 ? void 0 : _a.absenceOfDigitsInNumericCharacterReference(this.consumed);
+            (_a2 = this.errors) === null || _a2 === void 0 ? void 0 : _a2.absenceOfDigitsInNumericCharacterReference(this.consumed);
             return 0;
           }
           if (lastCp === CharCodes.SEMI) {
@@ -2958,11 +2931,11 @@ function requireDecode() {
           return -1;
         };
         EntityDecoder2.prototype.emitNotTerminatedNamedEntity = function() {
-          var _a;
+          var _a2;
           var _b = this, result = _b.result, decodeTree = _b.decodeTree;
           var valueLength = (decodeTree[result] & BinTrieFlags.VALUE_LENGTH) >> 14;
           this.emitNamedEntityData(result, valueLength, this.consumed);
-          (_a = this.errors) === null || _a === void 0 ? void 0 : _a.missingSemicolonAfterCharacterReference();
+          (_a2 = this.errors) === null || _a2 === void 0 ? void 0 : _a2.missingSemicolonAfterCharacterReference();
           return this.consumed;
         };
         EntityDecoder2.prototype.emitNamedEntityData = function(result, valueLength, consumed) {
@@ -2974,7 +2947,7 @@ function requireDecode() {
           return consumed;
         };
         EntityDecoder2.prototype.end = function() {
-          var _a;
+          var _a2;
           switch (this.state) {
             case EntityDecoderState.NamedEntity: {
               return this.result !== 0 && (this.decodeMode !== DecodingMode.Attribute || this.result === this.treeIndex) ? this.emitNotTerminatedNamedEntity() : 0;
@@ -2986,7 +2959,7 @@ function requireDecode() {
               return this.emitNumericEntity(0, 3);
             }
             case EntityDecoderState.NumericStart: {
-              (_a = this.errors) === null || _a === void 0 ? void 0 : _a.absenceOfDigitsInNumericCharacterReference(this.consumed);
+              (_a2 = this.errors) === null || _a2 === void 0 ? void 0 : _a2.absenceOfDigitsInNumericCharacterReference(this.consumed);
               return 0;
             }
             case EntityDecoderState.EntityStart: {
@@ -3157,7 +3130,7 @@ function requireLib() {
     VariableDeclarator: "variable declaration",
     YieldExpression: "yield expression"
   };
-  const toNodeDescription = (node2) => node2.type === "UpdateExpression" ? NodeDescriptions.UpdateExpression[`${node2.prefix}`] : NodeDescriptions[node2.type];
+  const toNodeDescription = (node) => node.type === "UpdateExpression" ? NodeDescriptions.UpdateExpression[`${node.prefix}`] : NodeDescriptions[node.type];
   var StandardErrors = {
     AccessorIsGenerator: ({
       kind
@@ -3562,10 +3535,10 @@ function requireLib() {
       });
     }
   };
-  function toESTreeLocation(node2) {
-    toUnenumerable(node2.loc.start, "index");
-    toUnenumerable(node2.loc.end, "index");
-    return node2;
+  function toESTreeLocation(node) {
+    toUnenumerable(node.loc.start, "index");
+    toUnenumerable(node.loc.end, "index");
+    return node;
   }
   var estree = (superClass) => class ESTreeParserMixin extends superClass {
     parse() {
@@ -3584,12 +3557,12 @@ function requireLib() {
         regex = new RegExp(pattern, flags);
       } catch (_) {
       }
-      const node2 = this.estreeParseLiteral(regex);
-      node2.regex = {
+      const node = this.estreeParseLiteral(regex);
+      node.regex = {
         pattern,
         flags
       };
-      return node2;
+      return node;
     }
     parseBigIntLiteral(value) {
       let bigInt;
@@ -3598,15 +3571,15 @@ function requireLib() {
       } catch (_unused) {
         bigInt = null;
       }
-      const node2 = this.estreeParseLiteral(bigInt);
-      node2.bigint = String(node2.value || value);
-      return node2;
+      const node = this.estreeParseLiteral(bigInt);
+      node.bigint = String(node.value || value);
+      return node;
     }
     parseDecimalLiteral(value) {
       const decimal = null;
-      const node2 = this.estreeParseLiteral(decimal);
-      node2.decimal = String(node2.value || value);
-      return node2;
+      const node = this.estreeParseLiteral(decimal);
+      node.decimal = String(node.value || value);
+      return node;
     }
     estreeParseLiteral(value) {
       return this.parseLiteral(value, "Literal");
@@ -3636,15 +3609,15 @@ function requireLib() {
       delete expression.extra;
       return stmt;
     }
-    initFunction(node2, isAsync) {
-      super.initFunction(node2, isAsync);
-      node2.expression = false;
+    initFunction(node, isAsync) {
+      super.initFunction(node, isAsync);
+      node.expression = false;
     }
-    checkDeclaration(node2) {
-      if (node2 != null && this.isObjectProperty(node2)) {
-        this.checkDeclaration(node2.value);
+    checkDeclaration(node) {
+      if (node != null && this.isObjectProperty(node)) {
+        this.checkDeclaration(node.value);
       } else {
-        super.checkDeclaration(node2);
+        super.checkDeclaration(node);
       }
     }
     getObjectOrClassMethodParams(method) {
@@ -3654,74 +3627,74 @@ function requireLib() {
       var _stmt$expression$extr;
       return stmt.type === "ExpressionStatement" && stmt.expression.type === "Literal" && typeof stmt.expression.value === "string" && !((_stmt$expression$extr = stmt.expression.extra) != null && _stmt$expression$extr.parenthesized);
     }
-    parseBlockBody(node2, allowDirectives, topLevel, end, afterBlockParse) {
-      super.parseBlockBody(node2, allowDirectives, topLevel, end, afterBlockParse);
-      const directiveStatements = node2.directives.map((d) => this.directiveToStmt(d));
-      node2.body = directiveStatements.concat(node2.body);
-      delete node2.directives;
+    parseBlockBody(node, allowDirectives, topLevel, end, afterBlockParse) {
+      super.parseBlockBody(node, allowDirectives, topLevel, end, afterBlockParse);
+      const directiveStatements = node.directives.map((d) => this.directiveToStmt(d));
+      node.body = directiveStatements.concat(node.body);
+      delete node.directives;
     }
     parsePrivateName() {
-      const node2 = super.parsePrivateName();
+      const node = super.parsePrivateName();
       {
         if (!this.getPluginOption("estree", "classFeatures")) {
-          return node2;
+          return node;
         }
       }
-      return this.convertPrivateNameToPrivateIdentifier(node2);
+      return this.convertPrivateNameToPrivateIdentifier(node);
     }
-    convertPrivateNameToPrivateIdentifier(node2) {
-      const name = super.getPrivateNameSV(node2);
-      node2 = node2;
-      delete node2.id;
-      node2.name = name;
-      node2.type = "PrivateIdentifier";
-      return node2;
+    convertPrivateNameToPrivateIdentifier(node) {
+      const name = super.getPrivateNameSV(node);
+      node = node;
+      delete node.id;
+      node.name = name;
+      node.type = "PrivateIdentifier";
+      return node;
     }
-    isPrivateName(node2) {
+    isPrivateName(node) {
       {
         if (!this.getPluginOption("estree", "classFeatures")) {
-          return super.isPrivateName(node2);
+          return super.isPrivateName(node);
         }
       }
-      return node2.type === "PrivateIdentifier";
+      return node.type === "PrivateIdentifier";
     }
-    getPrivateNameSV(node2) {
+    getPrivateNameSV(node) {
       {
         if (!this.getPluginOption("estree", "classFeatures")) {
-          return super.getPrivateNameSV(node2);
+          return super.getPrivateNameSV(node);
         }
       }
-      return node2.name;
+      return node.name;
     }
     parseLiteral(value, type) {
-      const node2 = super.parseLiteral(value, type);
-      node2.raw = node2.extra.raw;
-      delete node2.extra;
-      return node2;
+      const node = super.parseLiteral(value, type);
+      node.raw = node.extra.raw;
+      delete node.extra;
+      return node;
     }
-    parseFunctionBody(node2, allowExpression, isMethod = false) {
-      super.parseFunctionBody(node2, allowExpression, isMethod);
-      node2.expression = node2.body.type !== "BlockStatement";
+    parseFunctionBody(node, allowExpression, isMethod = false) {
+      super.parseFunctionBody(node, allowExpression, isMethod);
+      node.expression = node.body.type !== "BlockStatement";
     }
-    parseMethod(node2, isGenerator, isAsync, isConstructor, allowDirectSuper, type, inClassScope = false) {
+    parseMethod(node, isGenerator, isAsync, isConstructor, allowDirectSuper, type, inClassScope = false) {
       let funcNode = this.startNode();
-      funcNode.kind = node2.kind;
+      funcNode.kind = node.kind;
       funcNode = super.parseMethod(funcNode, isGenerator, isAsync, isConstructor, allowDirectSuper, type, inClassScope);
       funcNode.type = "FunctionExpression";
       delete funcNode.kind;
-      node2.value = funcNode;
+      node.value = funcNode;
       const {
         typeParameters
-      } = node2;
+      } = node;
       if (typeParameters) {
-        delete node2.typeParameters;
+        delete node.typeParameters;
         funcNode.typeParameters = typeParameters;
         this.resetStartLocationFromNode(funcNode, typeParameters);
       }
       if (type === "ClassPrivateMethod") {
-        node2.computed = false;
+        node.computed = false;
       }
-      return this.finishNode(node2, "MethodDefinition");
+      return this.finishNode(node, "MethodDefinition");
     }
     nameIsConstructor(key) {
       if (key.type === "Literal") return key.value === "constructor";
@@ -3752,8 +3725,8 @@ function requireLib() {
       propertyNode.computed = false;
       return propertyNode;
     }
-    parseClassAccessorProperty(node2) {
-      const accessorPropertyNode = super.parseClassAccessorProperty(node2);
+    parseClassAccessorProperty(node) {
+      const accessorPropertyNode = super.parseClassAccessorProperty(node);
       {
         if (!this.getPluginOption("estree", "classFeatures")) {
           return accessorPropertyNode;
@@ -3763,45 +3736,45 @@ function requireLib() {
       return accessorPropertyNode;
     }
     parseObjectMethod(prop, isGenerator, isAsync, isPattern, isAccessor) {
-      const node2 = super.parseObjectMethod(prop, isGenerator, isAsync, isPattern, isAccessor);
-      if (node2) {
-        node2.type = "Property";
-        if (node2.kind === "method") {
-          node2.kind = "init";
+      const node = super.parseObjectMethod(prop, isGenerator, isAsync, isPattern, isAccessor);
+      if (node) {
+        node.type = "Property";
+        if (node.kind === "method") {
+          node.kind = "init";
         }
-        node2.shorthand = false;
+        node.shorthand = false;
       }
-      return node2;
+      return node;
     }
     parseObjectProperty(prop, startLoc, isPattern, refExpressionErrors) {
-      const node2 = super.parseObjectProperty(prop, startLoc, isPattern, refExpressionErrors);
-      if (node2) {
-        node2.kind = "init";
-        node2.type = "Property";
+      const node = super.parseObjectProperty(prop, startLoc, isPattern, refExpressionErrors);
+      if (node) {
+        node.kind = "init";
+        node.type = "Property";
       }
-      return node2;
+      return node;
     }
     isValidLVal(type, isUnparenthesizedInAssign, binding) {
       return type === "Property" ? "value" : super.isValidLVal(type, isUnparenthesizedInAssign, binding);
     }
-    isAssignable(node2, isBinding) {
-      if (node2 != null && this.isObjectProperty(node2)) {
-        return this.isAssignable(node2.value, isBinding);
+    isAssignable(node, isBinding) {
+      if (node != null && this.isObjectProperty(node)) {
+        return this.isAssignable(node.value, isBinding);
       }
-      return super.isAssignable(node2, isBinding);
+      return super.isAssignable(node, isBinding);
     }
-    toAssignable(node2, isLHS = false) {
-      if (node2 != null && this.isObjectProperty(node2)) {
+    toAssignable(node, isLHS = false) {
+      if (node != null && this.isObjectProperty(node)) {
         const {
           key,
           value
-        } = node2;
+        } = node;
         if (this.isPrivateName(key)) {
           this.classScope.usePrivateName(this.getPrivateNameSV(key), key.loc.start);
         }
         this.toAssignable(value, isLHS);
       } else {
-        super.toAssignable(node2, isLHS);
+        super.toAssignable(node, isLHS);
       }
     }
     toAssignableObjectExpressionProp(prop, isLast, isLHS) {
@@ -3814,95 +3787,95 @@ function requireLib() {
       }
     }
     finishCallExpression(unfinished, optional) {
-      const node2 = super.finishCallExpression(unfinished, optional);
-      if (node2.callee.type === "Import") {
+      const node = super.finishCallExpression(unfinished, optional);
+      if (node.callee.type === "Import") {
         var _ref, _ref2;
-        node2.type = "ImportExpression";
-        node2.source = node2.arguments[0];
-        node2.options = (_ref = node2.arguments[1]) != null ? _ref : null;
-        node2.attributes = (_ref2 = node2.arguments[1]) != null ? _ref2 : null;
-        delete node2.arguments;
-        delete node2.callee;
+        node.type = "ImportExpression";
+        node.source = node.arguments[0];
+        node.options = (_ref = node.arguments[1]) != null ? _ref : null;
+        node.attributes = (_ref2 = node.arguments[1]) != null ? _ref2 : null;
+        delete node.arguments;
+        delete node.callee;
       }
-      return node2;
+      return node;
     }
-    toReferencedArguments(node2) {
-      if (node2.type === "ImportExpression") {
+    toReferencedArguments(node) {
+      if (node.type === "ImportExpression") {
         return;
       }
-      super.toReferencedArguments(node2);
+      super.toReferencedArguments(node);
     }
     parseExport(unfinished, decorators) {
       const exportStartLoc = this.state.lastTokStartLoc;
-      const node2 = super.parseExport(unfinished, decorators);
-      switch (node2.type) {
+      const node = super.parseExport(unfinished, decorators);
+      switch (node.type) {
         case "ExportAllDeclaration":
-          node2.exported = null;
+          node.exported = null;
           break;
         case "ExportNamedDeclaration":
-          if (node2.specifiers.length === 1 && node2.specifiers[0].type === "ExportNamespaceSpecifier") {
-            node2.type = "ExportAllDeclaration";
-            node2.exported = node2.specifiers[0].exported;
-            delete node2.specifiers;
+          if (node.specifiers.length === 1 && node.specifiers[0].type === "ExportNamespaceSpecifier") {
+            node.type = "ExportAllDeclaration";
+            node.exported = node.specifiers[0].exported;
+            delete node.specifiers;
           }
         case "ExportDefaultDeclaration":
           {
             var _declaration$decorato;
             const {
               declaration
-            } = node2;
-            if ((declaration == null ? void 0 : declaration.type) === "ClassDeclaration" && ((_declaration$decorato = declaration.decorators) == null ? void 0 : _declaration$decorato.length) > 0 && declaration.start === node2.start) {
-              this.resetStartLocation(node2, exportStartLoc);
+            } = node;
+            if ((declaration == null ? void 0 : declaration.type) === "ClassDeclaration" && ((_declaration$decorato = declaration.decorators) == null ? void 0 : _declaration$decorato.length) > 0 && declaration.start === node.start) {
+              this.resetStartLocation(node, exportStartLoc);
             }
           }
           break;
       }
-      return node2;
+      return node;
     }
     parseSubscript(base, startLoc, noCalls, state) {
-      const node2 = super.parseSubscript(base, startLoc, noCalls, state);
+      const node = super.parseSubscript(base, startLoc, noCalls, state);
       if (state.optionalChainMember) {
-        if (node2.type === "OptionalMemberExpression" || node2.type === "OptionalCallExpression") {
-          node2.type = node2.type.substring(8);
+        if (node.type === "OptionalMemberExpression" || node.type === "OptionalCallExpression") {
+          node.type = node.type.substring(8);
         }
         if (state.stop) {
-          const chain = this.startNodeAtNode(node2);
-          chain.expression = node2;
+          const chain = this.startNodeAtNode(node);
+          chain.expression = node;
           return this.finishNode(chain, "ChainExpression");
         }
-      } else if (node2.type === "MemberExpression" || node2.type === "CallExpression") {
-        node2.optional = false;
+      } else if (node.type === "MemberExpression" || node.type === "CallExpression") {
+        node.optional = false;
       }
-      return node2;
+      return node;
     }
-    isOptionalMemberExpression(node2) {
-      if (node2.type === "ChainExpression") {
-        return node2.expression.type === "MemberExpression";
+    isOptionalMemberExpression(node) {
+      if (node.type === "ChainExpression") {
+        return node.expression.type === "MemberExpression";
       }
-      return super.isOptionalMemberExpression(node2);
+      return super.isOptionalMemberExpression(node);
     }
-    hasPropertyAsPrivateName(node2) {
-      if (node2.type === "ChainExpression") {
-        node2 = node2.expression;
+    hasPropertyAsPrivateName(node) {
+      if (node.type === "ChainExpression") {
+        node = node.expression;
       }
-      return super.hasPropertyAsPrivateName(node2);
+      return super.hasPropertyAsPrivateName(node);
     }
-    isObjectProperty(node2) {
-      return node2.type === "Property" && node2.kind === "init" && !node2.method;
+    isObjectProperty(node) {
+      return node.type === "Property" && node.kind === "init" && !node.method;
     }
-    isObjectMethod(node2) {
-      return node2.type === "Property" && (node2.method || node2.kind === "get" || node2.kind === "set");
+    isObjectMethod(node) {
+      return node.type === "Property" && (node.method || node.kind === "get" || node.kind === "set");
     }
-    finishNodeAt(node2, type, endLoc) {
-      return toESTreeLocation(super.finishNodeAt(node2, type, endLoc));
+    finishNodeAt(node, type, endLoc) {
+      return toESTreeLocation(super.finishNodeAt(node, type, endLoc));
     }
-    resetStartLocation(node2, startLoc) {
-      super.resetStartLocation(node2, startLoc);
-      toESTreeLocation(node2);
+    resetStartLocation(node, startLoc) {
+      super.resetStartLocation(node, startLoc);
+      toESTreeLocation(node);
     }
-    resetEndLocation(node2, endLoc = this.state.lastTokEndLoc) {
-      super.resetEndLocation(node2, endLoc);
-      toESTreeLocation(node2);
+    resetEndLocation(node, endLoc = this.state.lastTokEndLoc) {
+      super.resetEndLocation(node, endLoc);
+      toESTreeLocation(node);
     }
   };
   class TokContext {
@@ -4761,35 +4734,35 @@ function requireLib() {
       return (_this$plugins$get = this.plugins.get(plugin)) == null ? void 0 : _this$plugins$get[name];
     }
   }
-  function setTrailingComments(node2, comments) {
-    if (node2.trailingComments === void 0) {
-      node2.trailingComments = comments;
+  function setTrailingComments(node, comments) {
+    if (node.trailingComments === void 0) {
+      node.trailingComments = comments;
     } else {
-      node2.trailingComments.unshift(...comments);
+      node.trailingComments.unshift(...comments);
     }
   }
-  function setLeadingComments(node2, comments) {
-    if (node2.leadingComments === void 0) {
-      node2.leadingComments = comments;
+  function setLeadingComments(node, comments) {
+    if (node.leadingComments === void 0) {
+      node.leadingComments = comments;
     } else {
-      node2.leadingComments.unshift(...comments);
+      node.leadingComments.unshift(...comments);
     }
   }
-  function setInnerComments(node2, comments) {
-    if (node2.innerComments === void 0) {
-      node2.innerComments = comments;
+  function setInnerComments(node, comments) {
+    if (node.innerComments === void 0) {
+      node.innerComments = comments;
     } else {
-      node2.innerComments.unshift(...comments);
+      node.innerComments.unshift(...comments);
     }
   }
-  function adjustInnerComments(node2, elements, commentWS) {
+  function adjustInnerComments(node, elements, commentWS) {
     let lastElement = null;
     let i = elements.length;
     while (lastElement === null && i > 0) {
       lastElement = elements[--i];
     }
     if (lastElement === null || lastElement.start > commentWS.start) {
-      setInnerComments(node2, commentWS.comments);
+      setInnerComments(node, commentWS.comments);
     } else {
       setTrailingComments(lastElement, commentWS.comments);
     }
@@ -4806,7 +4779,7 @@ function requireLib() {
       this.comments.push(comment);
       this.state.commentsLen++;
     }
-    processComment(node2) {
+    processComment(node) {
       const {
         commentStack
       } = this.state;
@@ -4814,23 +4787,23 @@ function requireLib() {
       if (commentStackLength === 0) return;
       let i = commentStackLength - 1;
       const lastCommentWS = commentStack[i];
-      if (lastCommentWS.start === node2.end) {
-        lastCommentWS.leadingNode = node2;
+      if (lastCommentWS.start === node.end) {
+        lastCommentWS.leadingNode = node;
         i--;
       }
       const {
         start: nodeStart
-      } = node2;
+      } = node;
       for (; i >= 0; i--) {
         const commentWS = commentStack[i];
         const commentEnd = commentWS.end;
         if (commentEnd > nodeStart) {
-          commentWS.containingNode = node2;
+          commentWS.containingNode = node;
           this.finalizeComment(commentWS);
           commentStack.splice(i, 1);
         } else {
           if (commentEnd === nodeStart) {
-            commentWS.trailingNode = node2;
+            commentWS.trailingNode = node;
           }
           break;
         }
@@ -4849,19 +4822,19 @@ function requireLib() {
         }
       } else {
         const {
-          containingNode: node2,
+          containingNode: node,
           start: commentStart
         } = commentWS;
         if (this.input.charCodeAt(this.offsetToSourcePos(commentStart) - 1) === 44) {
-          switch (node2.type) {
+          switch (node.type) {
             case "ObjectExpression":
             case "ObjectPattern":
             case "RecordExpression":
-              adjustInnerComments(node2, node2.properties, commentWS);
+              adjustInnerComments(node, node.properties, commentWS);
               break;
             case "CallExpression":
             case "OptionalCallExpression":
-              adjustInnerComments(node2, node2.arguments, commentWS);
+              adjustInnerComments(node, node.arguments, commentWS);
               break;
             case "FunctionDeclaration":
             case "FunctionExpression":
@@ -4869,31 +4842,31 @@ function requireLib() {
             case "ObjectMethod":
             case "ClassMethod":
             case "ClassPrivateMethod":
-              adjustInnerComments(node2, node2.params, commentWS);
+              adjustInnerComments(node, node.params, commentWS);
               break;
             case "ArrayExpression":
             case "ArrayPattern":
             case "TupleExpression":
-              adjustInnerComments(node2, node2.elements, commentWS);
+              adjustInnerComments(node, node.elements, commentWS);
               break;
             case "ExportNamedDeclaration":
             case "ImportDeclaration":
-              adjustInnerComments(node2, node2.specifiers, commentWS);
+              adjustInnerComments(node, node.specifiers, commentWS);
               break;
             case "TSEnumDeclaration":
               {
-                adjustInnerComments(node2, node2.members, commentWS);
+                adjustInnerComments(node, node.members, commentWS);
               }
               break;
             case "TSEnumBody":
-              adjustInnerComments(node2, node2.members, commentWS);
+              adjustInnerComments(node, node.members, commentWS);
               break;
             default: {
-              setInnerComments(node2, comments);
+              setInnerComments(node, comments);
             }
           }
         } else {
-          setInnerComments(node2, comments);
+          setInnerComments(node, comments);
         }
       }
     }
@@ -4906,7 +4879,7 @@ function requireLib() {
       }
       this.state.commentStack = [];
     }
-    resetPreviousNodeTrailingComments(node2) {
+    resetPreviousNodeTrailingComments(node) {
       const {
         commentStack
       } = this.state;
@@ -4915,11 +4888,11 @@ function requireLib() {
       } = commentStack;
       if (length === 0) return;
       const commentWS = commentStack[length - 1];
-      if (commentWS.leadingNode === node2) {
+      if (commentWS.leadingNode === node) {
         commentWS.leadingNode = null;
       }
     }
-    resetPreviousIdentifierLeadingComments(node2) {
+    resetPreviousIdentifierLeadingComments(node) {
       const {
         commentStack
       } = this.state;
@@ -4927,13 +4900,13 @@ function requireLib() {
         length
       } = commentStack;
       if (length === 0) return;
-      if (commentStack[length - 1].trailingNode === node2) {
+      if (commentStack[length - 1].trailingNode === node) {
         commentStack[length - 1].trailingNode = null;
-      } else if (length >= 2 && commentStack[length - 2].trailingNode === node2) {
+      } else if (length >= 2 && commentStack[length - 2].trailingNode === node) {
         commentStack[length - 2].trailingNode = null;
       }
     }
-    takeSurroundingComments(node2, start, end) {
+    takeSurroundingComments(node, start, end) {
       const {
         commentStack
       } = this.state;
@@ -4945,9 +4918,9 @@ function requireLib() {
         const commentEnd = commentWS.end;
         const commentStart = commentWS.start;
         if (commentStart === end) {
-          commentWS.leadingNode = node2;
+          commentWS.leadingNode = node;
         } else if (commentEnd === start) {
-          commentWS.trailingNode = node2;
+          commentWS.trailingNode = node;
         } else if (commentEnd < start) {
           break;
         }
@@ -6586,8 +6559,8 @@ function requireLib() {
     exit() {
       this.stack.pop();
     }
-    recordParameterInitializerError(toParseError, node2) {
-      const origin = node2.loc.start;
+    recordParameterInitializerError(toParseError, node) {
+      const origin = node.loc.start;
       const {
         stack
       } = this;
@@ -6603,12 +6576,12 @@ function requireLib() {
       }
       this.parser.raise(toParseError, origin);
     }
-    recordArrowParameterBindingError(error, node2) {
+    recordArrowParameterBindingError(error, node) {
       const {
         stack
       } = this;
       const scope2 = stack[stack.length - 1];
-      const origin = node2.loc.start;
+      const origin = node.loc.start;
       if (scope2.isCertainlyParameterDeclaration()) {
         this.parser.raise(error, origin);
       } else if (scope2.canBeArrowParameterDeclaration()) {
@@ -6689,14 +6662,14 @@ function requireLib() {
     return (isAsync ? 2 : 0) | (isGenerator ? 1 : 0);
   }
   class UtilParser extends Tokenizer {
-    addExtra(node2, key, value, enumerable = true) {
-      if (!node2) return;
+    addExtra(node, key, value, enumerable = true) {
+      if (!node) return;
       let {
         extra
-      } = node2;
+      } = node;
       if (extra == null) {
         extra = {};
-        node2.extra = extra;
+        node.extra = extra;
       }
       if (enumerable) {
         extra[key] = value;
@@ -6763,8 +6736,8 @@ function requireLib() {
         node: null
       };
       try {
-        const node2 = fn((node3 = null) => {
-          abortSignal.node = node3;
+        const node = fn((node2 = null) => {
+          abortSignal.node = node2;
           throw abortSignal;
         });
         if (this.state.errors.length > oldState.errors.length) {
@@ -6772,7 +6745,7 @@ function requireLib() {
           this.state = oldState;
           this.state.tokensLength = failState.tokensLength;
           return {
-            node: node2,
+            node,
             error: failState.errors[oldState.errors.length],
             thrown: false,
             aborted: false,
@@ -6780,7 +6753,7 @@ function requireLib() {
           };
         }
         return {
-          node: node2,
+          node,
           error: null,
           thrown: false,
           aborted: false,
@@ -6838,20 +6811,20 @@ function requireLib() {
     isLiteralPropertyName() {
       return tokenIsLiteralPropertyName(this.state.type);
     }
-    isPrivateName(node2) {
-      return node2.type === "PrivateName";
+    isPrivateName(node) {
+      return node.type === "PrivateName";
     }
-    getPrivateNameSV(node2) {
-      return node2.id.name;
+    getPrivateNameSV(node) {
+      return node.id.name;
     }
-    hasPropertyAsPrivateName(node2) {
-      return (node2.type === "MemberExpression" || node2.type === "OptionalMemberExpression") && this.isPrivateName(node2.property);
+    hasPropertyAsPrivateName(node) {
+      return (node.type === "MemberExpression" || node.type === "OptionalMemberExpression") && this.isPrivateName(node.property);
     }
-    isObjectProperty(node2) {
-      return node2.type === "ObjectProperty";
+    isObjectProperty(node) {
+      return node.type === "ObjectProperty";
     }
-    isObjectMethod(node2) {
-      return node2.type === "ObjectMethod";
+    isObjectMethod(node) {
+      return node.type === "ObjectMethod";
     }
     initializeScopes(inModule = this.options.sourceType === "module") {
       const oldLabels = this.state.labels;
@@ -6931,10 +6904,10 @@ function requireLib() {
       return newNode;
     };
   }
-  function clonePlaceholder(node2) {
-    return cloneIdentifier(node2);
+  function clonePlaceholder(node) {
+    return cloneIdentifier(node);
   }
-  function cloneIdentifier(node2) {
+  function cloneIdentifier(node) {
     const {
       type,
       start,
@@ -6943,7 +6916,7 @@ function requireLib() {
       range,
       extra,
       name
-    } = node2;
+    } = node;
     const cloned = Object.create(NodePrototype);
     cloned.type = type;
     cloned.start = start;
@@ -6953,11 +6926,11 @@ function requireLib() {
     cloned.extra = extra;
     cloned.name = name;
     if (type === "Placeholder") {
-      cloned.expectedNode = node2.expectedNode;
+      cloned.expectedNode = node.expectedNode;
     }
     return cloned;
   }
-  function cloneStringLiteral(node2) {
+  function cloneStringLiteral(node) {
     const {
       type,
       start,
@@ -6965,9 +6938,9 @@ function requireLib() {
       loc,
       range,
       extra
-    } = node2;
+    } = node;
     if (type === "Placeholder") {
-      return clonePlaceholder(node2);
+      return clonePlaceholder(node);
     }
     const cloned = Object.create(NodePrototype);
     cloned.type = type;
@@ -6975,12 +6948,12 @@ function requireLib() {
     cloned.end = end;
     cloned.loc = loc;
     cloned.range = range;
-    if (node2.raw !== void 0) {
-      cloned.raw = node2.raw;
+    if (node.raw !== void 0) {
+      cloned.raw = node.raw;
     } else {
       cloned.extra = extra;
     }
-    cloned.value = node2.value;
+    cloned.value = node.value;
     return cloned;
   }
   class NodeUtils extends UtilParser {
@@ -6994,31 +6967,31 @@ function requireLib() {
     startNodeAtNode(type) {
       return this.startNodeAt(type.loc.start);
     }
-    finishNode(node2, type) {
-      return this.finishNodeAt(node2, type, this.state.lastTokEndLoc);
+    finishNode(node, type) {
+      return this.finishNodeAt(node, type, this.state.lastTokEndLoc);
     }
-    finishNodeAt(node2, type, endLoc) {
-      node2.type = type;
-      node2.end = endLoc.index;
-      node2.loc.end = endLoc;
-      if (this.optionFlags & 128) node2.range[1] = endLoc.index;
+    finishNodeAt(node, type, endLoc) {
+      node.type = type;
+      node.end = endLoc.index;
+      node.loc.end = endLoc;
+      if (this.optionFlags & 128) node.range[1] = endLoc.index;
       if (this.optionFlags & 4096) {
-        this.processComment(node2);
+        this.processComment(node);
       }
-      return node2;
+      return node;
     }
-    resetStartLocation(node2, startLoc) {
-      node2.start = startLoc.index;
-      node2.loc.start = startLoc;
-      if (this.optionFlags & 128) node2.range[0] = startLoc.index;
+    resetStartLocation(node, startLoc) {
+      node.start = startLoc.index;
+      node.loc.start = startLoc;
+      if (this.optionFlags & 128) node.range[0] = startLoc.index;
     }
-    resetEndLocation(node2, endLoc = this.state.lastTokEndLoc) {
-      node2.end = endLoc.index;
-      node2.loc.end = endLoc;
-      if (this.optionFlags & 128) node2.range[1] = endLoc.index;
+    resetEndLocation(node, endLoc = this.state.lastTokEndLoc) {
+      node.end = endLoc.index;
+      node.loc.end = endLoc;
+      if (this.optionFlags & 128) node.range[1] = endLoc.index;
     }
-    resetStartLocationFromNode(node2, locationNode) {
-      this.resetStartLocation(node2, locationNode.loc.start);
+    resetStartLocationFromNode(node, locationNode) {
+      this.resetStartLocation(node, locationNode.loc.start);
     }
   }
   const reservedTypes = /* @__PURE__ */ new Set(["_", "any", "bool", "boolean", "empty", "extends", "false", "interface", "mixed", "null", "number", "static", "string", "true", "typeof", "void"]);
@@ -7118,8 +7091,8 @@ function requireLib() {
   function isEsModuleType(bodyElement) {
     return bodyElement.type === "DeclareExportAllDeclaration" || bodyElement.type === "DeclareExportDeclaration" && (!bodyElement.declaration || bodyElement.declaration.type !== "TypeAlias" && bodyElement.declaration.type !== "InterfaceDeclaration");
   }
-  function hasTypeImportKind(node2) {
-    return node2.importKind === "type" || node2.importKind === "typeof";
+  function hasTypeImportKind(node) {
+    return node.importKind === "type" || node.importKind === "typeof";
   }
   const exportSuggestions = {
     const: "declare export var",
@@ -7178,7 +7151,7 @@ function requireLib() {
       return type;
     }
     flowParsePredicate() {
-      const node2 = this.startNode();
+      const node = this.startNode();
       const moduloLoc = this.state.startLoc;
       this.next();
       this.expectContextual(110);
@@ -7186,11 +7159,11 @@ function requireLib() {
         this.raise(FlowErrors.UnexpectedSpaceBetweenModuloChecks, moduloLoc);
       }
       if (this.eat(10)) {
-        node2.value = super.parseExpression();
+        node.value = super.parseExpression();
         this.expect(11);
-        return this.finishNode(node2, "DeclaredPredicate");
+        return this.finishNode(node, "DeclaredPredicate");
       } else {
-        return this.finishNode(node2, "InferredPredicate");
+        return this.finishNode(node, "InferredPredicate");
       }
     }
     flowParseTypeAndPredicateInitialiser() {
@@ -7211,14 +7184,14 @@ function requireLib() {
       }
       return [type, predicate];
     }
-    flowParseDeclareClass(node2) {
+    flowParseDeclareClass(node) {
       this.next();
-      this.flowParseInterfaceish(node2, true);
-      return this.finishNode(node2, "DeclareClass");
+      this.flowParseInterfaceish(node, true);
+      return this.finishNode(node, "DeclareClass");
     }
-    flowParseDeclareFunction(node2) {
+    flowParseDeclareFunction(node) {
       this.next();
-      const id = node2.id = this.parseIdentifier();
+      const id = node.id = this.parseIdentifier();
       const typeNode = this.startNode();
       const typeContainer = this.startNode();
       if (this.match(47)) {
@@ -7232,57 +7205,57 @@ function requireLib() {
       typeNode.rest = tmp.rest;
       typeNode.this = tmp._this;
       this.expect(11);
-      [typeNode.returnType, node2.predicate] = this.flowParseTypeAndPredicateInitialiser();
+      [typeNode.returnType, node.predicate] = this.flowParseTypeAndPredicateInitialiser();
       typeContainer.typeAnnotation = this.finishNode(typeNode, "FunctionTypeAnnotation");
       id.typeAnnotation = this.finishNode(typeContainer, "TypeAnnotation");
       this.resetEndLocation(id);
       this.semicolon();
-      this.scope.declareName(node2.id.name, 2048, node2.id.loc.start);
-      return this.finishNode(node2, "DeclareFunction");
+      this.scope.declareName(node.id.name, 2048, node.id.loc.start);
+      return this.finishNode(node, "DeclareFunction");
     }
-    flowParseDeclare(node2, insideModule) {
+    flowParseDeclare(node, insideModule) {
       if (this.match(80)) {
-        return this.flowParseDeclareClass(node2);
+        return this.flowParseDeclareClass(node);
       } else if (this.match(68)) {
-        return this.flowParseDeclareFunction(node2);
+        return this.flowParseDeclareFunction(node);
       } else if (this.match(74)) {
-        return this.flowParseDeclareVariable(node2);
+        return this.flowParseDeclareVariable(node);
       } else if (this.eatContextual(127)) {
         if (this.match(16)) {
-          return this.flowParseDeclareModuleExports(node2);
+          return this.flowParseDeclareModuleExports(node);
         } else {
           if (insideModule) {
             this.raise(FlowErrors.NestedDeclareModule, this.state.lastTokStartLoc);
           }
-          return this.flowParseDeclareModule(node2);
+          return this.flowParseDeclareModule(node);
         }
       } else if (this.isContextual(130)) {
-        return this.flowParseDeclareTypeAlias(node2);
+        return this.flowParseDeclareTypeAlias(node);
       } else if (this.isContextual(131)) {
-        return this.flowParseDeclareOpaqueType(node2);
+        return this.flowParseDeclareOpaqueType(node);
       } else if (this.isContextual(129)) {
-        return this.flowParseDeclareInterface(node2);
+        return this.flowParseDeclareInterface(node);
       } else if (this.match(82)) {
-        return this.flowParseDeclareExportDeclaration(node2, insideModule);
+        return this.flowParseDeclareExportDeclaration(node, insideModule);
       } else {
         this.unexpected();
       }
     }
-    flowParseDeclareVariable(node2) {
+    flowParseDeclareVariable(node) {
       this.next();
-      node2.id = this.flowParseTypeAnnotatableIdentifier(true);
-      this.scope.declareName(node2.id.name, 5, node2.id.loc.start);
+      node.id = this.flowParseTypeAnnotatableIdentifier(true);
+      this.scope.declareName(node.id.name, 5, node.id.loc.start);
       this.semicolon();
-      return this.finishNode(node2, "DeclareVariable");
+      return this.finishNode(node, "DeclareVariable");
     }
-    flowParseDeclareModule(node2) {
+    flowParseDeclareModule(node) {
       this.scope.enter(0);
       if (this.match(134)) {
-        node2.id = super.parseExprAtom();
+        node.id = super.parseExprAtom();
       } else {
-        node2.id = this.parseIdentifier();
+        node.id = this.parseIdentifier();
       }
-      const bodyNode = node2.body = this.startNode();
+      const bodyNode = node.body = this.startNode();
       const body = bodyNode.body = [];
       this.expect(5);
       while (!this.match(8)) {
@@ -7321,20 +7294,20 @@ function requireLib() {
           hasModuleExport = true;
         }
       });
-      node2.kind = kind || "CommonJS";
-      return this.finishNode(node2, "DeclareModule");
+      node.kind = kind || "CommonJS";
+      return this.finishNode(node, "DeclareModule");
     }
-    flowParseDeclareExportDeclaration(node2, insideModule) {
+    flowParseDeclareExportDeclaration(node, insideModule) {
       this.expect(82);
       if (this.eat(65)) {
         if (this.match(68) || this.match(80)) {
-          node2.declaration = this.flowParseDeclare(this.startNode());
+          node.declaration = this.flowParseDeclare(this.startNode());
         } else {
-          node2.declaration = this.flowParseType();
+          node.declaration = this.flowParseType();
           this.semicolon();
         }
-        node2.default = true;
-        return this.finishNode(node2, "DeclareExportDeclaration");
+        node.default = true;
+        return this.finishNode(node, "DeclareExportDeclaration");
       } else {
         if (this.match(75) || this.isLet() || (this.isContextual(130) || this.isContextual(129)) && !insideModule) {
           const label = this.state.value;
@@ -7344,75 +7317,75 @@ function requireLib() {
           });
         }
         if (this.match(74) || this.match(68) || this.match(80) || this.isContextual(131)) {
-          node2.declaration = this.flowParseDeclare(this.startNode());
-          node2.default = false;
-          return this.finishNode(node2, "DeclareExportDeclaration");
+          node.declaration = this.flowParseDeclare(this.startNode());
+          node.default = false;
+          return this.finishNode(node, "DeclareExportDeclaration");
         } else if (this.match(55) || this.match(5) || this.isContextual(129) || this.isContextual(130) || this.isContextual(131)) {
-          node2 = this.parseExport(node2, null);
-          if (node2.type === "ExportNamedDeclaration") {
-            node2.type = "ExportDeclaration";
-            node2.default = false;
-            delete node2.exportKind;
+          node = this.parseExport(node, null);
+          if (node.type === "ExportNamedDeclaration") {
+            node.type = "ExportDeclaration";
+            node.default = false;
+            delete node.exportKind;
           }
-          node2.type = "Declare" + node2.type;
-          return node2;
+          node.type = "Declare" + node.type;
+          return node;
         }
       }
       this.unexpected();
     }
-    flowParseDeclareModuleExports(node2) {
+    flowParseDeclareModuleExports(node) {
       this.next();
       this.expectContextual(111);
-      node2.typeAnnotation = this.flowParseTypeAnnotation();
+      node.typeAnnotation = this.flowParseTypeAnnotation();
       this.semicolon();
-      return this.finishNode(node2, "DeclareModuleExports");
+      return this.finishNode(node, "DeclareModuleExports");
     }
-    flowParseDeclareTypeAlias(node2) {
+    flowParseDeclareTypeAlias(node) {
       this.next();
-      const finished = this.flowParseTypeAlias(node2);
+      const finished = this.flowParseTypeAlias(node);
       finished.type = "DeclareTypeAlias";
       return finished;
     }
-    flowParseDeclareOpaqueType(node2) {
+    flowParseDeclareOpaqueType(node) {
       this.next();
-      const finished = this.flowParseOpaqueType(node2, true);
+      const finished = this.flowParseOpaqueType(node, true);
       finished.type = "DeclareOpaqueType";
       return finished;
     }
-    flowParseDeclareInterface(node2) {
+    flowParseDeclareInterface(node) {
       this.next();
-      this.flowParseInterfaceish(node2, false);
-      return this.finishNode(node2, "DeclareInterface");
+      this.flowParseInterfaceish(node, false);
+      return this.finishNode(node, "DeclareInterface");
     }
-    flowParseInterfaceish(node2, isClass) {
-      node2.id = this.flowParseRestrictedIdentifier(!isClass, true);
-      this.scope.declareName(node2.id.name, isClass ? 17 : 8201, node2.id.loc.start);
+    flowParseInterfaceish(node, isClass) {
+      node.id = this.flowParseRestrictedIdentifier(!isClass, true);
+      this.scope.declareName(node.id.name, isClass ? 17 : 8201, node.id.loc.start);
       if (this.match(47)) {
-        node2.typeParameters = this.flowParseTypeParameterDeclaration();
+        node.typeParameters = this.flowParseTypeParameterDeclaration();
       } else {
-        node2.typeParameters = null;
+        node.typeParameters = null;
       }
-      node2.extends = [];
+      node.extends = [];
       if (this.eat(81)) {
         do {
-          node2.extends.push(this.flowParseInterfaceExtends());
+          node.extends.push(this.flowParseInterfaceExtends());
         } while (!isClass && this.eat(12));
       }
       if (isClass) {
-        node2.implements = [];
-        node2.mixins = [];
+        node.implements = [];
+        node.mixins = [];
         if (this.eatContextual(117)) {
           do {
-            node2.mixins.push(this.flowParseInterfaceExtends());
+            node.mixins.push(this.flowParseInterfaceExtends());
           } while (this.eat(12));
         }
         if (this.eatContextual(113)) {
           do {
-            node2.implements.push(this.flowParseInterfaceExtends());
+            node.implements.push(this.flowParseInterfaceExtends());
           } while (this.eat(12));
         }
       }
-      node2.body = this.flowParseObjectType({
+      node.body = this.flowParseObjectType({
         allowStatic: isClass,
         allowExact: false,
         allowSpread: false,
@@ -7421,18 +7394,18 @@ function requireLib() {
       });
     }
     flowParseInterfaceExtends() {
-      const node2 = this.startNode();
-      node2.id = this.flowParseQualifiedTypeIdentifier();
+      const node = this.startNode();
+      node.id = this.flowParseQualifiedTypeIdentifier();
       if (this.match(47)) {
-        node2.typeParameters = this.flowParseTypeParameterInstantiation();
+        node.typeParameters = this.flowParseTypeParameterInstantiation();
       } else {
-        node2.typeParameters = null;
+        node.typeParameters = null;
       }
-      return this.finishNode(node2, "InterfaceExtends");
+      return this.finishNode(node, "InterfaceExtends");
     }
-    flowParseInterface(node2) {
-      this.flowParseInterfaceish(node2, false);
-      return this.finishNode(node2, "InterfaceDeclaration");
+    flowParseInterface(node) {
+      this.flowParseInterfaceish(node, false);
+      return this.finishNode(node, "InterfaceDeclaration");
     }
     checkNotUnderscore(word) {
       if (word === "_") {
@@ -7449,60 +7422,60 @@ function requireLib() {
       this.checkReservedType(this.state.value, this.state.startLoc, declaration);
       return this.parseIdentifier(liberal);
     }
-    flowParseTypeAlias(node2) {
-      node2.id = this.flowParseRestrictedIdentifier(false, true);
-      this.scope.declareName(node2.id.name, 8201, node2.id.loc.start);
+    flowParseTypeAlias(node) {
+      node.id = this.flowParseRestrictedIdentifier(false, true);
+      this.scope.declareName(node.id.name, 8201, node.id.loc.start);
       if (this.match(47)) {
-        node2.typeParameters = this.flowParseTypeParameterDeclaration();
+        node.typeParameters = this.flowParseTypeParameterDeclaration();
       } else {
-        node2.typeParameters = null;
+        node.typeParameters = null;
       }
-      node2.right = this.flowParseTypeInitialiser(29);
+      node.right = this.flowParseTypeInitialiser(29);
       this.semicolon();
-      return this.finishNode(node2, "TypeAlias");
+      return this.finishNode(node, "TypeAlias");
     }
-    flowParseOpaqueType(node2, declare) {
+    flowParseOpaqueType(node, declare) {
       this.expectContextual(130);
-      node2.id = this.flowParseRestrictedIdentifier(true, true);
-      this.scope.declareName(node2.id.name, 8201, node2.id.loc.start);
+      node.id = this.flowParseRestrictedIdentifier(true, true);
+      this.scope.declareName(node.id.name, 8201, node.id.loc.start);
       if (this.match(47)) {
-        node2.typeParameters = this.flowParseTypeParameterDeclaration();
+        node.typeParameters = this.flowParseTypeParameterDeclaration();
       } else {
-        node2.typeParameters = null;
+        node.typeParameters = null;
       }
-      node2.supertype = null;
+      node.supertype = null;
       if (this.match(14)) {
-        node2.supertype = this.flowParseTypeInitialiser(14);
+        node.supertype = this.flowParseTypeInitialiser(14);
       }
-      node2.impltype = null;
+      node.impltype = null;
       if (!declare) {
-        node2.impltype = this.flowParseTypeInitialiser(29);
+        node.impltype = this.flowParseTypeInitialiser(29);
       }
       this.semicolon();
-      return this.finishNode(node2, "OpaqueType");
+      return this.finishNode(node, "OpaqueType");
     }
     flowParseTypeParameter(requireDefault = false) {
       const nodeStartLoc = this.state.startLoc;
-      const node2 = this.startNode();
+      const node = this.startNode();
       const variance = this.flowParseVariance();
       const ident = this.flowParseTypeAnnotatableIdentifier();
-      node2.name = ident.name;
-      node2.variance = variance;
-      node2.bound = ident.typeAnnotation;
+      node.name = ident.name;
+      node.variance = variance;
+      node.bound = ident.typeAnnotation;
       if (this.match(29)) {
         this.eat(29);
-        node2.default = this.flowParseType();
+        node.default = this.flowParseType();
       } else {
         if (requireDefault) {
           this.raise(FlowErrors.MissingTypeParamDefault, nodeStartLoc);
         }
       }
-      return this.finishNode(node2, "TypeParameter");
+      return this.finishNode(node, "TypeParameter");
     }
     flowParseTypeParameterDeclaration() {
       const oldInType = this.state.inType;
-      const node2 = this.startNode();
-      node2.params = [];
+      const node = this.startNode();
+      node.params = [];
       this.state.inType = true;
       if (this.match(47) || this.match(143)) {
         this.next();
@@ -7512,7 +7485,7 @@ function requireLib() {
       let defaultRequired = false;
       do {
         const typeParameter = this.flowParseTypeParameter(defaultRequired);
-        node2.params.push(typeParameter);
+        node.params.push(typeParameter);
         if (typeParameter.default) {
           defaultRequired = true;
         }
@@ -7522,7 +7495,7 @@ function requireLib() {
       } while (!this.match(48));
       this.expect(48);
       this.state.inType = oldInType;
-      return this.finishNode(node2, "TypeParameterDeclaration");
+      return this.finishNode(node, "TypeParameterDeclaration");
     }
     flowInTopLevelContext(cb) {
       if (this.curContext() !== types.brace) {
@@ -7542,16 +7515,16 @@ function requireLib() {
       return this.flowParseTypeParameterInstantiation();
     }
     flowParseTypeParameterInstantiation() {
-      const node2 = this.startNode();
+      const node = this.startNode();
       const oldInType = this.state.inType;
       this.state.inType = true;
-      node2.params = [];
+      node.params = [];
       this.flowInTopLevelContext(() => {
         this.expect(47);
         const oldNoAnonFunctionType = this.state.noAnonFunctionType;
         this.state.noAnonFunctionType = false;
         while (!this.match(48)) {
-          node2.params.push(this.flowParseType());
+          node.params.push(this.flowParseType());
           if (!this.match(48)) {
             this.expect(12);
           }
@@ -7563,112 +7536,112 @@ function requireLib() {
         this.reScan_lt_gt();
       }
       this.expect(48);
-      return this.finishNode(node2, "TypeParameterInstantiation");
+      return this.finishNode(node, "TypeParameterInstantiation");
     }
     flowParseTypeParameterInstantiationCallOrNew() {
       if (this.reScan_lt() !== 47) return;
-      const node2 = this.startNode();
+      const node = this.startNode();
       const oldInType = this.state.inType;
-      node2.params = [];
+      node.params = [];
       this.state.inType = true;
       this.expect(47);
       while (!this.match(48)) {
-        node2.params.push(this.flowParseTypeOrImplicitInstantiation());
+        node.params.push(this.flowParseTypeOrImplicitInstantiation());
         if (!this.match(48)) {
           this.expect(12);
         }
       }
       this.expect(48);
       this.state.inType = oldInType;
-      return this.finishNode(node2, "TypeParameterInstantiation");
+      return this.finishNode(node, "TypeParameterInstantiation");
     }
     flowParseInterfaceType() {
-      const node2 = this.startNode();
+      const node = this.startNode();
       this.expectContextual(129);
-      node2.extends = [];
+      node.extends = [];
       if (this.eat(81)) {
         do {
-          node2.extends.push(this.flowParseInterfaceExtends());
+          node.extends.push(this.flowParseInterfaceExtends());
         } while (this.eat(12));
       }
-      node2.body = this.flowParseObjectType({
+      node.body = this.flowParseObjectType({
         allowStatic: false,
         allowExact: false,
         allowSpread: false,
         allowProto: false,
         allowInexact: false
       });
-      return this.finishNode(node2, "InterfaceTypeAnnotation");
+      return this.finishNode(node, "InterfaceTypeAnnotation");
     }
     flowParseObjectPropertyKey() {
       return this.match(135) || this.match(134) ? super.parseExprAtom() : this.parseIdentifier(true);
     }
-    flowParseObjectTypeIndexer(node2, isStatic, variance) {
-      node2.static = isStatic;
+    flowParseObjectTypeIndexer(node, isStatic, variance) {
+      node.static = isStatic;
       if (this.lookahead().type === 14) {
-        node2.id = this.flowParseObjectPropertyKey();
-        node2.key = this.flowParseTypeInitialiser();
+        node.id = this.flowParseObjectPropertyKey();
+        node.key = this.flowParseTypeInitialiser();
       } else {
-        node2.id = null;
-        node2.key = this.flowParseType();
+        node.id = null;
+        node.key = this.flowParseType();
       }
       this.expect(3);
-      node2.value = this.flowParseTypeInitialiser();
-      node2.variance = variance;
-      return this.finishNode(node2, "ObjectTypeIndexer");
+      node.value = this.flowParseTypeInitialiser();
+      node.variance = variance;
+      return this.finishNode(node, "ObjectTypeIndexer");
     }
-    flowParseObjectTypeInternalSlot(node2, isStatic) {
-      node2.static = isStatic;
-      node2.id = this.flowParseObjectPropertyKey();
+    flowParseObjectTypeInternalSlot(node, isStatic) {
+      node.static = isStatic;
+      node.id = this.flowParseObjectPropertyKey();
       this.expect(3);
       this.expect(3);
       if (this.match(47) || this.match(10)) {
-        node2.method = true;
-        node2.optional = false;
-        node2.value = this.flowParseObjectTypeMethodish(this.startNodeAt(node2.loc.start));
+        node.method = true;
+        node.optional = false;
+        node.value = this.flowParseObjectTypeMethodish(this.startNodeAt(node.loc.start));
       } else {
-        node2.method = false;
+        node.method = false;
         if (this.eat(17)) {
-          node2.optional = true;
+          node.optional = true;
         }
-        node2.value = this.flowParseTypeInitialiser();
+        node.value = this.flowParseTypeInitialiser();
       }
-      return this.finishNode(node2, "ObjectTypeInternalSlot");
+      return this.finishNode(node, "ObjectTypeInternalSlot");
     }
-    flowParseObjectTypeMethodish(node2) {
-      node2.params = [];
-      node2.rest = null;
-      node2.typeParameters = null;
-      node2.this = null;
+    flowParseObjectTypeMethodish(node) {
+      node.params = [];
+      node.rest = null;
+      node.typeParameters = null;
+      node.this = null;
       if (this.match(47)) {
-        node2.typeParameters = this.flowParseTypeParameterDeclaration();
+        node.typeParameters = this.flowParseTypeParameterDeclaration();
       }
       this.expect(10);
       if (this.match(78)) {
-        node2.this = this.flowParseFunctionTypeParam(true);
-        node2.this.name = null;
+        node.this = this.flowParseFunctionTypeParam(true);
+        node.this.name = null;
         if (!this.match(11)) {
           this.expect(12);
         }
       }
       while (!this.match(11) && !this.match(21)) {
-        node2.params.push(this.flowParseFunctionTypeParam(false));
+        node.params.push(this.flowParseFunctionTypeParam(false));
         if (!this.match(11)) {
           this.expect(12);
         }
       }
       if (this.eat(21)) {
-        node2.rest = this.flowParseFunctionTypeParam(false);
+        node.rest = this.flowParseFunctionTypeParam(false);
       }
       this.expect(11);
-      node2.returnType = this.flowParseTypeInitialiser();
-      return this.finishNode(node2, "FunctionTypeAnnotation");
+      node.returnType = this.flowParseTypeInitialiser();
+      return this.finishNode(node, "FunctionTypeAnnotation");
     }
-    flowParseObjectTypeCallProperty(node2, isStatic) {
+    flowParseObjectTypeCallProperty(node, isStatic) {
       const valueNode = this.startNode();
-      node2.static = isStatic;
-      node2.value = this.flowParseObjectTypeMethodish(valueNode);
-      return this.finishNode(node2, "ObjectTypeCallProperty");
+      node.static = isStatic;
+      node.value = this.flowParseObjectTypeMethodish(valueNode);
+      return this.finishNode(node, "ObjectTypeCallProperty");
     }
     flowParseObjectType({
       allowStatic,
@@ -7701,7 +7674,7 @@ function requireLib() {
         let isStatic = false;
         let protoStartLoc = null;
         let inexactStartLoc = null;
-        const node2 = this.startNode();
+        const node = this.startNode();
         if (allowProto && this.isContextual(118)) {
           const lookahead = this.lookahead();
           if (lookahead.type !== 14 && lookahead.type !== 17) {
@@ -7726,9 +7699,9 @@ function requireLib() {
             if (variance) {
               this.unexpected(variance.loc.start);
             }
-            nodeStart.internalSlots.push(this.flowParseObjectTypeInternalSlot(node2, isStatic));
+            nodeStart.internalSlots.push(this.flowParseObjectTypeInternalSlot(node, isStatic));
           } else {
-            nodeStart.indexers.push(this.flowParseObjectTypeIndexer(node2, isStatic, variance));
+            nodeStart.indexers.push(this.flowParseObjectTypeIndexer(node, isStatic, variance));
           }
         } else if (this.match(10) || this.match(47)) {
           if (protoStartLoc != null) {
@@ -7737,7 +7710,7 @@ function requireLib() {
           if (variance) {
             this.unexpected(variance.loc.start);
           }
-          nodeStart.callProperties.push(this.flowParseObjectTypeCallProperty(node2, isStatic));
+          nodeStart.callProperties.push(this.flowParseObjectTypeCallProperty(node, isStatic));
         } else {
           let kind = "init";
           if (this.isContextual(99) || this.isContextual(104)) {
@@ -7747,7 +7720,7 @@ function requireLib() {
               this.next();
             }
           }
-          const propOrInexact = this.flowParseObjectTypeProperty(node2, isStatic, protoStartLoc, variance, kind, allowSpread, allowInexact != null ? allowInexact : !exact);
+          const propOrInexact = this.flowParseObjectTypeProperty(node, isStatic, protoStartLoc, variance, kind, allowSpread, allowInexact != null ? allowInexact : !exact);
           if (propOrInexact === null) {
             inexact = true;
             inexactStartLoc = this.state.lastTokStartLoc;
@@ -7768,7 +7741,7 @@ function requireLib() {
       this.state.inType = oldInType;
       return out;
     }
-    flowParseObjectTypeProperty(node2, isStatic, protoStartLoc, variance, kind, allowSpread, allowInexact) {
+    flowParseObjectTypeProperty(node, isStatic, protoStartLoc, variance, kind, allowSpread, allowInexact) {
       if (this.eat(21)) {
         const isInexactToken = this.match(12) || this.match(13) || this.match(8) || this.match(9);
         if (isInexactToken) {
@@ -7791,40 +7764,40 @@ function requireLib() {
         if (variance) {
           this.raise(FlowErrors.SpreadVariance, variance);
         }
-        node2.argument = this.flowParseType();
-        return this.finishNode(node2, "ObjectTypeSpreadProperty");
+        node.argument = this.flowParseType();
+        return this.finishNode(node, "ObjectTypeSpreadProperty");
       } else {
-        node2.key = this.flowParseObjectPropertyKey();
-        node2.static = isStatic;
-        node2.proto = protoStartLoc != null;
-        node2.kind = kind;
+        node.key = this.flowParseObjectPropertyKey();
+        node.static = isStatic;
+        node.proto = protoStartLoc != null;
+        node.kind = kind;
         let optional = false;
         if (this.match(47) || this.match(10)) {
-          node2.method = true;
+          node.method = true;
           if (protoStartLoc != null) {
             this.unexpected(protoStartLoc);
           }
           if (variance) {
             this.unexpected(variance.loc.start);
           }
-          node2.value = this.flowParseObjectTypeMethodish(this.startNodeAt(node2.loc.start));
+          node.value = this.flowParseObjectTypeMethodish(this.startNodeAt(node.loc.start));
           if (kind === "get" || kind === "set") {
-            this.flowCheckGetterSetterParams(node2);
+            this.flowCheckGetterSetterParams(node);
           }
-          if (!allowSpread && node2.key.name === "constructor" && node2.value.this) {
-            this.raise(FlowErrors.ThisParamBannedInConstructor, node2.value.this);
+          if (!allowSpread && node.key.name === "constructor" && node.value.this) {
+            this.raise(FlowErrors.ThisParamBannedInConstructor, node.value.this);
           }
         } else {
           if (kind !== "init") this.unexpected();
-          node2.method = false;
+          node.method = false;
           if (this.eat(17)) {
             optional = true;
           }
-          node2.value = this.flowParseTypeInitialiser();
-          node2.variance = variance;
+          node.value = this.flowParseTypeInitialiser();
+          node.variance = variance;
         }
-        node2.optional = optional;
-        return this.finishNode(node2, "ObjectTypeProperty");
+        node.optional = optional;
+        return this.finishNode(node, "ObjectTypeProperty");
       }
     }
     flowCheckGetterSetterParams(property) {
@@ -7847,75 +7820,75 @@ function requireLib() {
     }
     flowParseQualifiedTypeIdentifier(startLoc, id) {
       startLoc != null ? startLoc : startLoc = this.state.startLoc;
-      let node2 = id || this.flowParseRestrictedIdentifier(true);
+      let node = id || this.flowParseRestrictedIdentifier(true);
       while (this.eat(16)) {
-        const node22 = this.startNodeAt(startLoc);
-        node22.qualification = node2;
-        node22.id = this.flowParseRestrictedIdentifier(true);
-        node2 = this.finishNode(node22, "QualifiedTypeIdentifier");
+        const node2 = this.startNodeAt(startLoc);
+        node2.qualification = node;
+        node2.id = this.flowParseRestrictedIdentifier(true);
+        node = this.finishNode(node2, "QualifiedTypeIdentifier");
       }
-      return node2;
+      return node;
     }
     flowParseGenericType(startLoc, id) {
-      const node2 = this.startNodeAt(startLoc);
-      node2.typeParameters = null;
-      node2.id = this.flowParseQualifiedTypeIdentifier(startLoc, id);
+      const node = this.startNodeAt(startLoc);
+      node.typeParameters = null;
+      node.id = this.flowParseQualifiedTypeIdentifier(startLoc, id);
       if (this.match(47)) {
-        node2.typeParameters = this.flowParseTypeParameterInstantiation();
+        node.typeParameters = this.flowParseTypeParameterInstantiation();
       }
-      return this.finishNode(node2, "GenericTypeAnnotation");
+      return this.finishNode(node, "GenericTypeAnnotation");
     }
     flowParseTypeofType() {
-      const node2 = this.startNode();
+      const node = this.startNode();
       this.expect(87);
-      node2.argument = this.flowParsePrimaryType();
-      return this.finishNode(node2, "TypeofTypeAnnotation");
+      node.argument = this.flowParsePrimaryType();
+      return this.finishNode(node, "TypeofTypeAnnotation");
     }
     flowParseTupleType() {
-      const node2 = this.startNode();
-      node2.types = [];
+      const node = this.startNode();
+      node.types = [];
       this.expect(0);
       while (this.state.pos < this.length && !this.match(3)) {
-        node2.types.push(this.flowParseType());
+        node.types.push(this.flowParseType());
         if (this.match(3)) break;
         this.expect(12);
       }
       this.expect(3);
-      return this.finishNode(node2, "TupleTypeAnnotation");
+      return this.finishNode(node, "TupleTypeAnnotation");
     }
     flowParseFunctionTypeParam(first) {
       let name = null;
       let optional = false;
       let typeAnnotation = null;
-      const node2 = this.startNode();
+      const node = this.startNode();
       const lh = this.lookahead();
       const isThis = this.state.type === 78;
       if (lh.type === 14 || lh.type === 17) {
         if (isThis && !first) {
-          this.raise(FlowErrors.ThisParamMustBeFirst, node2);
+          this.raise(FlowErrors.ThisParamMustBeFirst, node);
         }
         name = this.parseIdentifier(isThis);
         if (this.eat(17)) {
           optional = true;
           if (isThis) {
-            this.raise(FlowErrors.ThisParamMayNotBeOptional, node2);
+            this.raise(FlowErrors.ThisParamMayNotBeOptional, node);
           }
         }
         typeAnnotation = this.flowParseTypeInitialiser();
       } else {
         typeAnnotation = this.flowParseType();
       }
-      node2.name = name;
-      node2.optional = optional;
-      node2.typeAnnotation = typeAnnotation;
-      return this.finishNode(node2, "FunctionTypeParam");
+      node.name = name;
+      node.optional = optional;
+      node.typeAnnotation = typeAnnotation;
+      return this.finishNode(node, "FunctionTypeParam");
     }
     reinterpretTypeAsFunctionTypeParam(type) {
-      const node2 = this.startNodeAt(type.loc.start);
-      node2.name = null;
-      node2.optional = false;
-      node2.typeAnnotation = type;
-      return this.finishNode(node2, "FunctionTypeParam");
+      const node = this.startNodeAt(type.loc.start);
+      node.name = null;
+      node.optional = false;
+      node.typeAnnotation = type;
+      return this.finishNode(node, "FunctionTypeParam");
     }
     flowParseFunctionTypeParams(params = []) {
       let rest = null;
@@ -7942,23 +7915,23 @@ function requireLib() {
         _this
       };
     }
-    flowIdentToTypeAnnotation(startLoc, node2, id) {
+    flowIdentToTypeAnnotation(startLoc, node, id) {
       switch (id.name) {
         case "any":
-          return this.finishNode(node2, "AnyTypeAnnotation");
+          return this.finishNode(node, "AnyTypeAnnotation");
         case "bool":
         case "boolean":
-          return this.finishNode(node2, "BooleanTypeAnnotation");
+          return this.finishNode(node, "BooleanTypeAnnotation");
         case "mixed":
-          return this.finishNode(node2, "MixedTypeAnnotation");
+          return this.finishNode(node, "MixedTypeAnnotation");
         case "empty":
-          return this.finishNode(node2, "EmptyTypeAnnotation");
+          return this.finishNode(node, "EmptyTypeAnnotation");
         case "number":
-          return this.finishNode(node2, "NumberTypeAnnotation");
+          return this.finishNode(node, "NumberTypeAnnotation");
         case "string":
-          return this.finishNode(node2, "StringTypeAnnotation");
+          return this.finishNode(node, "StringTypeAnnotation");
         case "symbol":
-          return this.finishNode(node2, "SymbolTypeAnnotation");
+          return this.finishNode(node, "SymbolTypeAnnotation");
         default:
           this.checkNotUnderscore(id.name);
           return this.flowParseGenericType(startLoc, id);
@@ -7966,7 +7939,7 @@ function requireLib() {
     }
     flowParsePrimaryType() {
       const startLoc = this.state.startLoc;
-      const node2 = this.startNode();
+      const node = this.startNode();
       let tmp;
       let type;
       let isGroupedType = false;
@@ -7994,20 +7967,20 @@ function requireLib() {
           this.state.noAnonFunctionType = oldNoAnonFunctionType;
           return type;
         case 47: {
-          const node3 = this.startNode();
-          node3.typeParameters = this.flowParseTypeParameterDeclaration();
+          const node2 = this.startNode();
+          node2.typeParameters = this.flowParseTypeParameterDeclaration();
           this.expect(10);
           tmp = this.flowParseFunctionTypeParams();
-          node3.params = tmp.params;
-          node3.rest = tmp.rest;
-          node3.this = tmp._this;
+          node2.params = tmp.params;
+          node2.rest = tmp.rest;
+          node2.this = tmp._this;
           this.expect(11);
           this.expect(19);
-          node3.returnType = this.flowParseType();
-          return this.finishNode(node3, "FunctionTypeAnnotation");
+          node2.returnType = this.flowParseType();
+          return this.finishNode(node2, "FunctionTypeAnnotation");
         }
         case 10: {
-          const node3 = this.startNode();
+          const node2 = this.startNode();
           this.next();
           if (!this.match(11) && !this.match(21)) {
             if (tokenIsIdentifier(this.state.type) || this.match(78)) {
@@ -8033,30 +8006,30 @@ function requireLib() {
           } else {
             tmp = this.flowParseFunctionTypeParams();
           }
-          node3.params = tmp.params;
-          node3.rest = tmp.rest;
-          node3.this = tmp._this;
+          node2.params = tmp.params;
+          node2.rest = tmp.rest;
+          node2.this = tmp._this;
           this.expect(11);
           this.expect(19);
-          node3.returnType = this.flowParseType();
-          node3.typeParameters = null;
-          return this.finishNode(node3, "FunctionTypeAnnotation");
+          node2.returnType = this.flowParseType();
+          node2.typeParameters = null;
+          return this.finishNode(node2, "FunctionTypeAnnotation");
         }
         case 134:
           return this.parseLiteral(this.state.value, "StringLiteralTypeAnnotation");
         case 85:
         case 86:
-          node2.value = this.match(85);
+          node.value = this.match(85);
           this.next();
-          return this.finishNode(node2, "BooleanLiteralTypeAnnotation");
+          return this.finishNode(node, "BooleanLiteralTypeAnnotation");
         case 53:
           if (this.state.value === "-") {
             this.next();
             if (this.match(135)) {
-              return this.parseLiteralAtNode(-this.state.value, "NumberLiteralTypeAnnotation", node2);
+              return this.parseLiteralAtNode(-this.state.value, "NumberLiteralTypeAnnotation", node);
             }
             if (this.match(136)) {
-              return this.parseLiteralAtNode(-this.state.value, "BigIntLiteralTypeAnnotation", node2);
+              return this.parseLiteralAtNode(-this.state.value, "BigIntLiteralTypeAnnotation", node);
             }
             throw this.raise(FlowErrors.UnexpectedSubtractionOperand, this.state.startLoc);
           }
@@ -8068,28 +8041,28 @@ function requireLib() {
           return this.parseLiteral(this.state.value, "BigIntLiteralTypeAnnotation");
         case 88:
           this.next();
-          return this.finishNode(node2, "VoidTypeAnnotation");
+          return this.finishNode(node, "VoidTypeAnnotation");
         case 84:
           this.next();
-          return this.finishNode(node2, "NullLiteralTypeAnnotation");
+          return this.finishNode(node, "NullLiteralTypeAnnotation");
         case 78:
           this.next();
-          return this.finishNode(node2, "ThisTypeAnnotation");
+          return this.finishNode(node, "ThisTypeAnnotation");
         case 55:
           this.next();
-          return this.finishNode(node2, "ExistsTypeAnnotation");
+          return this.finishNode(node, "ExistsTypeAnnotation");
         case 87:
           return this.flowParseTypeofType();
         default:
           if (tokenIsKeyword(this.state.type)) {
             const label = tokenLabelName(this.state.type);
             this.next();
-            return super.createIdentifier(node2, label);
+            return super.createIdentifier(node, label);
           } else if (tokenIsIdentifier(this.state.type)) {
             if (this.isContextual(129)) {
               return this.flowParseInterfaceType();
             }
-            return this.flowIdentToTypeAnnotation(startLoc, node2, this.parseIdentifier());
+            return this.flowIdentToTypeAnnotation(startLoc, node, this.parseIdentifier());
           }
       }
       this.unexpected();
@@ -8099,33 +8072,33 @@ function requireLib() {
       let type = this.flowParsePrimaryType();
       let seenOptionalIndexedAccess = false;
       while ((this.match(0) || this.match(18)) && !this.canInsertSemicolon()) {
-        const node2 = this.startNodeAt(startLoc);
+        const node = this.startNodeAt(startLoc);
         const optional = this.eat(18);
         seenOptionalIndexedAccess = seenOptionalIndexedAccess || optional;
         this.expect(0);
         if (!optional && this.match(3)) {
-          node2.elementType = type;
+          node.elementType = type;
           this.next();
-          type = this.finishNode(node2, "ArrayTypeAnnotation");
+          type = this.finishNode(node, "ArrayTypeAnnotation");
         } else {
-          node2.objectType = type;
-          node2.indexType = this.flowParseType();
+          node.objectType = type;
+          node.indexType = this.flowParseType();
           this.expect(3);
           if (seenOptionalIndexedAccess) {
-            node2.optional = optional;
-            type = this.finishNode(node2, "OptionalIndexedAccessType");
+            node.optional = optional;
+            type = this.finishNode(node, "OptionalIndexedAccessType");
           } else {
-            type = this.finishNode(node2, "IndexedAccessType");
+            type = this.finishNode(node, "IndexedAccessType");
           }
         }
       }
       return type;
     }
     flowParsePrefixType() {
-      const node2 = this.startNode();
+      const node = this.startNode();
       if (this.eat(17)) {
-        node2.typeAnnotation = this.flowParsePrefixType();
-        return this.finishNode(node2, "NullableTypeAnnotation");
+        node.typeAnnotation = this.flowParsePrefixType();
+        return this.finishNode(node, "NullableTypeAnnotation");
       } else {
         return this.flowParsePostfixType();
       }
@@ -8133,35 +8106,35 @@ function requireLib() {
     flowParseAnonFunctionWithoutParens() {
       const param = this.flowParsePrefixType();
       if (!this.state.noAnonFunctionType && this.eat(19)) {
-        const node2 = this.startNodeAt(param.loc.start);
-        node2.params = [this.reinterpretTypeAsFunctionTypeParam(param)];
-        node2.rest = null;
-        node2.this = null;
-        node2.returnType = this.flowParseType();
-        node2.typeParameters = null;
-        return this.finishNode(node2, "FunctionTypeAnnotation");
+        const node = this.startNodeAt(param.loc.start);
+        node.params = [this.reinterpretTypeAsFunctionTypeParam(param)];
+        node.rest = null;
+        node.this = null;
+        node.returnType = this.flowParseType();
+        node.typeParameters = null;
+        return this.finishNode(node, "FunctionTypeAnnotation");
       }
       return param;
     }
     flowParseIntersectionType() {
-      const node2 = this.startNode();
+      const node = this.startNode();
       this.eat(45);
       const type = this.flowParseAnonFunctionWithoutParens();
-      node2.types = [type];
+      node.types = [type];
       while (this.eat(45)) {
-        node2.types.push(this.flowParseAnonFunctionWithoutParens());
+        node.types.push(this.flowParseAnonFunctionWithoutParens());
       }
-      return node2.types.length === 1 ? type : this.finishNode(node2, "IntersectionTypeAnnotation");
+      return node.types.length === 1 ? type : this.finishNode(node, "IntersectionTypeAnnotation");
     }
     flowParseUnionType() {
-      const node2 = this.startNode();
+      const node = this.startNode();
       this.eat(43);
       const type = this.flowParseIntersectionType();
-      node2.types = [type];
+      node.types = [type];
       while (this.eat(43)) {
-        node2.types.push(this.flowParseIntersectionType());
+        node.types.push(this.flowParseIntersectionType());
       }
-      return node2.types.length === 1 ? type : this.finishNode(node2, "UnionTypeAnnotation");
+      return node.types.length === 1 ? type : this.finishNode(node, "UnionTypeAnnotation");
     }
     flowParseType() {
       const oldInType = this.state.inType;
@@ -8173,16 +8146,16 @@ function requireLib() {
     flowParseTypeOrImplicitInstantiation() {
       if (this.state.type === 132 && this.state.value === "_") {
         const startLoc = this.state.startLoc;
-        const node2 = this.parseIdentifier();
-        return this.flowParseGenericType(startLoc, node2);
+        const node = this.parseIdentifier();
+        return this.flowParseGenericType(startLoc, node);
       } else {
         return this.flowParseType();
       }
     }
     flowParseTypeAnnotation() {
-      const node2 = this.startNode();
-      node2.typeAnnotation = this.flowParseTypeInitialiser();
-      return this.finishNode(node2, "TypeAnnotation");
+      const node = this.startNode();
+      node.typeAnnotation = this.flowParseTypeInitialiser();
+      return this.finishNode(node, "TypeAnnotation");
     }
     flowParseTypeAnnotatableIdentifier(allowPrimitiveOverride) {
       const ident = allowPrimitiveOverride ? this.parseIdentifier() : this.flowParseRestrictedIdentifier();
@@ -8192,10 +8165,10 @@ function requireLib() {
       }
       return ident;
     }
-    typeCastToParameter(node2) {
-      node2.expression.typeAnnotation = node2.typeAnnotation;
-      this.resetEndLocation(node2.expression, node2.typeAnnotation.loc.end);
-      return node2.expression;
+    typeCastToParameter(node) {
+      node.expression.typeAnnotation = node.typeAnnotation;
+      this.resetEndLocation(node.expression, node.typeAnnotation.loc.end);
+      return node.expression;
     }
     flowParseVariance() {
       let variance = null;
@@ -8211,33 +8184,33 @@ function requireLib() {
       }
       return variance;
     }
-    parseFunctionBody(node2, allowExpressionBody, isMethod = false) {
+    parseFunctionBody(node, allowExpressionBody, isMethod = false) {
       if (allowExpressionBody) {
-        this.forwardNoArrowParamsConversionAt(node2, () => super.parseFunctionBody(node2, true, isMethod));
+        this.forwardNoArrowParamsConversionAt(node, () => super.parseFunctionBody(node, true, isMethod));
         return;
       }
-      super.parseFunctionBody(node2, false, isMethod);
+      super.parseFunctionBody(node, false, isMethod);
     }
-    parseFunctionBodyAndFinish(node2, type, isMethod = false) {
+    parseFunctionBodyAndFinish(node, type, isMethod = false) {
       if (this.match(14)) {
         const typeNode = this.startNode();
-        [typeNode.typeAnnotation, node2.predicate] = this.flowParseTypeAndPredicateInitialiser();
-        node2.returnType = typeNode.typeAnnotation ? this.finishNode(typeNode, "TypeAnnotation") : null;
+        [typeNode.typeAnnotation, node.predicate] = this.flowParseTypeAndPredicateInitialiser();
+        node.returnType = typeNode.typeAnnotation ? this.finishNode(typeNode, "TypeAnnotation") : null;
       }
-      return super.parseFunctionBodyAndFinish(node2, type, isMethod);
+      return super.parseFunctionBodyAndFinish(node, type, isMethod);
     }
     parseStatementLike(flags) {
       if (this.state.strict && this.isContextual(129)) {
         const lookahead = this.lookahead();
         if (tokenIsKeywordOrIdentifier(lookahead.type)) {
-          const node2 = this.startNode();
+          const node = this.startNode();
           this.next();
-          return this.flowParseInterface(node2);
+          return this.flowParseInterface(node);
         }
       } else if (this.isContextual(126)) {
-        const node2 = this.startNode();
+        const node = this.startNode();
         this.next();
-        return this.flowParseEnumDeclaration(node2);
+        return this.flowParseEnumDeclaration(node);
       }
       const stmt = super.parseStatementLike(flags);
       if (this.flowPragma === void 0 && !this.isValidDirective(stmt)) {
@@ -8245,23 +8218,23 @@ function requireLib() {
       }
       return stmt;
     }
-    parseExpressionStatement(node2, expr, decorators) {
+    parseExpressionStatement(node, expr, decorators) {
       if (expr.type === "Identifier") {
         if (expr.name === "declare") {
           if (this.match(80) || tokenIsIdentifier(this.state.type) || this.match(68) || this.match(74) || this.match(82)) {
-            return this.flowParseDeclare(node2);
+            return this.flowParseDeclare(node);
           }
         } else if (tokenIsIdentifier(this.state.type)) {
           if (expr.name === "interface") {
-            return this.flowParseInterface(node2);
+            return this.flowParseInterface(node);
           } else if (expr.name === "type") {
-            return this.flowParseTypeAlias(node2);
+            return this.flowParseTypeAlias(node);
           } else if (expr.name === "opaque") {
-            return this.flowParseOpaqueType(node2, false);
+            return this.flowParseOpaqueType(node, false);
           }
         }
       }
-      return super.parseExpressionStatement(node2, expr, decorators);
+      return super.parseExpressionStatement(node, expr, decorators);
     }
     shouldParseExportDeclaration() {
       const {
@@ -8283,9 +8256,9 @@ function requireLib() {
     }
     parseExportDefaultExpression() {
       if (this.isContextual(126)) {
-        const node2 = this.startNode();
+        const node = this.startNode();
         this.next();
-        return this.flowParseEnumDeclaration(node2);
+        return this.flowParseEnumDeclaration(node);
       }
       return super.parseExportDefaultExpression();
     }
@@ -8301,7 +8274,7 @@ function requireLib() {
       this.expect(17);
       const state = this.state.clone();
       const originalNoArrowAt = this.state.noArrowAt;
-      const node2 = this.startNodeAt(startLoc);
+      const node = this.startNodeAt(startLoc);
       let {
         consequent,
         failed
@@ -8337,10 +8310,10 @@ function requireLib() {
       this.getArrowLikeExpressions(consequent, true);
       this.state.noArrowAt = originalNoArrowAt;
       this.expect(14);
-      node2.test = expr;
-      node2.consequent = consequent;
-      node2.alternate = this.forwardNoArrowParamsConversionAt(node2, () => this.parseMaybeAssign(void 0, void 0));
-      return this.finishNode(node2, "ConditionalExpression");
+      node.test = expr;
+      node.consequent = consequent;
+      node.alternate = this.forwardNoArrowParamsConversionAt(node, () => this.parseMaybeAssign(void 0, void 0));
+      return this.finishNode(node, "ConditionalExpression");
     }
     tryParseConditionalConsequent() {
       this.state.noArrowParamsConversionAt.push(this.state.start);
@@ -8352,39 +8325,39 @@ function requireLib() {
         failed
       };
     }
-    getArrowLikeExpressions(node2, disallowInvalid) {
-      const stack = [node2];
+    getArrowLikeExpressions(node, disallowInvalid) {
+      const stack = [node];
       const arrows = [];
       while (stack.length !== 0) {
-        const node3 = stack.pop();
-        if (node3.type === "ArrowFunctionExpression" && node3.body.type !== "BlockStatement") {
-          if (node3.typeParameters || !node3.returnType) {
-            this.finishArrowValidation(node3);
+        const node2 = stack.pop();
+        if (node2.type === "ArrowFunctionExpression" && node2.body.type !== "BlockStatement") {
+          if (node2.typeParameters || !node2.returnType) {
+            this.finishArrowValidation(node2);
           } else {
-            arrows.push(node3);
+            arrows.push(node2);
           }
-          stack.push(node3.body);
-        } else if (node3.type === "ConditionalExpression") {
-          stack.push(node3.consequent);
-          stack.push(node3.alternate);
+          stack.push(node2.body);
+        } else if (node2.type === "ConditionalExpression") {
+          stack.push(node2.consequent);
+          stack.push(node2.alternate);
         }
       }
       if (disallowInvalid) {
-        arrows.forEach((node3) => this.finishArrowValidation(node3));
+        arrows.forEach((node2) => this.finishArrowValidation(node2));
         return [arrows, []];
       }
-      return partition(arrows, (node3) => node3.params.every((param) => this.isAssignable(param, true)));
+      return partition(arrows, (node2) => node2.params.every((param) => this.isAssignable(param, true)));
     }
-    finishArrowValidation(node2) {
+    finishArrowValidation(node) {
       var _node$extra;
-      this.toAssignableList(node2.params, (_node$extra = node2.extra) == null ? void 0 : _node$extra.trailingCommaLoc, false);
+      this.toAssignableList(node.params, (_node$extra = node.extra) == null ? void 0 : _node$extra.trailingCommaLoc, false);
       this.scope.enter(2 | 4);
-      super.checkParams(node2, false, true);
+      super.checkParams(node, false, true);
       this.scope.exit();
     }
-    forwardNoArrowParamsConversionAt(node2, parse2) {
+    forwardNoArrowParamsConversionAt(node, parse2) {
       let result;
-      if (this.state.noArrowParamsConversionAt.includes(this.offsetToSourcePos(node2.start))) {
+      if (this.state.noArrowParamsConversionAt.includes(this.offsetToSourcePos(node.start))) {
         this.state.noArrowParamsConversionAt.push(this.state.start);
         result = parse2();
         this.state.noArrowParamsConversionAt.pop();
@@ -8393,11 +8366,11 @@ function requireLib() {
       }
       return result;
     }
-    parseParenItem(node2, startLoc) {
-      const newNode = super.parseParenItem(node2, startLoc);
+    parseParenItem(node, startLoc) {
+      const newNode = super.parseParenItem(node, startLoc);
       if (this.eat(17)) {
         newNode.optional = true;
-        this.resetEndLocation(node2);
+        this.resetEndLocation(node);
       }
       if (this.match(14)) {
         const typeCastNode = this.startNodeAt(startLoc);
@@ -8407,67 +8380,67 @@ function requireLib() {
       }
       return newNode;
     }
-    assertModuleNodeAllowed(node2) {
-      if (node2.type === "ImportDeclaration" && (node2.importKind === "type" || node2.importKind === "typeof") || node2.type === "ExportNamedDeclaration" && node2.exportKind === "type" || node2.type === "ExportAllDeclaration" && node2.exportKind === "type") {
+    assertModuleNodeAllowed(node) {
+      if (node.type === "ImportDeclaration" && (node.importKind === "type" || node.importKind === "typeof") || node.type === "ExportNamedDeclaration" && node.exportKind === "type" || node.type === "ExportAllDeclaration" && node.exportKind === "type") {
         return;
       }
-      super.assertModuleNodeAllowed(node2);
+      super.assertModuleNodeAllowed(node);
     }
-    parseExportDeclaration(node2) {
+    parseExportDeclaration(node) {
       if (this.isContextual(130)) {
-        node2.exportKind = "type";
+        node.exportKind = "type";
         const declarationNode = this.startNode();
         this.next();
         if (this.match(5)) {
-          node2.specifiers = this.parseExportSpecifiers(true);
-          super.parseExportFrom(node2);
+          node.specifiers = this.parseExportSpecifiers(true);
+          super.parseExportFrom(node);
           return null;
         } else {
           return this.flowParseTypeAlias(declarationNode);
         }
       } else if (this.isContextual(131)) {
-        node2.exportKind = "type";
+        node.exportKind = "type";
         const declarationNode = this.startNode();
         this.next();
         return this.flowParseOpaqueType(declarationNode, false);
       } else if (this.isContextual(129)) {
-        node2.exportKind = "type";
+        node.exportKind = "type";
         const declarationNode = this.startNode();
         this.next();
         return this.flowParseInterface(declarationNode);
       } else if (this.isContextual(126)) {
-        node2.exportKind = "value";
+        node.exportKind = "value";
         const declarationNode = this.startNode();
         this.next();
         return this.flowParseEnumDeclaration(declarationNode);
       } else {
-        return super.parseExportDeclaration(node2);
+        return super.parseExportDeclaration(node);
       }
     }
-    eatExportStar(node2) {
-      if (super.eatExportStar(node2)) return true;
+    eatExportStar(node) {
+      if (super.eatExportStar(node)) return true;
       if (this.isContextual(130) && this.lookahead().type === 55) {
-        node2.exportKind = "type";
+        node.exportKind = "type";
         this.next();
         this.next();
         return true;
       }
       return false;
     }
-    maybeParseExportNamespaceSpecifier(node2) {
+    maybeParseExportNamespaceSpecifier(node) {
       const {
         startLoc
       } = this.state;
-      const hasNamespace = super.maybeParseExportNamespaceSpecifier(node2);
-      if (hasNamespace && node2.exportKind === "type") {
+      const hasNamespace = super.maybeParseExportNamespaceSpecifier(node);
+      if (hasNamespace && node.exportKind === "type") {
         this.unexpected(startLoc);
       }
       return hasNamespace;
     }
-    parseClassId(node2, isStatement, optionalId) {
-      super.parseClassId(node2, isStatement, optionalId);
+    parseClassId(node, isStatement, optionalId) {
+      super.parseClassId(node, isStatement, optionalId);
       if (this.match(47)) {
-        node2.typeParameters = this.flowParseTypeParameterDeclaration();
+        node.typeParameters = this.flowParseTypeParameterDeclaration();
       }
     }
     parseClassMember(classBody, member, state) {
@@ -8521,18 +8494,18 @@ function requireLib() {
         super.getTokenFromCode(code2);
       }
     }
-    isAssignable(node2, isBinding) {
-      if (node2.type === "TypeCastExpression") {
-        return this.isAssignable(node2.expression, isBinding);
+    isAssignable(node, isBinding) {
+      if (node.type === "TypeCastExpression") {
+        return this.isAssignable(node.expression, isBinding);
       } else {
-        return super.isAssignable(node2, isBinding);
+        return super.isAssignable(node, isBinding);
       }
     }
-    toAssignable(node2, isLHS = false) {
-      if (!isLHS && node2.type === "AssignmentExpression" && node2.left.type === "TypeCastExpression") {
-        node2.left = this.typeCastToParameter(node2.left);
+    toAssignable(node, isLHS = false) {
+      if (!isLHS && node.type === "AssignmentExpression" && node.left.type === "TypeCastExpression") {
+        node.left = this.typeCastToParameter(node.left);
       }
-      super.toAssignable(node2, isLHS);
+      super.toAssignable(node, isLHS);
     }
     toAssignableList(exprList, trailingCommaLoc, isLHS) {
       for (let i = 0; i < exprList.length; i++) {
@@ -8554,26 +8527,26 @@ function requireLib() {
       return exprList;
     }
     parseArrayLike(close, canBePattern, isTuple, refExpressionErrors) {
-      const node2 = super.parseArrayLike(close, canBePattern, isTuple, refExpressionErrors);
+      const node = super.parseArrayLike(close, canBePattern, isTuple, refExpressionErrors);
       if (canBePattern && !this.state.maybeInArrowParameters) {
-        this.toReferencedList(node2.elements);
+        this.toReferencedList(node.elements);
       }
-      return node2;
+      return node;
     }
     isValidLVal(type, isParenthesized, binding) {
       return type === "TypeCastExpression" || super.isValidLVal(type, isParenthesized, binding);
     }
-    parseClassProperty(node2) {
+    parseClassProperty(node) {
       if (this.match(14)) {
-        node2.typeAnnotation = this.flowParseTypeAnnotation();
+        node.typeAnnotation = this.flowParseTypeAnnotation();
       }
-      return super.parseClassProperty(node2);
+      return super.parseClassProperty(node);
     }
-    parseClassPrivateProperty(node2) {
+    parseClassPrivateProperty(node) {
       if (this.match(14)) {
-        node2.typeAnnotation = this.flowParseTypeAnnotation();
+        node.typeAnnotation = this.flowParseTypeAnnotation();
       }
-      return super.parseClassPrivateProperty(node2);
+      return super.parseClassPrivateProperty(node);
     }
     isClassMethod() {
       return this.match(47) || super.isClassMethod();
@@ -8615,25 +8588,25 @@ function requireLib() {
       }
       super.pushClassPrivateMethod(classBody, method, isGenerator, isAsync);
     }
-    parseClassSuper(node2) {
-      super.parseClassSuper(node2);
-      if (node2.superClass && (this.match(47) || this.match(51))) {
+    parseClassSuper(node) {
+      super.parseClassSuper(node);
+      if (node.superClass && (this.match(47) || this.match(51))) {
         {
-          node2.superTypeParameters = this.flowParseTypeParameterInstantiationInExpression();
+          node.superTypeParameters = this.flowParseTypeParameterInstantiationInExpression();
         }
       }
       if (this.isContextual(113)) {
         this.next();
-        const implemented = node2.implements = [];
+        const implemented = node.implements = [];
         do {
-          const node3 = this.startNode();
-          node3.id = this.flowParseRestrictedIdentifier(true);
+          const node2 = this.startNode();
+          node2.id = this.flowParseRestrictedIdentifier(true);
           if (this.match(47)) {
-            node3.typeParameters = this.flowParseTypeParameterInstantiation();
+            node2.typeParameters = this.flowParseTypeParameterInstantiation();
           } else {
-            node3.typeParameters = null;
+            node2.typeParameters = null;
           }
-          implemented.push(this.finishNode(node3, "ClassImplements"));
+          implemented.push(this.finishNode(node2, "ClassImplements"));
         } while (this.eat(12));
       }
     }
@@ -8649,8 +8622,8 @@ function requireLib() {
         }
       }
     }
-    parsePropertyNamePrefixOperator(node2) {
-      node2.variance = this.flowParseVariance();
+    parsePropertyNamePrefixOperator(node) {
+      node.variance = this.flowParseVariance();
     }
     parseObjPropValue(prop, startLoc, isGenerator, isAsync, isPattern, isAccessor, refExpressionErrors) {
       if (prop.variance) {
@@ -8690,21 +8663,21 @@ function requireLib() {
       return param;
     }
     parseMaybeDefault(startLoc, left) {
-      const node2 = super.parseMaybeDefault(startLoc, left);
-      if (node2.type === "AssignmentPattern" && node2.typeAnnotation && node2.right.start < node2.typeAnnotation.start) {
-        this.raise(FlowErrors.TypeBeforeInitializer, node2.typeAnnotation);
+      const node = super.parseMaybeDefault(startLoc, left);
+      if (node.type === "AssignmentPattern" && node.typeAnnotation && node.right.start < node.typeAnnotation.start) {
+        this.raise(FlowErrors.TypeBeforeInitializer, node.typeAnnotation);
       }
-      return node2;
+      return node;
     }
-    checkImportReflection(node2) {
-      super.checkImportReflection(node2);
-      if (node2.module && node2.importKind !== "value") {
-        this.raise(FlowErrors.ImportReflectionHasImportType, node2.specifiers[0].loc.start);
+    checkImportReflection(node) {
+      super.checkImportReflection(node);
+      if (node.module && node.importKind !== "value") {
+        this.raise(FlowErrors.ImportReflectionHasImportType, node.specifiers[0].loc.start);
       }
     }
-    parseImportSpecifierLocal(node2, specifier, type) {
-      specifier.local = hasTypeImportKind(node2) ? this.flowParseRestrictedIdentifier(true, true) : this.parseIdentifier();
-      node2.specifiers.push(this.finishImportSpecifier(specifier, type));
+    parseImportSpecifierLocal(node, specifier, type) {
+      specifier.local = hasTypeImportKind(node) ? this.flowParseRestrictedIdentifier(true, true) : this.parseIdentifier();
+      node.specifiers.push(this.finishImportSpecifier(specifier, type));
     }
     isPotentialImportPhase(isExport) {
       if (super.isPotentialImportPhase(isExport)) return true;
@@ -8715,16 +8688,16 @@ function requireLib() {
       }
       return !isExport && this.isContextual(87);
     }
-    applyImportPhase(node2, isExport, phase, loc) {
-      super.applyImportPhase(node2, isExport, phase, loc);
+    applyImportPhase(node, isExport, phase, loc) {
+      super.applyImportPhase(node, isExport, phase, loc);
       if (isExport) {
         if (!phase && this.match(65)) {
           return;
         }
-        node2.exportKind = phase === "type" ? phase : "value";
+        node.exportKind = phase === "type" ? phase : "value";
       } else {
         if (phase === "type" && this.match(55)) this.unexpected();
-        node2.importKind = phase === "type" || phase === "typeof" ? phase : "value";
+        node.importKind = phase === "type" || phase === "typeof" ? phase : "value";
       }
     }
     parseImportSpecifier(specifier, importedIsString, isInTypeOnlyImport, isMaybeTypeOnly, bindingType) {
@@ -8789,12 +8762,12 @@ function requireLib() {
           return super.parseBindingAtom();
       }
     }
-    parseFunctionParams(node2, isConstructor) {
-      const kind = node2.kind;
+    parseFunctionParams(node, isConstructor) {
+      const kind = node.kind;
       if (kind !== "get" && kind !== "set" && this.match(47)) {
-        node2.typeParameters = this.flowParseTypeParameterDeclaration();
+        node.typeParameters = this.flowParseTypeParameterDeclaration();
       }
-      super.parseFunctionParams(node2, isConstructor);
+      super.parseFunctionParams(node, isConstructor);
     }
     parseVarId(decl, kind) {
       super.parseVarId(decl, kind);
@@ -8803,14 +8776,14 @@ function requireLib() {
         this.resetEndLocation(decl.id);
       }
     }
-    parseAsyncArrowFromCallExpression(node2, call) {
+    parseAsyncArrowFromCallExpression(node, call) {
       if (this.match(14)) {
         const oldNoAnonFunctionType = this.state.noAnonFunctionType;
         this.state.noAnonFunctionType = true;
-        node2.returnType = this.flowParseTypeAnnotation();
+        node.returnType = this.flowParseTypeAnnotation();
         this.state.noAnonFunctionType = oldNoAnonFunctionType;
       }
-      return super.parseAsyncArrowFromCallExpression(node2, call);
+      return super.parseAsyncArrowFromCallExpression(node, call);
     }
     shouldParseAsyncArrow() {
       return this.match(14) || super.shouldParseAsyncArrow();
@@ -8874,13 +8847,13 @@ function requireLib() {
       }
       return super.parseMaybeAssign(refExpressionErrors, afterLeftParse);
     }
-    parseArrow(node2) {
+    parseArrow(node) {
       if (this.match(14)) {
         const result = this.tryParse(() => {
           const oldNoAnonFunctionType = this.state.noAnonFunctionType;
           this.state.noAnonFunctionType = true;
           const typeNode = this.startNode();
-          [typeNode.typeAnnotation, node2.predicate] = this.flowParseTypeAndPredicateInitialiser();
+          [typeNode.typeAnnotation, node.predicate] = this.flowParseTypeAndPredicateInitialiser();
           this.state.noAnonFunctionType = oldNoAnonFunctionType;
           if (this.canInsertSemicolon()) this.unexpected();
           if (!this.match(19)) this.unexpected();
@@ -8888,30 +8861,30 @@ function requireLib() {
         });
         if (result.thrown) return null;
         if (result.error) this.state = result.failState;
-        node2.returnType = result.node.typeAnnotation ? this.finishNode(result.node, "TypeAnnotation") : null;
+        node.returnType = result.node.typeAnnotation ? this.finishNode(result.node, "TypeAnnotation") : null;
       }
-      return super.parseArrow(node2);
+      return super.parseArrow(node);
     }
     shouldParseArrow(params) {
       return this.match(14) || super.shouldParseArrow(params);
     }
-    setArrowFunctionParameters(node2, params) {
-      if (this.state.noArrowParamsConversionAt.includes(this.offsetToSourcePos(node2.start))) {
-        node2.params = params;
+    setArrowFunctionParameters(node, params) {
+      if (this.state.noArrowParamsConversionAt.includes(this.offsetToSourcePos(node.start))) {
+        node.params = params;
       } else {
-        super.setArrowFunctionParameters(node2, params);
+        super.setArrowFunctionParameters(node, params);
       }
     }
-    checkParams(node2, allowDuplicates, isArrowFunction, strictModeChanged = true) {
-      if (isArrowFunction && this.state.noArrowParamsConversionAt.includes(this.offsetToSourcePos(node2.start))) {
+    checkParams(node, allowDuplicates, isArrowFunction, strictModeChanged = true) {
+      if (isArrowFunction && this.state.noArrowParamsConversionAt.includes(this.offsetToSourcePos(node.start))) {
         return;
       }
-      for (let i = 0; i < node2.params.length; i++) {
-        if (this.isThisParam(node2.params[i]) && i > 0) {
-          this.raise(FlowErrors.ThisParamMustBeFirst, node2.params[i]);
+      for (let i = 0; i < node.params.length; i++) {
+        if (this.isThisParam(node.params[i]) && i > 0) {
+          this.raise(FlowErrors.ThisParamMustBeFirst, node.params[i]);
         }
       }
-      super.checkParams(node2, allowDuplicates, isArrowFunction, strictModeChanged);
+      super.checkParams(node, allowDuplicates, isArrowFunction, strictModeChanged);
     }
     parseParenAndDistinguishExpression(canBeArrow) {
       return super.parseParenAndDistinguishExpression(canBeArrow && !this.state.noArrowAt.includes(this.sourceToOffsetPos(this.state.start)));
@@ -8919,10 +8892,10 @@ function requireLib() {
     parseSubscripts(base, startLoc, noCalls) {
       if (base.type === "Identifier" && base.name === "async" && this.state.noArrowAt.includes(startLoc.index)) {
         this.next();
-        const node2 = this.startNodeAt(startLoc);
-        node2.callee = base;
-        node2.arguments = super.parseCallExpressionArguments(11);
-        base = this.finishNode(node2, "CallExpression");
+        const node = this.startNodeAt(startLoc);
+        node.callee = base;
+        node.arguments = super.parseCallExpressionArguments(11);
+        base = this.finishNode(node, "CallExpression");
       } else if (base.type === "Identifier" && base.name === "async" && this.match(47)) {
         const state = this.state.clone();
         const arrow = this.tryParse((abort) => this.parseAsyncArrowWithTypeParameters(startLoc) || abort(), state);
@@ -8949,24 +8922,24 @@ function requireLib() {
           return base;
         }
         this.next();
-        const node2 = this.startNodeAt(startLoc);
-        node2.callee = base;
-        node2.typeArguments = this.flowParseTypeParameterInstantiationInExpression();
+        const node = this.startNodeAt(startLoc);
+        node.callee = base;
+        node.typeArguments = this.flowParseTypeParameterInstantiationInExpression();
         this.expect(10);
-        node2.arguments = this.parseCallExpressionArguments(11);
-        node2.optional = true;
-        return this.finishCallExpression(node2, true);
+        node.arguments = this.parseCallExpressionArguments(11);
+        node.optional = true;
+        return this.finishCallExpression(node, true);
       } else if (!noCalls && this.shouldParseTypes() && (this.match(47) || this.match(51))) {
-        const node2 = this.startNodeAt(startLoc);
-        node2.callee = base;
+        const node = this.startNodeAt(startLoc);
+        node.callee = base;
         const result = this.tryParse(() => {
-          node2.typeArguments = this.flowParseTypeParameterInstantiationCallOrNew();
+          node.typeArguments = this.flowParseTypeParameterInstantiationCallOrNew();
           this.expect(10);
-          node2.arguments = super.parseCallExpressionArguments(11);
+          node.arguments = super.parseCallExpressionArguments(11);
           if (subscriptState.optionalChainMember) {
-            node2.optional = false;
+            node.optional = false;
           }
-          return this.finishCallExpression(node2, subscriptState.optionalChainMember);
+          return this.finishCallExpression(node, subscriptState.optionalChainMember);
         });
         if (result.node) {
           if (result.error) this.state = result.failState;
@@ -8975,19 +8948,19 @@ function requireLib() {
       }
       return super.parseSubscript(base, startLoc, noCalls, subscriptState);
     }
-    parseNewCallee(node2) {
-      super.parseNewCallee(node2);
+    parseNewCallee(node) {
+      super.parseNewCallee(node);
       let targs = null;
       if (this.shouldParseTypes() && this.match(47)) {
         targs = this.tryParse(() => this.flowParseTypeParameterInstantiationCallOrNew()).node;
       }
-      node2.typeArguments = targs;
+      node.typeArguments = targs;
     }
     parseAsyncArrowWithTypeParameters(startLoc) {
-      const node2 = this.startNodeAt(startLoc);
-      this.parseFunctionParams(node2, false);
-      if (!this.parseArrow(node2)) return;
-      return super.parseArrowExpression(node2, void 0, true);
+      const node = this.startNodeAt(startLoc);
+      this.parseFunctionParams(node, false);
+      if (!this.parseArrow(node)) return;
+      return super.parseArrowExpression(node, void 0, true);
     }
     readToken_mult_modulo(code2) {
       const next = this.input.charCodeAt(this.state.pos + 1);
@@ -9071,8 +9044,8 @@ function requireLib() {
     flowEnumErrorNumberMemberNotInitialized(loc, details) {
       this.raise(FlowErrors.EnumNumberMemberNotInitialized, loc, details);
     }
-    flowEnumErrorStringMemberInconsistentlyInitialized(node2, details) {
-      this.raise(FlowErrors.EnumStringMemberInconsistentlyInitialized, node2, details);
+    flowEnumErrorStringMemberInconsistentlyInitialized(node, details) {
+      this.raise(FlowErrors.EnumStringMemberInconsistentlyInitialized, node, details);
     }
     flowEnumMemberInit() {
       const startLoc = this.state.startLoc;
@@ -9285,7 +9258,7 @@ function requireLib() {
       }
       return value;
     }
-    flowEnumBody(node2, id) {
+    flowEnumBody(node, id) {
       const enumName = id.name;
       const nameLoc = id.loc.start;
       const explicitType = this.flowEnumParseExplicitType({
@@ -9299,36 +9272,36 @@ function requireLib() {
         enumName,
         explicitType
       });
-      node2.hasUnknownMembers = hasUnknownMembers;
+      node.hasUnknownMembers = hasUnknownMembers;
       switch (explicitType) {
         case "boolean":
-          node2.explicitType = true;
-          node2.members = members.booleanMembers;
+          node.explicitType = true;
+          node.members = members.booleanMembers;
           this.expect(8);
-          return this.finishNode(node2, "EnumBooleanBody");
+          return this.finishNode(node, "EnumBooleanBody");
         case "number":
-          node2.explicitType = true;
-          node2.members = members.numberMembers;
+          node.explicitType = true;
+          node.members = members.numberMembers;
           this.expect(8);
-          return this.finishNode(node2, "EnumNumberBody");
+          return this.finishNode(node, "EnumNumberBody");
         case "string":
-          node2.explicitType = true;
-          node2.members = this.flowEnumStringMembers(members.stringMembers, members.defaultedMembers, {
+          node.explicitType = true;
+          node.members = this.flowEnumStringMembers(members.stringMembers, members.defaultedMembers, {
             enumName
           });
           this.expect(8);
-          return this.finishNode(node2, "EnumStringBody");
+          return this.finishNode(node, "EnumStringBody");
         case "symbol":
-          node2.members = members.defaultedMembers;
+          node.members = members.defaultedMembers;
           this.expect(8);
-          return this.finishNode(node2, "EnumSymbolBody");
+          return this.finishNode(node, "EnumSymbolBody");
         default: {
           const empty = () => {
-            node2.members = [];
+            node.members = [];
             this.expect(8);
-            return this.finishNode(node2, "EnumStringBody");
+            return this.finishNode(node, "EnumStringBody");
           };
-          node2.explicitType = false;
+          node.explicitType = false;
           const boolsLen = members.booleanMembers.length;
           const numsLen = members.numberMembers.length;
           const strsLen = members.stringMembers.length;
@@ -9336,11 +9309,11 @@ function requireLib() {
           if (!boolsLen && !numsLen && !strsLen && !defaultedLen) {
             return empty();
           } else if (!boolsLen && !numsLen) {
-            node2.members = this.flowEnumStringMembers(members.stringMembers, members.defaultedMembers, {
+            node.members = this.flowEnumStringMembers(members.stringMembers, members.defaultedMembers, {
               enumName
             });
             this.expect(8);
-            return this.finishNode(node2, "EnumStringBody");
+            return this.finishNode(node, "EnumStringBody");
           } else if (!numsLen && !strsLen && boolsLen >= defaultedLen) {
             for (const member of members.defaultedMembers) {
               this.flowEnumErrorBooleanMemberNotInitialized(member.loc.start, {
@@ -9348,9 +9321,9 @@ function requireLib() {
                 memberName: member.id.name
               });
             }
-            node2.members = members.booleanMembers;
+            node.members = members.booleanMembers;
             this.expect(8);
-            return this.finishNode(node2, "EnumBooleanBody");
+            return this.finishNode(node, "EnumBooleanBody");
           } else if (!boolsLen && !strsLen && numsLen >= defaultedLen) {
             for (const member of members.defaultedMembers) {
               this.flowEnumErrorNumberMemberNotInitialized(member.loc.start, {
@@ -9358,9 +9331,9 @@ function requireLib() {
                 memberName: member.id.name
               });
             }
-            node2.members = members.numberMembers;
+            node.members = members.numberMembers;
             this.expect(8);
-            return this.finishNode(node2, "EnumNumberBody");
+            return this.finishNode(node, "EnumNumberBody");
           } else {
             this.raise(FlowErrors.EnumInconsistentMemberValues, nameLoc, {
               enumName
@@ -9370,19 +9343,19 @@ function requireLib() {
         }
       }
     }
-    flowParseEnumDeclaration(node2) {
+    flowParseEnumDeclaration(node) {
       const id = this.parseIdentifier();
-      node2.id = id;
-      node2.body = this.flowEnumBody(this.startNode(), id);
-      return this.finishNode(node2, "EnumDeclaration");
+      node.id = id;
+      node.body = this.flowEnumBody(this.startNode(), id);
+      return this.finishNode(node, "EnumDeclaration");
     }
-    jsxParseOpeningElementAfterName(node2) {
+    jsxParseOpeningElementAfterName(node) {
       if (this.shouldParseTypes()) {
         if (this.match(47) || this.match(51)) {
-          node2.typeArguments = this.flowParseTypeParameterInstantiationInExpression();
+          node.typeArguments = this.flowParseTypeParameterInstantiationInExpression();
         }
       }
-      return super.jsxParseOpeningElementAfterName(node2);
+      return super.jsxParseOpeningElementAfterName(node);
     }
     isLookaheadToken_lt() {
       const next = this.nextTokenStart();
@@ -9415,8 +9388,8 @@ function requireLib() {
       }
       return type;
     }
-    maybeUnwrapTypeCastExpression(node2) {
-      return node2.type === "TypeCastExpression" ? node2.expression : node2;
+    maybeUnwrapTypeCastExpression(node) {
+      return node.type === "TypeCastExpression" ? node.expression : node;
     }
   };
   const entities = {
@@ -9826,52 +9799,52 @@ function requireLib() {
       this.finishToken(141, this.input.slice(start, this.state.pos));
     }
     jsxParseIdentifier() {
-      const node2 = this.startNode();
+      const node = this.startNode();
       if (this.match(141)) {
-        node2.name = this.state.value;
+        node.name = this.state.value;
       } else if (tokenIsKeyword(this.state.type)) {
-        node2.name = tokenLabelName(this.state.type);
+        node.name = tokenLabelName(this.state.type);
       } else {
         this.unexpected();
       }
       this.next();
-      return this.finishNode(node2, "JSXIdentifier");
+      return this.finishNode(node, "JSXIdentifier");
     }
     jsxParseNamespacedName() {
       const startLoc = this.state.startLoc;
       const name = this.jsxParseIdentifier();
       if (!this.eat(14)) return name;
-      const node2 = this.startNodeAt(startLoc);
-      node2.namespace = name;
-      node2.name = this.jsxParseIdentifier();
-      return this.finishNode(node2, "JSXNamespacedName");
+      const node = this.startNodeAt(startLoc);
+      node.namespace = name;
+      node.name = this.jsxParseIdentifier();
+      return this.finishNode(node, "JSXNamespacedName");
     }
     jsxParseElementName() {
       const startLoc = this.state.startLoc;
-      let node2 = this.jsxParseNamespacedName();
-      if (node2.type === "JSXNamespacedName") {
-        return node2;
+      let node = this.jsxParseNamespacedName();
+      if (node.type === "JSXNamespacedName") {
+        return node;
       }
       while (this.eat(16)) {
         const newNode = this.startNodeAt(startLoc);
-        newNode.object = node2;
+        newNode.object = node;
         newNode.property = this.jsxParseIdentifier();
-        node2 = this.finishNode(newNode, "JSXMemberExpression");
+        node = this.finishNode(newNode, "JSXMemberExpression");
       }
-      return node2;
+      return node;
     }
     jsxParseAttributeValue() {
-      let node2;
+      let node;
       switch (this.state.type) {
         case 5:
-          node2 = this.startNode();
+          node = this.startNode();
           this.setContext(types.brace);
           this.next();
-          node2 = this.jsxParseExpressionContainer(node2, types.j_oTag);
-          if (node2.expression.type === "JSXEmptyExpression") {
-            this.raise(JsxErrors.AttributeIsEmpty, node2);
+          node = this.jsxParseExpressionContainer(node, types.j_oTag);
+          if (node.expression.type === "JSXEmptyExpression") {
+            this.raise(JsxErrors.AttributeIsEmpty, node);
           }
-          return node2;
+          return node;
         case 143:
         case 134:
           return this.parseExprAtom();
@@ -9880,74 +9853,74 @@ function requireLib() {
       }
     }
     jsxParseEmptyExpression() {
-      const node2 = this.startNodeAt(this.state.lastTokEndLoc);
-      return this.finishNodeAt(node2, "JSXEmptyExpression", this.state.startLoc);
+      const node = this.startNodeAt(this.state.lastTokEndLoc);
+      return this.finishNodeAt(node, "JSXEmptyExpression", this.state.startLoc);
     }
-    jsxParseSpreadChild(node2) {
+    jsxParseSpreadChild(node) {
       this.next();
-      node2.expression = this.parseExpression();
+      node.expression = this.parseExpression();
       this.setContext(types.j_expr);
       this.state.canStartJSXElement = true;
       this.expect(8);
-      return this.finishNode(node2, "JSXSpreadChild");
+      return this.finishNode(node, "JSXSpreadChild");
     }
-    jsxParseExpressionContainer(node2, previousContext) {
+    jsxParseExpressionContainer(node, previousContext) {
       if (this.match(8)) {
-        node2.expression = this.jsxParseEmptyExpression();
+        node.expression = this.jsxParseEmptyExpression();
       } else {
         const expression = this.parseExpression();
-        node2.expression = expression;
+        node.expression = expression;
       }
       this.setContext(previousContext);
       this.state.canStartJSXElement = true;
       this.expect(8);
-      return this.finishNode(node2, "JSXExpressionContainer");
+      return this.finishNode(node, "JSXExpressionContainer");
     }
     jsxParseAttribute() {
-      const node2 = this.startNode();
+      const node = this.startNode();
       if (this.match(5)) {
         this.setContext(types.brace);
         this.next();
         this.expect(21);
-        node2.argument = this.parseMaybeAssignAllowIn();
+        node.argument = this.parseMaybeAssignAllowIn();
         this.setContext(types.j_oTag);
         this.state.canStartJSXElement = true;
         this.expect(8);
-        return this.finishNode(node2, "JSXSpreadAttribute");
+        return this.finishNode(node, "JSXSpreadAttribute");
       }
-      node2.name = this.jsxParseNamespacedName();
-      node2.value = this.eat(29) ? this.jsxParseAttributeValue() : null;
-      return this.finishNode(node2, "JSXAttribute");
+      node.name = this.jsxParseNamespacedName();
+      node.value = this.eat(29) ? this.jsxParseAttributeValue() : null;
+      return this.finishNode(node, "JSXAttribute");
     }
     jsxParseOpeningElementAt(startLoc) {
-      const node2 = this.startNodeAt(startLoc);
+      const node = this.startNodeAt(startLoc);
       if (this.eat(144)) {
-        return this.finishNode(node2, "JSXOpeningFragment");
+        return this.finishNode(node, "JSXOpeningFragment");
       }
-      node2.name = this.jsxParseElementName();
-      return this.jsxParseOpeningElementAfterName(node2);
+      node.name = this.jsxParseElementName();
+      return this.jsxParseOpeningElementAfterName(node);
     }
-    jsxParseOpeningElementAfterName(node2) {
+    jsxParseOpeningElementAfterName(node) {
       const attributes = [];
       while (!this.match(56) && !this.match(144)) {
         attributes.push(this.jsxParseAttribute());
       }
-      node2.attributes = attributes;
-      node2.selfClosing = this.eat(56);
+      node.attributes = attributes;
+      node.selfClosing = this.eat(56);
       this.expect(144);
-      return this.finishNode(node2, "JSXOpeningElement");
+      return this.finishNode(node, "JSXOpeningElement");
     }
     jsxParseClosingElementAt(startLoc) {
-      const node2 = this.startNodeAt(startLoc);
+      const node = this.startNodeAt(startLoc);
       if (this.eat(144)) {
-        return this.finishNode(node2, "JSXClosingFragment");
+        return this.finishNode(node, "JSXClosingFragment");
       }
-      node2.name = this.jsxParseElementName();
+      node.name = this.jsxParseElementName();
       this.expect(144);
-      return this.finishNode(node2, "JSXClosingElement");
+      return this.finishNode(node, "JSXClosingElement");
     }
     jsxParseElementAt(startLoc) {
-      const node2 = this.startNodeAt(startLoc);
+      const node = this.startNodeAt(startLoc);
       const children = [];
       const openingElement = this.jsxParseOpeningElementAt(startLoc);
       let closingElement = null;
@@ -9967,13 +9940,13 @@ function requireLib() {
               children.push(this.parseLiteral(this.state.value, "JSXText"));
               break;
             case 5: {
-              const node3 = this.startNode();
+              const node2 = this.startNode();
               this.setContext(types.brace);
               this.next();
               if (this.match(21)) {
-                children.push(this.jsxParseSpreadChild(node3));
+                children.push(this.jsxParseSpreadChild(node2));
               } else {
-                children.push(this.jsxParseExpressionContainer(node3, types.j_expr));
+                children.push(this.jsxParseExpressionContainer(node2, types.j_expr));
               }
               break;
             }
@@ -9996,17 +9969,17 @@ function requireLib() {
         }
       }
       if (isFragment(openingElement)) {
-        node2.openingFragment = openingElement;
-        node2.closingFragment = closingElement;
+        node.openingFragment = openingElement;
+        node.closingFragment = closingElement;
       } else {
-        node2.openingElement = openingElement;
-        node2.closingElement = closingElement;
+        node.openingElement = openingElement;
+        node.closingElement = closingElement;
       }
-      node2.children = children;
+      node.children = children;
       if (this.match(47)) {
         throw this.raise(JsxErrors.UnwrappedAdjacentJSXElements, this.state.startLoc);
       }
-      return isFragment(openingElement) ? this.finishNode(node2, "JSXFragment") : this.finishNode(node2, "JSXElement");
+      return isFragment(openingElement) ? this.finishNode(node, "JSXFragment") : this.finishNode(node, "JSXElement");
     }
     jsxParseElement() {
       const startLoc = this.state.startLoc;
@@ -10199,26 +10172,26 @@ function requireLib() {
       super.checkLocalExport(id);
     }
   }
-  const unwrapParenthesizedExpression = (node2) => {
-    return node2.type === "ParenthesizedExpression" ? unwrapParenthesizedExpression(node2.expression) : node2;
+  const unwrapParenthesizedExpression = (node) => {
+    return node.type === "ParenthesizedExpression" ? unwrapParenthesizedExpression(node.expression) : node;
   };
   class LValParser extends NodeUtils {
-    toAssignable(node2, isLHS = false) {
+    toAssignable(node, isLHS = false) {
       var _node$extra, _node$extra3;
       let parenthesized = void 0;
-      if (node2.type === "ParenthesizedExpression" || (_node$extra = node2.extra) != null && _node$extra.parenthesized) {
-        parenthesized = unwrapParenthesizedExpression(node2);
+      if (node.type === "ParenthesizedExpression" || (_node$extra = node.extra) != null && _node$extra.parenthesized) {
+        parenthesized = unwrapParenthesizedExpression(node);
         if (isLHS) {
           if (parenthesized.type === "Identifier") {
-            this.expressionScope.recordArrowParameterBindingError(Errors.InvalidParenthesizedAssignment, node2);
+            this.expressionScope.recordArrowParameterBindingError(Errors.InvalidParenthesizedAssignment, node);
           } else if (parenthesized.type !== "MemberExpression" && !this.isOptionalMemberExpression(parenthesized)) {
-            this.raise(Errors.InvalidParenthesizedAssignment, node2);
+            this.raise(Errors.InvalidParenthesizedAssignment, node);
           }
         } else {
-          this.raise(Errors.InvalidParenthesizedAssignment, node2);
+          this.raise(Errors.InvalidParenthesizedAssignment, node);
         }
       }
-      switch (node2.type) {
+      switch (node.type) {
         case "Identifier":
         case "ObjectPattern":
         case "ArrayPattern":
@@ -10226,14 +10199,14 @@ function requireLib() {
         case "RestElement":
           break;
         case "ObjectExpression":
-          node2.type = "ObjectPattern";
-          for (let i = 0, length = node2.properties.length, last = length - 1; i < length; i++) {
+          node.type = "ObjectPattern";
+          for (let i = 0, length = node.properties.length, last = length - 1; i < length; i++) {
             var _node$extra2;
-            const prop = node2.properties[i];
+            const prop = node.properties[i];
             const isLast = i === last;
             this.toAssignableObjectExpressionProp(prop, isLast, isLHS);
-            if (isLast && prop.type === "RestElement" && (_node$extra2 = node2.extra) != null && _node$extra2.trailingCommaLoc) {
-              this.raise(Errors.RestTrailingComma, node2.extra.trailingCommaLoc);
+            if (isLast && prop.type === "RestElement" && (_node$extra2 = node.extra) != null && _node$extra2.trailingCommaLoc) {
+              this.raise(Errors.RestTrailingComma, node.extra.trailingCommaLoc);
             }
           }
           break;
@@ -10241,7 +10214,7 @@ function requireLib() {
           const {
             key,
             value
-          } = node2;
+          } = node;
           if (this.isPrivateName(key)) {
             this.classScope.usePrivateName(this.getPrivateNameSV(key), key.loc.start);
           }
@@ -10252,16 +10225,16 @@ function requireLib() {
           throw new Error("Internal @babel/parser error (this is a bug, please report it). SpreadElement should be converted by .toAssignable's caller.");
         }
         case "ArrayExpression":
-          node2.type = "ArrayPattern";
-          this.toAssignableList(node2.elements, (_node$extra3 = node2.extra) == null ? void 0 : _node$extra3.trailingCommaLoc, isLHS);
+          node.type = "ArrayPattern";
+          this.toAssignableList(node.elements, (_node$extra3 = node.extra) == null ? void 0 : _node$extra3.trailingCommaLoc, isLHS);
           break;
         case "AssignmentExpression":
-          if (node2.operator !== "=") {
-            this.raise(Errors.MissingEqInAssignment, node2.left.loc.end);
+          if (node.operator !== "=") {
+            this.raise(Errors.MissingEqInAssignment, node.left.loc.end);
           }
-          node2.type = "AssignmentPattern";
-          delete node2.operator;
-          this.toAssignable(node2.left, isLHS);
+          node.type = "AssignmentPattern";
+          delete node.operator;
+          this.toAssignable(node.left, isLHS);
           break;
         case "ParenthesizedExpression":
           this.toAssignable(parenthesized, isLHS);
@@ -10299,18 +10272,18 @@ function requireLib() {
       }
     }
     toAssignableListItem(exprList, index, isLHS) {
-      const node2 = exprList[index];
-      if (node2.type === "SpreadElement") {
-        node2.type = "RestElement";
-        const arg = node2.argument;
+      const node = exprList[index];
+      if (node.type === "SpreadElement") {
+        node.type = "RestElement";
+        const arg = node.argument;
         this.checkToRestConversion(arg, true);
         this.toAssignable(arg, isLHS);
       } else {
-        this.toAssignable(node2, isLHS);
+        this.toAssignable(node, isLHS);
       }
     }
-    isAssignable(node2, isBinding) {
-      switch (node2.type) {
+    isAssignable(node, isBinding) {
+      switch (node.type) {
         case "Identifier":
         case "ObjectPattern":
         case "ArrayPattern":
@@ -10318,21 +10291,21 @@ function requireLib() {
         case "RestElement":
           return true;
         case "ObjectExpression": {
-          const last = node2.properties.length - 1;
-          return node2.properties.every((prop, i) => {
+          const last = node.properties.length - 1;
+          return node.properties.every((prop, i) => {
             return prop.type !== "ObjectMethod" && (i === last || prop.type !== "SpreadElement") && this.isAssignable(prop);
           });
         }
         case "ObjectProperty":
-          return this.isAssignable(node2.value);
+          return this.isAssignable(node.value);
         case "SpreadElement":
-          return this.isAssignable(node2.argument);
+          return this.isAssignable(node.argument);
         case "ArrayExpression":
-          return node2.elements.every((element) => element === null || this.isAssignable(element));
+          return node.elements.every((element) => element === null || this.isAssignable(element));
         case "AssignmentExpression":
-          return node2.operator === "=";
+          return node.operator === "=";
         case "ParenthesizedExpression":
-          return this.isAssignable(node2.expression);
+          return this.isAssignable(node.expression);
         case "MemberExpression":
         case "OptionalMemberExpression":
           return !isBinding;
@@ -10352,24 +10325,24 @@ function requireLib() {
       }
     }
     parseSpread(refExpressionErrors) {
-      const node2 = this.startNode();
+      const node = this.startNode();
       this.next();
-      node2.argument = this.parseMaybeAssignAllowIn(refExpressionErrors, void 0);
-      return this.finishNode(node2, "SpreadElement");
+      node.argument = this.parseMaybeAssignAllowIn(refExpressionErrors, void 0);
+      return this.finishNode(node, "SpreadElement");
     }
     parseRestBinding() {
-      const node2 = this.startNode();
+      const node = this.startNode();
       this.next();
-      node2.argument = this.parseBindingAtom();
-      return this.finishNode(node2, "RestElement");
+      node.argument = this.parseBindingAtom();
+      return this.finishNode(node, "RestElement");
     }
     parseBindingAtom() {
       switch (this.state.type) {
         case 0: {
-          const node2 = this.startNode();
+          const node = this.startNode();
           this.next();
-          node2.elements = this.parseBindingList(3, 93, 1);
-          return this.finishNode(node2, "ArrayPattern");
+          node.elements = this.parseBindingList(3, 93, 1);
+          return this.finishNode(node, "ArrayPattern");
         }
         case 5:
           return this.parseObjectLike(8, true);
@@ -10458,10 +10431,10 @@ function requireLib() {
       startLoc != null ? startLoc : startLoc = this.state.startLoc;
       left = left != null ? left : this.parseBindingAtom();
       if (!this.eat(29)) return left;
-      const node2 = this.startNodeAt(startLoc);
-      node2.left = left;
-      node2.right = this.parseMaybeAssignAllowIn();
-      return this.finishNode(node2, "AssignmentPattern");
+      const node = this.startNodeAt(startLoc);
+      node.left = left;
+      node.right = this.parseMaybeAssignAllowIn();
+      return this.finishNode(node, "AssignmentPattern");
     }
     isValidLVal(type, isUnparenthesizedInAssign, binding) {
       switch (type) {
@@ -10568,10 +10541,10 @@ function requireLib() {
     declareNameFromIdentifier(identifier, binding) {
       this.scope.declareName(identifier.name, binding, identifier.loc.start);
     }
-    checkToRestConversion(node2, allowPattern) {
-      switch (node2.type) {
+    checkToRestConversion(node, allowPattern) {
+      switch (node.type) {
         case "ParenthesizedExpression":
-          this.checkToRestConversion(node2.expression, allowPattern);
+          this.checkToRestConversion(node.expression, allowPattern);
           break;
         case "Identifier":
         case "MemberExpression":
@@ -10580,7 +10553,7 @@ function requireLib() {
         case "ObjectExpression":
           if (allowPattern) break;
         default:
-          this.raise(Errors.InvalidRestAssignmentPattern, node2);
+          this.raise(Errors.InvalidRestAssignmentPattern, node);
       }
     }
     checkCommaAfterRest(close) {
@@ -10924,35 +10897,35 @@ function requireLib() {
       return result;
     }
     tsParseImportType() {
-      const node2 = this.startNode();
+      const node = this.startNode();
       this.expect(83);
       this.expect(10);
       if (!this.match(134)) {
         this.raise(TSErrors.UnsupportedImportTypeArgument, this.state.startLoc);
         {
-          node2.argument = super.parseExprAtom();
+          node.argument = super.parseExprAtom();
         }
       } else {
         {
-          node2.argument = this.parseStringLiteral(this.state.value);
+          node.argument = this.parseStringLiteral(this.state.value);
         }
       }
       if (this.eat(12) && !this.match(11)) {
-        node2.options = super.parseMaybeAssignAllowIn();
+        node.options = super.parseMaybeAssignAllowIn();
         this.eat(12);
       } else {
-        node2.options = null;
+        node.options = null;
       }
       this.expect(11);
       if (this.eat(16)) {
-        node2.qualifier = this.tsParseEntityName(1 | 2);
+        node.qualifier = this.tsParseEntityName(1 | 2);
       }
       if (this.match(47)) {
         {
-          node2.typeParameters = this.tsParseTypeArguments();
+          node.typeParameters = this.tsParseTypeArguments();
         }
       }
-      return this.finishNode(node2, "TSImportType");
+      return this.finishNode(node, "TSImportType");
     }
     tsParseEntityName(flags) {
       let entity;
@@ -10960,68 +10933,68 @@ function requireLib() {
         if (flags & 2) {
           entity = this.parseIdentifier(true);
         } else {
-          const node2 = this.startNode();
+          const node = this.startNode();
           this.next();
-          entity = this.finishNode(node2, "ThisExpression");
+          entity = this.finishNode(node, "ThisExpression");
         }
       } else {
         entity = this.parseIdentifier(!!(flags & 1));
       }
       while (this.eat(16)) {
-        const node2 = this.startNodeAtNode(entity);
-        node2.left = entity;
-        node2.right = this.parseIdentifier(!!(flags & 1));
-        entity = this.finishNode(node2, "TSQualifiedName");
+        const node = this.startNodeAtNode(entity);
+        node.left = entity;
+        node.right = this.parseIdentifier(!!(flags & 1));
+        entity = this.finishNode(node, "TSQualifiedName");
       }
       return entity;
     }
     tsParseTypeReference() {
-      const node2 = this.startNode();
-      node2.typeName = this.tsParseEntityName(1);
+      const node = this.startNode();
+      node.typeName = this.tsParseEntityName(1);
       if (!this.hasPrecedingLineBreak() && this.match(47)) {
         {
-          node2.typeParameters = this.tsParseTypeArguments();
+          node.typeParameters = this.tsParseTypeArguments();
         }
       }
-      return this.finishNode(node2, "TSTypeReference");
+      return this.finishNode(node, "TSTypeReference");
     }
     tsParseThisTypePredicate(lhs) {
       this.next();
-      const node2 = this.startNodeAtNode(lhs);
-      node2.parameterName = lhs;
-      node2.typeAnnotation = this.tsParseTypeAnnotation(false);
-      node2.asserts = false;
-      return this.finishNode(node2, "TSTypePredicate");
+      const node = this.startNodeAtNode(lhs);
+      node.parameterName = lhs;
+      node.typeAnnotation = this.tsParseTypeAnnotation(false);
+      node.asserts = false;
+      return this.finishNode(node, "TSTypePredicate");
     }
     tsParseThisTypeNode() {
-      const node2 = this.startNode();
+      const node = this.startNode();
       this.next();
-      return this.finishNode(node2, "TSThisType");
+      return this.finishNode(node, "TSThisType");
     }
     tsParseTypeQuery() {
-      const node2 = this.startNode();
+      const node = this.startNode();
       this.expect(87);
       if (this.match(83)) {
-        node2.exprName = this.tsParseImportType();
+        node.exprName = this.tsParseImportType();
       } else {
         {
-          node2.exprName = this.tsParseEntityName(1 | 2);
+          node.exprName = this.tsParseEntityName(1 | 2);
         }
       }
       if (!this.hasPrecedingLineBreak() && this.match(47)) {
         {
-          node2.typeParameters = this.tsParseTypeArguments();
+          node.typeParameters = this.tsParseTypeArguments();
         }
       }
-      return this.finishNode(node2, "TSTypeQuery");
+      return this.finishNode(node, "TSTypeQuery");
     }
     tsParseTypeParameter(parseModifiers) {
-      const node2 = this.startNode();
-      parseModifiers(node2);
-      node2.name = this.tsParseTypeParameterName();
-      node2.constraint = this.tsEatThenParseType(81);
-      node2.default = this.tsEatThenParseType(29);
-      return this.finishNode(node2, "TSTypeParameter");
+      const node = this.startNode();
+      parseModifiers(node);
+      node.name = this.tsParseTypeParameterName();
+      node.constraint = this.tsEatThenParseType(81);
+      node.default = this.tsEatThenParseType(29);
+      return this.finishNode(node, "TSTypeParameter");
     }
     tsTryParseTypeParameters(parseModifiers) {
       if (this.match(47)) {
@@ -11029,7 +11002,7 @@ function requireLib() {
       }
     }
     tsParseTypeParameters(parseModifiers) {
-      const node2 = this.startNode();
+      const node = this.startNode();
       if (this.match(47) || this.match(143)) {
         this.next();
       } else {
@@ -11038,14 +11011,14 @@ function requireLib() {
       const refTrailingCommaPos = {
         value: -1
       };
-      node2.params = this.tsParseBracketedList("TypeParametersOrArguments", this.tsParseTypeParameter.bind(this, parseModifiers), false, true, refTrailingCommaPos);
-      if (node2.params.length === 0) {
-        this.raise(TSErrors.EmptyTypeParameters, node2);
+      node.params = this.tsParseBracketedList("TypeParametersOrArguments", this.tsParseTypeParameter.bind(this, parseModifiers), false, true, refTrailingCommaPos);
+      if (node.params.length === 0) {
+        this.raise(TSErrors.EmptyTypeParameters, node);
       }
       if (refTrailingCommaPos.value !== -1) {
-        this.addExtra(node2, "trailingComma", refTrailingCommaPos.value);
+        this.addExtra(node, "trailingComma", refTrailingCommaPos.value);
       }
-      return this.finishNode(node2, "TSTypeParameterDeclaration");
+      return this.finishNode(node, "TSTypeParameterDeclaration");
     }
     tsFillSignature(returnToken, signature) {
       const returnTokenRequired = returnToken === 19;
@@ -11079,10 +11052,10 @@ function requireLib() {
         this.expect(13);
       }
     }
-    tsParseSignatureMember(kind, node2) {
-      this.tsFillSignature(14, node2);
+    tsParseSignatureMember(kind, node) {
+      this.tsFillSignature(14, node);
       this.tsParseTypeMemberSemicolon();
-      return this.finishNode(node2, kind);
+      return this.finishNode(node, kind);
     }
     tsIsUnambiguouslyIndexSignature() {
       this.next();
@@ -11092,7 +11065,7 @@ function requireLib() {
       }
       return false;
     }
-    tsTryParseIndexSignature(node2) {
+    tsTryParseIndexSignature(node) {
       if (!(this.match(0) && this.tsLookAhead(this.tsIsUnambiguouslyIndexSignature.bind(this)))) {
         return;
       }
@@ -11101,18 +11074,18 @@ function requireLib() {
       id.typeAnnotation = this.tsParseTypeAnnotation();
       this.resetEndLocation(id);
       this.expect(3);
-      node2.parameters = [id];
+      node.parameters = [id];
       const type = this.tsTryParseTypeAnnotation();
-      if (type) node2.typeAnnotation = type;
+      if (type) node.typeAnnotation = type;
       this.tsParseTypeMemberSemicolon();
-      return this.finishNode(node2, "TSIndexSignature");
+      return this.finishNode(node, "TSIndexSignature");
     }
-    tsParsePropertyOrMethodSignature(node2, readonly) {
-      if (this.eat(17)) node2.optional = true;
-      const nodeAny = node2;
+    tsParsePropertyOrMethodSignature(node, readonly) {
+      if (this.eat(17)) node.optional = true;
+      const nodeAny = node;
       if (this.match(10) || this.match(47)) {
         if (readonly) {
-          this.raise(TSErrors.ReadonlyForMethodSignature, node2);
+          this.raise(TSErrors.ReadonlyForMethodSignature, node);
         }
         const method = nodeAny;
         if (method.kind && this.match(47)) {
@@ -11161,39 +11134,39 @@ function requireLib() {
       }
     }
     tsParseTypeMember() {
-      const node2 = this.startNode();
+      const node = this.startNode();
       if (this.match(10) || this.match(47)) {
-        return this.tsParseSignatureMember("TSCallSignatureDeclaration", node2);
+        return this.tsParseSignatureMember("TSCallSignatureDeclaration", node);
       }
       if (this.match(77)) {
         const id = this.startNode();
         this.next();
         if (this.match(10) || this.match(47)) {
-          return this.tsParseSignatureMember("TSConstructSignatureDeclaration", node2);
+          return this.tsParseSignatureMember("TSConstructSignatureDeclaration", node);
         } else {
-          node2.key = this.createIdentifier(id, "new");
-          return this.tsParsePropertyOrMethodSignature(node2, false);
+          node.key = this.createIdentifier(id, "new");
+          return this.tsParsePropertyOrMethodSignature(node, false);
         }
       }
       this.tsParseModifiers({
         allowedModifiers: ["readonly"],
         disallowedModifiers: ["declare", "abstract", "private", "protected", "public", "static", "override"]
-      }, node2);
-      const idx = this.tsTryParseIndexSignature(node2);
+      }, node);
+      const idx = this.tsTryParseIndexSignature(node);
       if (idx) {
         return idx;
       }
-      super.parsePropertyName(node2);
-      if (!node2.computed && node2.key.type === "Identifier" && (node2.key.name === "get" || node2.key.name === "set") && this.tsTokenCanFollowModifier()) {
-        node2.kind = node2.key.name;
-        super.parsePropertyName(node2);
+      super.parsePropertyName(node);
+      if (!node.computed && node.key.type === "Identifier" && (node.key.name === "get" || node.key.name === "set") && this.tsTokenCanFollowModifier()) {
+        node.kind = node.key.name;
+        super.parsePropertyName(node);
       }
-      return this.tsParsePropertyOrMethodSignature(node2, !!node2.readonly);
+      return this.tsParsePropertyOrMethodSignature(node, !!node.readonly);
     }
     tsParseTypeLiteral() {
-      const node2 = this.startNode();
-      node2.members = this.tsParseObjectTypeMembers();
-      return this.finishNode(node2, "TSTypeLiteral");
+      const node = this.startNode();
+      node.members = this.tsParseObjectTypeMembers();
+      return this.finishNode(node, "TSTypeLiteral");
     }
     tsParseObjectTypeMembers() {
       this.expect(5);
@@ -11220,41 +11193,41 @@ function requireLib() {
       return this.match(58);
     }
     tsParseMappedType() {
-      const node2 = this.startNode();
+      const node = this.startNode();
       this.expect(5);
       if (this.match(53)) {
-        node2.readonly = this.state.value;
+        node.readonly = this.state.value;
         this.next();
         this.expectContextual(122);
       } else if (this.eatContextual(122)) {
-        node2.readonly = true;
+        node.readonly = true;
       }
       this.expect(0);
       {
         const typeParameter = this.startNode();
         typeParameter.name = this.tsParseTypeParameterName();
         typeParameter.constraint = this.tsExpectThenParseType(58);
-        node2.typeParameter = this.finishNode(typeParameter, "TSTypeParameter");
+        node.typeParameter = this.finishNode(typeParameter, "TSTypeParameter");
       }
-      node2.nameType = this.eatContextual(93) ? this.tsParseType() : null;
+      node.nameType = this.eatContextual(93) ? this.tsParseType() : null;
       this.expect(3);
       if (this.match(53)) {
-        node2.optional = this.state.value;
+        node.optional = this.state.value;
         this.next();
         this.expect(17);
       } else if (this.eat(17)) {
-        node2.optional = true;
+        node.optional = true;
       }
-      node2.typeAnnotation = this.tsTryParseType();
+      node.typeAnnotation = this.tsTryParseType();
       this.semicolon();
       this.expect(8);
-      return this.finishNode(node2, "TSMappedType");
+      return this.finishNode(node, "TSMappedType");
     }
     tsParseTupleType() {
-      const node2 = this.startNode();
-      node2.elementTypes = this.tsParseBracketedList("TupleElementTypes", this.tsParseTupleElementType.bind(this), true, false);
+      const node = this.startNode();
+      node.elementTypes = this.tsParseBracketedList("TupleElementTypes", this.tsParseTupleElementType.bind(this), true, false);
       let seenOptionalElement = false;
-      node2.elementTypes.forEach((elementNode) => {
+      node.elementTypes.forEach((elementNode) => {
         const {
           type
         } = elementNode;
@@ -11263,7 +11236,7 @@ function requireLib() {
         }
         seenOptionalElement || (seenOptionalElement = type === "TSNamedTupleMember" && elementNode.optional || type === "TSOptionalType");
       });
-      return this.finishNode(node2, "TSTupleType");
+      return this.finishNode(node, "TSTupleType");
     }
     tsParseTupleElementType() {
       const restStartLoc = this.state.startLoc;
@@ -11335,42 +11308,42 @@ function requireLib() {
       return type;
     }
     tsParseParenthesizedType() {
-      const node2 = this.startNode();
+      const node = this.startNode();
       this.expect(10);
-      node2.typeAnnotation = this.tsParseType();
+      node.typeAnnotation = this.tsParseType();
       this.expect(11);
-      return this.finishNode(node2, "TSParenthesizedType");
+      return this.finishNode(node, "TSParenthesizedType");
     }
     tsParseFunctionOrConstructorType(type, abstract) {
-      const node2 = this.startNode();
+      const node = this.startNode();
       if (type === "TSConstructorType") {
-        node2.abstract = !!abstract;
+        node.abstract = !!abstract;
         if (abstract) this.next();
         this.next();
       }
-      this.tsInAllowConditionalTypesContext(() => this.tsFillSignature(19, node2));
-      return this.finishNode(node2, type);
+      this.tsInAllowConditionalTypesContext(() => this.tsFillSignature(19, node));
+      return this.finishNode(node, type);
     }
     tsParseLiteralTypeNode() {
-      const node2 = this.startNode();
+      const node = this.startNode();
       switch (this.state.type) {
         case 135:
         case 136:
         case 134:
         case 85:
         case 86:
-          node2.literal = super.parseExprAtom();
+          node.literal = super.parseExprAtom();
           break;
         default:
           this.unexpected();
       }
-      return this.finishNode(node2, "TSLiteralType");
+      return this.finishNode(node, "TSLiteralType");
     }
     tsParseTemplateLiteralType() {
       {
-        const node2 = this.startNode();
-        node2.literal = super.parseTemplate(false);
-        return this.finishNode(node2, "TSLiteralType");
+        const node = this.startNode();
+        node.literal = super.parseTemplate(false);
+        return this.finishNode(node, "TSLiteralType");
       }
     }
     parseTemplateSubstitution() {
@@ -11395,13 +11368,13 @@ function requireLib() {
           return this.tsParseLiteralTypeNode();
         case 53:
           if (this.state.value === "-") {
-            const node2 = this.startNode();
+            const node = this.startNode();
             const nextToken = this.lookahead();
             if (nextToken.type !== 135 && nextToken.type !== 136) {
               this.unexpected();
             }
-            node2.literal = this.parseMaybeUnary();
-            return this.finishNode(node2, "TSLiteralType");
+            node.literal = this.parseMaybeUnary();
+            return this.finishNode(node, "TSLiteralType");
           }
           break;
         case 78:
@@ -11426,9 +11399,9 @@ function requireLib() {
           if (tokenIsIdentifier(type) || type === 88 || type === 84) {
             const nodeType = type === 88 ? "TSVoidKeyword" : type === 84 ? "TSNullKeyword" : keywordTypeFromName(this.state.value);
             if (nodeType !== void 0 && this.lookaheadCharCode() !== 46) {
-              const node2 = this.startNode();
+              const node = this.startNode();
               this.next();
-              return this.finishNode(node2, nodeType);
+              return this.finishNode(node, nodeType);
             }
             return this.tsParseTypeReference();
           }
@@ -11443,48 +11416,48 @@ function requireLib() {
       let type = this.tsParseNonArrayType();
       while (!this.hasPrecedingLineBreak() && this.eat(0)) {
         if (this.match(3)) {
-          const node2 = this.startNodeAt(startLoc);
-          node2.elementType = type;
+          const node = this.startNodeAt(startLoc);
+          node.elementType = type;
           this.expect(3);
-          type = this.finishNode(node2, "TSArrayType");
+          type = this.finishNode(node, "TSArrayType");
         } else {
-          const node2 = this.startNodeAt(startLoc);
-          node2.objectType = type;
-          node2.indexType = this.tsParseType();
+          const node = this.startNodeAt(startLoc);
+          node.objectType = type;
+          node.indexType = this.tsParseType();
           this.expect(3);
-          type = this.finishNode(node2, "TSIndexedAccessType");
+          type = this.finishNode(node, "TSIndexedAccessType");
         }
       }
       return type;
     }
     tsParseTypeOperator() {
-      const node2 = this.startNode();
+      const node = this.startNode();
       const operator = this.state.value;
       this.next();
-      node2.operator = operator;
-      node2.typeAnnotation = this.tsParseTypeOperatorOrHigher();
+      node.operator = operator;
+      node.typeAnnotation = this.tsParseTypeOperatorOrHigher();
       if (operator === "readonly") {
-        this.tsCheckTypeAnnotationForReadOnly(node2);
+        this.tsCheckTypeAnnotationForReadOnly(node);
       }
-      return this.finishNode(node2, "TSTypeOperator");
+      return this.finishNode(node, "TSTypeOperator");
     }
-    tsCheckTypeAnnotationForReadOnly(node2) {
-      switch (node2.typeAnnotation.type) {
+    tsCheckTypeAnnotationForReadOnly(node) {
+      switch (node.typeAnnotation.type) {
         case "TSTupleType":
         case "TSArrayType":
           return;
         default:
-          this.raise(TSErrors.UnexpectedReadonly, node2);
+          this.raise(TSErrors.UnexpectedReadonly, node);
       }
     }
     tsParseInferType() {
-      const node2 = this.startNode();
+      const node = this.startNode();
       this.expectContextual(115);
       const typeParameter = this.startNode();
       typeParameter.name = this.tsParseTypeParameterName();
       typeParameter.constraint = this.tsTryParse(() => this.tsParseConstraintForInferType());
-      node2.typeParameter = this.finishNode(typeParameter, "TSTypeParameter");
-      return this.finishNode(node2, "TSInferType");
+      node.typeParameter = this.finishNode(typeParameter, "TSTypeParameter");
+      return this.finishNode(node, "TSInferType");
     }
     tsParseConstraintForInferType() {
       if (this.eat(81)) {
@@ -11499,7 +11472,7 @@ function requireLib() {
       return isTypeOperator ? this.tsParseTypeOperator() : this.isContextual(115) ? this.tsParseInferType() : this.tsInAllowConditionalTypesContext(() => this.tsParseArrayTypeOrHigher());
     }
     tsParseUnionOrIntersectionType(kind, parseConstituentType, operator) {
-      const node2 = this.startNode();
+      const node = this.startNode();
       const hasLeadingOperator = this.eat(operator);
       const types2 = [];
       do {
@@ -11508,8 +11481,8 @@ function requireLib() {
       if (types2.length === 1 && !hasLeadingOperator) {
         return types2[0];
       }
-      node2.types = types2;
-      return this.finishNode(node2, kind);
+      node.types = types2;
+      return this.finishNode(node, kind);
     }
     tsParseIntersectionTypeOrHigher() {
       return this.tsParseUnionOrIntersectionType("TSIntersectionType", this.tsParseTypeOperatorOrHigher.bind(this), 45);
@@ -11577,17 +11550,17 @@ function requireLib() {
       return this.tsInType(() => {
         const t = this.startNode();
         this.expect(returnToken);
-        const node2 = this.startNode();
+        const node = this.startNode();
         const asserts = !!this.tsTryParse(this.tsParseTypePredicateAsserts.bind(this));
         if (asserts && this.match(78)) {
           let thisTypePredicate = this.tsParseThisTypeOrThisTypePredicate();
           if (thisTypePredicate.type === "TSThisType") {
-            node2.parameterName = thisTypePredicate;
-            node2.asserts = true;
-            node2.typeAnnotation = null;
-            thisTypePredicate = this.finishNode(node2, "TSTypePredicate");
+            node.parameterName = thisTypePredicate;
+            node.asserts = true;
+            node.typeAnnotation = null;
+            thisTypePredicate = this.finishNode(node, "TSTypePredicate");
           } else {
-            this.resetStartLocationFromNode(thisTypePredicate, node2);
+            this.resetStartLocationFromNode(thisTypePredicate, node);
             thisTypePredicate.asserts = true;
           }
           t.typeAnnotation = thisTypePredicate;
@@ -11598,17 +11571,17 @@ function requireLib() {
           if (!asserts) {
             return this.tsParseTypeAnnotation(false, t);
           }
-          node2.parameterName = this.parseIdentifier();
-          node2.asserts = asserts;
-          node2.typeAnnotation = null;
-          t.typeAnnotation = this.finishNode(node2, "TSTypePredicate");
+          node.parameterName = this.parseIdentifier();
+          node.asserts = asserts;
+          node.typeAnnotation = null;
+          t.typeAnnotation = this.finishNode(node, "TSTypePredicate");
           return this.finishNode(t, "TSTypeAnnotation");
         }
         const type = this.tsParseTypeAnnotation(false);
-        node2.parameterName = typePredicateVariable;
-        node2.typeAnnotation = type;
-        node2.asserts = asserts;
-        t.typeAnnotation = this.finishNode(node2, "TSTypePredicate");
+        node.parameterName = typePredicateVariable;
+        node.typeAnnotation = type;
+        node.asserts = asserts;
+        t.typeAnnotation = this.finishNode(node, "TSTypePredicate");
         return this.finishNode(t, "TSTypeAnnotation");
       });
     }
@@ -11661,14 +11634,14 @@ function requireLib() {
       if (this.state.inDisallowConditionalTypesContext || this.hasPrecedingLineBreak() || !this.eat(81)) {
         return type;
       }
-      const node2 = this.startNodeAtNode(type);
-      node2.checkType = type;
-      node2.extendsType = this.tsInDisallowConditionalTypesContext(() => this.tsParseNonConditionalType());
+      const node = this.startNodeAtNode(type);
+      node.checkType = type;
+      node.extendsType = this.tsInDisallowConditionalTypesContext(() => this.tsParseNonConditionalType());
       this.expect(17);
-      node2.trueType = this.tsInAllowConditionalTypesContext(() => this.tsParseType());
+      node.trueType = this.tsInAllowConditionalTypesContext(() => this.tsParseType());
       this.expect(14);
-      node2.falseType = this.tsInAllowConditionalTypesContext(() => this.tsParseType());
-      return this.finishNode(node2, "TSConditionalType");
+      node.falseType = this.tsInAllowConditionalTypesContext(() => this.tsParseType());
+      return this.finishNode(node, "TSConditionalType");
     }
     isAbstractConstructorSignature() {
       return this.isContextual(124) && this.lookahead().type === 77;
@@ -11688,25 +11661,25 @@ function requireLib() {
       if (this.getPluginOption("typescript", "disallowAmbiguousJSXLike")) {
         this.raise(TSErrors.ReservedTypeAssertion, this.state.startLoc);
       }
-      const node2 = this.startNode();
-      node2.typeAnnotation = this.tsInType(() => {
+      const node = this.startNode();
+      node.typeAnnotation = this.tsInType(() => {
         this.next();
         return this.match(75) ? this.tsParseTypeReference() : this.tsParseType();
       });
       this.expect(48);
-      node2.expression = this.parseMaybeUnary();
-      return this.finishNode(node2, "TSTypeAssertion");
+      node.expression = this.parseMaybeUnary();
+      return this.finishNode(node, "TSTypeAssertion");
     }
     tsParseHeritageClause(token) {
       const originalStartLoc = this.state.startLoc;
       const delimitedList = this.tsParseDelimitedList("HeritageClauseElement", () => {
         {
-          const node2 = this.startNode();
-          node2.expression = this.tsParseEntityName(1 | 2);
+          const node = this.startNode();
+          node.expression = this.tsParseEntityName(1 | 2);
           if (this.match(47)) {
-            node2.typeParameters = this.tsParseTypeArguments();
+            node.typeParameters = this.tsParseTypeArguments();
           }
-          return this.finishNode(node2, "TSExpressionWithTypeArguments");
+          return this.finishNode(node, "TSExpressionWithTypeArguments");
         }
       });
       if (!delimitedList.length) {
@@ -11716,41 +11689,41 @@ function requireLib() {
       }
       return delimitedList;
     }
-    tsParseInterfaceDeclaration(node2, properties = {}) {
+    tsParseInterfaceDeclaration(node, properties = {}) {
       if (this.hasFollowingLineBreak()) return null;
       this.expectContextual(129);
-      if (properties.declare) node2.declare = true;
+      if (properties.declare) node.declare = true;
       if (tokenIsIdentifier(this.state.type)) {
-        node2.id = this.parseIdentifier();
-        this.checkIdentifier(node2.id, 130);
+        node.id = this.parseIdentifier();
+        this.checkIdentifier(node.id, 130);
       } else {
-        node2.id = null;
+        node.id = null;
         this.raise(TSErrors.MissingInterfaceName, this.state.startLoc);
       }
-      node2.typeParameters = this.tsTryParseTypeParameters(this.tsParseInOutConstModifiers);
+      node.typeParameters = this.tsTryParseTypeParameters(this.tsParseInOutConstModifiers);
       if (this.eat(81)) {
-        node2.extends = this.tsParseHeritageClause("extends");
+        node.extends = this.tsParseHeritageClause("extends");
       }
       const body = this.startNode();
       body.body = this.tsInType(this.tsParseObjectTypeMembers.bind(this));
-      node2.body = this.finishNode(body, "TSInterfaceBody");
-      return this.finishNode(node2, "TSInterfaceDeclaration");
+      node.body = this.finishNode(body, "TSInterfaceBody");
+      return this.finishNode(node, "TSInterfaceDeclaration");
     }
-    tsParseTypeAliasDeclaration(node2) {
-      node2.id = this.parseIdentifier();
-      this.checkIdentifier(node2.id, 2);
-      node2.typeAnnotation = this.tsInType(() => {
-        node2.typeParameters = this.tsTryParseTypeParameters(this.tsParseInOutModifiers);
+    tsParseTypeAliasDeclaration(node) {
+      node.id = this.parseIdentifier();
+      this.checkIdentifier(node.id, 2);
+      node.typeAnnotation = this.tsInType(() => {
+        node.typeParameters = this.tsTryParseTypeParameters(this.tsParseInOutModifiers);
         this.expect(29);
         if (this.isContextual(114) && this.lookahead().type !== 16) {
-          const node3 = this.startNode();
+          const node2 = this.startNode();
           this.next();
-          return this.finishNode(node3, "TSIntrinsicKeyword");
+          return this.finishNode(node2, "TSIntrinsicKeyword");
         }
         return this.tsParseType();
       });
       this.semicolon();
-      return this.finishNode(node2, "TSTypeAliasDeclaration");
+      return this.finishNode(node, "TSTypeAliasDeclaration");
     }
     tsInTopLevelContext(cb) {
       if (this.curContext() !== types.brace) {
@@ -11810,97 +11783,97 @@ function requireLib() {
       });
     }
     tsParseEnumMember() {
-      const node2 = this.startNode();
-      node2.id = this.match(134) ? super.parseStringLiteral(this.state.value) : this.parseIdentifier(true);
+      const node = this.startNode();
+      node.id = this.match(134) ? super.parseStringLiteral(this.state.value) : this.parseIdentifier(true);
       if (this.eat(29)) {
-        node2.initializer = super.parseMaybeAssignAllowIn();
+        node.initializer = super.parseMaybeAssignAllowIn();
       }
-      return this.finishNode(node2, "TSEnumMember");
+      return this.finishNode(node, "TSEnumMember");
     }
-    tsParseEnumDeclaration(node2, properties = {}) {
-      if (properties.const) node2.const = true;
-      if (properties.declare) node2.declare = true;
+    tsParseEnumDeclaration(node, properties = {}) {
+      if (properties.const) node.const = true;
+      if (properties.declare) node.declare = true;
       this.expectContextual(126);
-      node2.id = this.parseIdentifier();
-      this.checkIdentifier(node2.id, node2.const ? 8971 : 8459);
+      node.id = this.parseIdentifier();
+      this.checkIdentifier(node.id, node.const ? 8971 : 8459);
       {
         this.expect(5);
-        node2.members = this.tsParseDelimitedList("EnumMembers", this.tsParseEnumMember.bind(this));
+        node.members = this.tsParseDelimitedList("EnumMembers", this.tsParseEnumMember.bind(this));
         this.expect(8);
       }
-      return this.finishNode(node2, "TSEnumDeclaration");
+      return this.finishNode(node, "TSEnumDeclaration");
     }
     tsParseEnumBody() {
-      const node2 = this.startNode();
+      const node = this.startNode();
       this.expect(5);
-      node2.members = this.tsParseDelimitedList("EnumMembers", this.tsParseEnumMember.bind(this));
+      node.members = this.tsParseDelimitedList("EnumMembers", this.tsParseEnumMember.bind(this));
       this.expect(8);
-      return this.finishNode(node2, "TSEnumBody");
+      return this.finishNode(node, "TSEnumBody");
     }
     tsParseModuleBlock() {
-      const node2 = this.startNode();
+      const node = this.startNode();
       this.scope.enter(0);
       this.expect(5);
-      super.parseBlockOrModuleBlockBody(node2.body = [], void 0, true, 8);
+      super.parseBlockOrModuleBlockBody(node.body = [], void 0, true, 8);
       this.scope.exit();
-      return this.finishNode(node2, "TSModuleBlock");
+      return this.finishNode(node, "TSModuleBlock");
     }
-    tsParseModuleOrNamespaceDeclaration(node2, nested = false) {
-      node2.id = this.parseIdentifier();
+    tsParseModuleOrNamespaceDeclaration(node, nested = false) {
+      node.id = this.parseIdentifier();
       if (!nested) {
-        this.checkIdentifier(node2.id, 1024);
+        this.checkIdentifier(node.id, 1024);
       }
       if (this.eat(16)) {
         const inner = this.startNode();
         this.tsParseModuleOrNamespaceDeclaration(inner, true);
-        node2.body = inner;
+        node.body = inner;
       } else {
         this.scope.enter(256);
         this.prodParam.enter(0);
-        node2.body = this.tsParseModuleBlock();
+        node.body = this.tsParseModuleBlock();
         this.prodParam.exit();
         this.scope.exit();
       }
-      return this.finishNode(node2, "TSModuleDeclaration");
+      return this.finishNode(node, "TSModuleDeclaration");
     }
-    tsParseAmbientExternalModuleDeclaration(node2) {
+    tsParseAmbientExternalModuleDeclaration(node) {
       if (this.isContextual(112)) {
-        node2.kind = "global";
+        node.kind = "global";
         {
-          node2.global = true;
+          node.global = true;
         }
-        node2.id = this.parseIdentifier();
+        node.id = this.parseIdentifier();
       } else if (this.match(134)) {
-        node2.kind = "module";
-        node2.id = super.parseStringLiteral(this.state.value);
+        node.kind = "module";
+        node.id = super.parseStringLiteral(this.state.value);
       } else {
         this.unexpected();
       }
       if (this.match(5)) {
         this.scope.enter(256);
         this.prodParam.enter(0);
-        node2.body = this.tsParseModuleBlock();
+        node.body = this.tsParseModuleBlock();
         this.prodParam.exit();
         this.scope.exit();
       } else {
         this.semicolon();
       }
-      return this.finishNode(node2, "TSModuleDeclaration");
+      return this.finishNode(node, "TSModuleDeclaration");
     }
-    tsParseImportEqualsDeclaration(node2, maybeDefaultIdentifier, isExport) {
+    tsParseImportEqualsDeclaration(node, maybeDefaultIdentifier, isExport) {
       {
-        node2.isExport = isExport || false;
+        node.isExport = isExport || false;
       }
-      node2.id = maybeDefaultIdentifier || this.parseIdentifier();
-      this.checkIdentifier(node2.id, 4096);
+      node.id = maybeDefaultIdentifier || this.parseIdentifier();
+      this.checkIdentifier(node.id, 4096);
       this.expect(29);
       const moduleReference = this.tsParseModuleReference();
-      if (node2.importKind === "type" && moduleReference.type !== "TSExternalModuleReference") {
+      if (node.importKind === "type" && moduleReference.type !== "TSExternalModuleReference") {
         this.raise(TSErrors.ImportAliasHasImportType, moduleReference);
       }
-      node2.moduleReference = moduleReference;
+      node.moduleReference = moduleReference;
       this.semicolon();
-      return this.finishNode(node2, "TSImportEqualsDeclaration");
+      return this.finishNode(node, "TSImportEqualsDeclaration");
     }
     tsIsExternalModuleReference() {
       return this.isContextual(119) && this.lookaheadCharCode() === 40;
@@ -11909,16 +11882,16 @@ function requireLib() {
       return this.tsIsExternalModuleReference() ? this.tsParseExternalModuleReference() : this.tsParseEntityName(0);
     }
     tsParseExternalModuleReference() {
-      const node2 = this.startNode();
+      const node = this.startNode();
       this.expectContextual(119);
       this.expect(10);
       if (!this.match(134)) {
         this.unexpected();
       }
-      node2.expression = super.parseExprAtom();
+      node.expression = super.parseExprAtom();
       this.expect(11);
       this.sawUnambiguousESM = true;
-      return this.finishNode(node2, "TSExternalModuleReference");
+      return this.finishNode(node, "TSExternalModuleReference");
     }
     tsLookAhead(f) {
       const state = this.state.clone();
@@ -11991,10 +11964,10 @@ function requireLib() {
     tsTryParseExportDeclaration() {
       return this.tsParseDeclaration(this.startNode(), this.state.value, true, null);
     }
-    tsParseExpressionStatement(node2, expr, decorators) {
+    tsParseExpressionStatement(node, expr, decorators) {
       switch (expr.name) {
         case "declare": {
-          const declaration = this.tsTryParseDeclare(node2);
+          const declaration = this.tsTryParseDeclare(node);
           if (declaration) {
             declaration.declare = true;
           }
@@ -12004,10 +11977,10 @@ function requireLib() {
           if (this.match(5)) {
             this.scope.enter(256);
             this.prodParam.enter(0);
-            const mod = node2;
+            const mod = node;
             mod.kind = "global";
             {
-              node2.global = true;
+              node.global = true;
             }
             mod.id = expr;
             mod.body = this.tsParseModuleBlock();
@@ -12017,35 +11990,35 @@ function requireLib() {
           }
           break;
         default:
-          return this.tsParseDeclaration(node2, expr.name, false, decorators);
+          return this.tsParseDeclaration(node, expr.name, false, decorators);
       }
     }
-    tsParseDeclaration(node2, value, next, decorators) {
+    tsParseDeclaration(node, value, next, decorators) {
       switch (value) {
         case "abstract":
           if (this.tsCheckLineTerminator(next) && (this.match(80) || tokenIsIdentifier(this.state.type))) {
-            return this.tsParseAbstractDeclaration(node2, decorators);
+            return this.tsParseAbstractDeclaration(node, decorators);
           }
           break;
         case "module":
           if (this.tsCheckLineTerminator(next)) {
             if (this.match(134)) {
-              return this.tsParseAmbientExternalModuleDeclaration(node2);
+              return this.tsParseAmbientExternalModuleDeclaration(node);
             } else if (tokenIsIdentifier(this.state.type)) {
-              node2.kind = "module";
-              return this.tsParseModuleOrNamespaceDeclaration(node2);
+              node.kind = "module";
+              return this.tsParseModuleOrNamespaceDeclaration(node);
             }
           }
           break;
         case "namespace":
           if (this.tsCheckLineTerminator(next) && tokenIsIdentifier(this.state.type)) {
-            node2.kind = "namespace";
-            return this.tsParseModuleOrNamespaceDeclaration(node2);
+            node.kind = "namespace";
+            return this.tsParseModuleOrNamespaceDeclaration(node);
           }
           break;
         case "type":
           if (this.tsCheckLineTerminator(next) && tokenIsIdentifier(this.state.type)) {
-            return this.tsParseTypeAliasDeclaration(node2);
+            return this.tsParseTypeAliasDeclaration(node);
           }
           break;
       }
@@ -12063,12 +12036,12 @@ function requireLib() {
       const oldMaybeInArrowParameters = this.state.maybeInArrowParameters;
       this.state.maybeInArrowParameters = true;
       const res = this.tsTryParseAndCatch(() => {
-        const node2 = this.startNodeAt(startLoc);
-        node2.typeParameters = this.tsParseTypeParameters(this.tsParseConstModifier);
-        super.parseFunctionParams(node2);
-        node2.returnType = this.tsTryParseTypeOrTypePredicateAnnotation();
+        const node = this.startNodeAt(startLoc);
+        node.typeParameters = this.tsParseTypeParameters(this.tsParseConstModifier);
+        super.parseFunctionParams(node);
+        node.returnType = this.tsTryParseTypeOrTypePredicateAnnotation();
         this.expect(19);
-        return node2;
+        return node;
       });
       this.state.maybeInArrowParameters = oldMaybeInArrowParameters;
       if (!res) return;
@@ -12079,18 +12052,18 @@ function requireLib() {
       return this.tsParseTypeArguments();
     }
     tsParseTypeArguments() {
-      const node2 = this.startNode();
-      node2.params = this.tsInType(() => this.tsInTopLevelContext(() => {
+      const node = this.startNode();
+      node.params = this.tsInType(() => this.tsInTopLevelContext(() => {
         this.expect(47);
         return this.tsParseDelimitedList("TypeParametersOrArguments", this.tsParseType.bind(this));
       }));
-      if (node2.params.length === 0) {
-        this.raise(TSErrors.EmptyTypeArguments, node2);
+      if (node.params.length === 0) {
+        this.raise(TSErrors.EmptyTypeArguments, node);
       } else if (!this.state.inType && this.curContext() === types.brace) {
         this.reScan_lt_gt();
       }
       this.expect(48);
-      return this.finishNode(node2, "TSTypeParameterInstantiation");
+      return this.finishNode(node, "TSTypeParameterInstantiation");
     }
     tsIsDeclarationStart() {
       return tokenIsTSDeclarationStart(this.state.type);
@@ -12135,48 +12108,48 @@ function requireLib() {
       }
       return elt;
     }
-    isSimpleParameter(node2) {
-      return node2.type === "TSParameterProperty" && super.isSimpleParameter(node2.parameter) || super.isSimpleParameter(node2);
+    isSimpleParameter(node) {
+      return node.type === "TSParameterProperty" && super.isSimpleParameter(node.parameter) || super.isSimpleParameter(node);
     }
-    tsDisallowOptionalPattern(node2) {
-      for (const param of node2.params) {
+    tsDisallowOptionalPattern(node) {
+      for (const param of node.params) {
         if (param.type !== "Identifier" && param.optional && !this.state.isAmbientContext) {
           this.raise(TSErrors.PatternIsOptional, param);
         }
       }
     }
-    setArrowFunctionParameters(node2, params, trailingCommaLoc) {
-      super.setArrowFunctionParameters(node2, params, trailingCommaLoc);
-      this.tsDisallowOptionalPattern(node2);
+    setArrowFunctionParameters(node, params, trailingCommaLoc) {
+      super.setArrowFunctionParameters(node, params, trailingCommaLoc);
+      this.tsDisallowOptionalPattern(node);
     }
-    parseFunctionBodyAndFinish(node2, type, isMethod = false) {
+    parseFunctionBodyAndFinish(node, type, isMethod = false) {
       if (this.match(14)) {
-        node2.returnType = this.tsParseTypeOrTypePredicateAnnotation(14);
+        node.returnType = this.tsParseTypeOrTypePredicateAnnotation(14);
       }
       const bodilessType = type === "FunctionDeclaration" ? "TSDeclareFunction" : type === "ClassMethod" || type === "ClassPrivateMethod" ? "TSDeclareMethod" : void 0;
       if (bodilessType && !this.match(5) && this.isLineTerminator()) {
-        return this.finishNode(node2, bodilessType);
+        return this.finishNode(node, bodilessType);
       }
       if (bodilessType === "TSDeclareFunction" && this.state.isAmbientContext) {
-        this.raise(TSErrors.DeclareFunctionHasImplementation, node2);
-        if (node2.declare) {
-          return super.parseFunctionBodyAndFinish(node2, bodilessType, isMethod);
+        this.raise(TSErrors.DeclareFunctionHasImplementation, node);
+        if (node.declare) {
+          return super.parseFunctionBodyAndFinish(node, bodilessType, isMethod);
         }
       }
-      this.tsDisallowOptionalPattern(node2);
-      return super.parseFunctionBodyAndFinish(node2, type, isMethod);
+      this.tsDisallowOptionalPattern(node);
+      return super.parseFunctionBodyAndFinish(node, type, isMethod);
     }
-    registerFunctionStatementId(node2) {
-      if (!node2.body && node2.id) {
-        this.checkIdentifier(node2.id, 1024);
+    registerFunctionStatementId(node) {
+      if (!node.body && node.id) {
+        this.checkIdentifier(node.id, 1024);
       } else {
-        super.registerFunctionStatementId(node2);
+        super.registerFunctionStatementId(node);
       }
     }
     tsCheckForInvalidTypeCasts(items) {
-      items.forEach((node2) => {
-        if ((node2 == null ? void 0 : node2.type) === "TSTypeCastExpression") {
-          this.raise(TSErrors.UnexpectedTypeAnnotation, node2.typeAnnotation);
+      items.forEach((node) => {
+        if ((node == null ? void 0 : node.type) === "TSTypeCastExpression") {
+          this.raise(TSErrors.UnexpectedTypeAnnotation, node.typeAnnotation);
         }
       });
     }
@@ -12185,11 +12158,11 @@ function requireLib() {
       return exprList;
     }
     parseArrayLike(close, canBePattern, isTuple, refExpressionErrors) {
-      const node2 = super.parseArrayLike(close, canBePattern, isTuple, refExpressionErrors);
-      if (node2.type === "ArrayExpression") {
-        this.tsCheckForInvalidTypeCasts(node2.elements);
+      const node = super.parseArrayLike(close, canBePattern, isTuple, refExpressionErrors);
+      if (node.type === "ArrayExpression") {
+        this.tsCheckForInvalidTypeCasts(node.elements);
       }
-      return node2;
+      return node;
     }
     parseSubscript(base, startLoc, noCalls, state) {
       if (!this.hasPrecedingLineBreak() && this.match(35)) {
@@ -12231,28 +12204,28 @@ function requireLib() {
             return result2;
           }
           if (!noCalls && this.eat(10)) {
-            const node3 = this.startNodeAt(startLoc);
-            node3.callee = base;
-            node3.arguments = this.parseCallExpressionArguments(11);
-            this.tsCheckForInvalidTypeCasts(node3.arguments);
+            const node2 = this.startNodeAt(startLoc);
+            node2.callee = base;
+            node2.arguments = this.parseCallExpressionArguments(11);
+            this.tsCheckForInvalidTypeCasts(node2.arguments);
             {
-              node3.typeParameters = typeArguments;
+              node2.typeParameters = typeArguments;
             }
             if (state.optionalChainMember) {
-              node3.optional = isOptionalCall;
+              node2.optional = isOptionalCall;
             }
-            return this.finishCallExpression(node3, state.optionalChainMember);
+            return this.finishCallExpression(node2, state.optionalChainMember);
           }
           const tokenType = this.state.type;
           if (tokenType === 48 || tokenType === 52 || tokenType !== 10 && tokenCanStartExpression(tokenType) && !this.hasPrecedingLineBreak()) {
             return;
           }
-          const node2 = this.startNodeAt(startLoc);
-          node2.expression = base;
+          const node = this.startNodeAt(startLoc);
+          node.expression = base;
           {
-            node2.typeParameters = typeArguments;
+            node.typeParameters = typeArguments;
           }
-          return this.finishNode(node2, "TSInstantiationExpression");
+          return this.finishNode(node, "TSInstantiationExpression");
         });
         if (missingParenErrorLoc) {
           this.unexpected(missingParenErrorLoc, 10);
@@ -12266,25 +12239,25 @@ function requireLib() {
       }
       return super.parseSubscript(base, startLoc, noCalls, state);
     }
-    parseNewCallee(node2) {
+    parseNewCallee(node) {
       var _callee$extra;
-      super.parseNewCallee(node2);
+      super.parseNewCallee(node);
       const {
         callee
-      } = node2;
+      } = node;
       if (callee.type === "TSInstantiationExpression" && !((_callee$extra = callee.extra) != null && _callee$extra.parenthesized)) {
         {
-          node2.typeParameters = callee.typeParameters;
+          node.typeParameters = callee.typeParameters;
         }
-        node2.callee = callee.expression;
+        node.callee = callee.expression;
       }
     }
     parseExprOp(left, leftStartLoc, minPrec) {
       let isSatisfies;
       if (tokenOperatorPrecedence(58) > minPrec && !this.hasPrecedingLineBreak() && (this.isContextual(93) || (isSatisfies = this.isContextual(120)))) {
-        const node2 = this.startNodeAt(leftStartLoc);
-        node2.expression = left;
-        node2.typeAnnotation = this.tsInType(() => {
+        const node = this.startNodeAt(leftStartLoc);
+        node.expression = left;
+        node.typeAnnotation = this.tsInType(() => {
           this.next();
           if (this.match(75)) {
             if (isSatisfies) {
@@ -12296,9 +12269,9 @@ function requireLib() {
           }
           return this.tsParseType();
         });
-        this.finishNode(node2, isSatisfies ? "TSSatisfiesExpression" : "TSAsExpression");
+        this.finishNode(node, isSatisfies ? "TSSatisfiesExpression" : "TSAsExpression");
         this.reScan_lt_gt();
-        return this.parseExprOp(node2, leftStartLoc, minPrec);
+        return this.parseExprOp(node, leftStartLoc, minPrec);
       }
       return super.parseExprOp(left, leftStartLoc, minPrec);
     }
@@ -12307,10 +12280,10 @@ function requireLib() {
         super.checkReservedWord(word, startLoc, checkKeywords, isBinding);
       }
     }
-    checkImportReflection(node2) {
-      super.checkImportReflection(node2);
-      if (node2.module && node2.importKind !== "value") {
-        this.raise(TSErrors.ImportReflectionHasImportType, node2.specifiers[0].loc.start);
+    checkImportReflection(node) {
+      super.checkImportReflection(node);
+      if (node.module && node.importKind !== "value") {
+        this.raise(TSErrors.ImportReflectionHasImportType, node.specifiers[0].loc.start);
       }
     }
     checkDuplicateExports() {
@@ -12323,41 +12296,41 @@ function requireLib() {
       }
       return !isExport && this.isContextual(87);
     }
-    applyImportPhase(node2, isExport, phase, loc) {
-      super.applyImportPhase(node2, isExport, phase, loc);
+    applyImportPhase(node, isExport, phase, loc) {
+      super.applyImportPhase(node, isExport, phase, loc);
       if (isExport) {
-        node2.exportKind = phase === "type" ? "type" : "value";
+        node.exportKind = phase === "type" ? "type" : "value";
       } else {
-        node2.importKind = phase === "type" || phase === "typeof" ? phase : "value";
+        node.importKind = phase === "type" || phase === "typeof" ? phase : "value";
       }
     }
-    parseImport(node2) {
+    parseImport(node) {
       if (this.match(134)) {
-        node2.importKind = "value";
-        return super.parseImport(node2);
+        node.importKind = "value";
+        return super.parseImport(node);
       }
       let importNode;
       if (tokenIsIdentifier(this.state.type) && this.lookaheadCharCode() === 61) {
-        node2.importKind = "value";
-        return this.tsParseImportEqualsDeclaration(node2);
+        node.importKind = "value";
+        return this.tsParseImportEqualsDeclaration(node);
       } else if (this.isContextual(130)) {
-        const maybeDefaultIdentifier = this.parseMaybeImportPhase(node2, false);
+        const maybeDefaultIdentifier = this.parseMaybeImportPhase(node, false);
         if (this.lookaheadCharCode() === 61) {
-          return this.tsParseImportEqualsDeclaration(node2, maybeDefaultIdentifier);
+          return this.tsParseImportEqualsDeclaration(node, maybeDefaultIdentifier);
         } else {
-          importNode = super.parseImportSpecifiersAndAfter(node2, maybeDefaultIdentifier);
+          importNode = super.parseImportSpecifiersAndAfter(node, maybeDefaultIdentifier);
         }
       } else {
-        importNode = super.parseImport(node2);
+        importNode = super.parseImport(node);
       }
       if (importNode.importKind === "type" && importNode.specifiers.length > 1 && importNode.specifiers[0].type === "ImportDefaultSpecifier") {
         this.raise(TSErrors.TypeImportCannotSpecifyDefaultAndNamed, importNode);
       }
       return importNode;
     }
-    parseExport(node2, decorators) {
+    parseExport(node, decorators) {
       if (this.match(83)) {
-        const nodeImportEquals = node2;
+        const nodeImportEquals = node;
         this.next();
         let maybeDefaultIdentifier = null;
         if (this.isContextual(130) && this.isPotentialImportPhase(false)) {
@@ -12370,19 +12343,19 @@ function requireLib() {
           return declaration;
         }
       } else if (this.eat(29)) {
-        const assign = node2;
+        const assign = node;
         assign.expression = super.parseExpression();
         this.semicolon();
         this.sawUnambiguousESM = true;
         return this.finishNode(assign, "TSExportAssignment");
       } else if (this.eatContextual(93)) {
-        const decl = node2;
+        const decl = node;
         this.expectContextual(128);
         decl.id = this.parseIdentifier();
         this.semicolon();
         return this.finishNode(decl, "TSNamespaceExportDeclaration");
       } else {
-        return super.parseExport(node2, decorators);
+        return super.parseExport(node, decorators);
       }
     }
     isAbstractClass() {
@@ -12401,11 +12374,11 @@ function requireLib() {
       }
       return super.parseExportDefaultExpression();
     }
-    parseVarStatement(node2, kind, allowMissingInitializer = false) {
+    parseVarStatement(node, kind, allowMissingInitializer = false) {
       const {
         isAmbientContext
       } = this.state;
-      const declaration = super.parseVarStatement(node2, kind, allowMissingInitializer || isAmbientContext);
+      const declaration = super.parseVarStatement(node, kind, allowMissingInitializer || isAmbientContext);
       if (!isAmbientContext) return declaration;
       for (const {
         id,
@@ -12422,9 +12395,9 @@ function requireLib() {
     }
     parseStatementContent(flags, decorators) {
       if (this.match(75) && this.isLookaheadContextual("enum")) {
-        const node2 = this.startNode();
+        const node = this.startNode();
         this.expect(75);
-        return this.tsParseEnumDeclaration(node2, {
+        return this.tsParseEnumDeclaration(node, {
           const: true
         });
       }
@@ -12517,9 +12490,9 @@ function requireLib() {
         this.raise(TSErrors.ClassMethodHasDeclare, methodOrProp);
       }
     }
-    parseExpressionStatement(node2, expr, decorators) {
-      const decl = expr.type === "Identifier" ? this.tsParseExpressionStatement(node2, expr, decorators) : void 0;
-      return decl || super.parseExpressionStatement(node2, expr, decorators);
+    parseExpressionStatement(node, expr, decorators) {
+      const decl = expr.type === "Identifier" ? this.tsParseExpressionStatement(node, expr, decorators) : void 0;
+      return decl || super.parseExpressionStatement(node, expr, decorators);
     }
     shouldParseExportDeclaration() {
       if (this.tsIsDeclarationStart()) return true;
@@ -12536,23 +12509,23 @@ function requireLib() {
       }
       return super.parseConditional(expr, startLoc, refExpressionErrors);
     }
-    parseParenItem(node2, startLoc) {
-      const newNode = super.parseParenItem(node2, startLoc);
+    parseParenItem(node, startLoc) {
+      const newNode = super.parseParenItem(node, startLoc);
       if (this.eat(17)) {
         newNode.optional = true;
-        this.resetEndLocation(node2);
+        this.resetEndLocation(node);
       }
       if (this.match(14)) {
         const typeCastNode = this.startNodeAt(startLoc);
-        typeCastNode.expression = node2;
+        typeCastNode.expression = node;
         typeCastNode.typeAnnotation = this.tsParseTypeAnnotation();
         return this.finishNode(typeCastNode, "TSTypeCastExpression");
       }
-      return node2;
+      return node;
     }
-    parseExportDeclaration(node2) {
+    parseExportDeclaration(node) {
       if (!this.state.isAmbientContext && this.isContextual(125)) {
-        return this.tsInAmbientContext(() => this.parseExportDeclaration(node2));
+        return this.tsInAmbientContext(() => this.parseExportDeclaration(node));
       }
       const startLoc = this.state.startLoc;
       const isDeclare = this.eatContextual(125);
@@ -12560,10 +12533,10 @@ function requireLib() {
         throw this.raise(TSErrors.ExpectedAmbientAfterExportDeclare, this.state.startLoc);
       }
       const isIdentifier = tokenIsIdentifier(this.state.type);
-      const declaration = isIdentifier && this.tsTryParseExportDeclaration() || super.parseExportDeclaration(node2);
+      const declaration = isIdentifier && this.tsTryParseExportDeclaration() || super.parseExportDeclaration(node);
       if (!declaration) return null;
       if (declaration.type === "TSInterfaceDeclaration" || declaration.type === "TSTypeAliasDeclaration" || isDeclare) {
-        node2.exportKind = "type";
+        node.exportKind = "type";
       }
       if (isDeclare && declaration.type !== "TSImportEqualsDeclaration") {
         this.resetStartLocation(declaration, startLoc);
@@ -12571,58 +12544,58 @@ function requireLib() {
       }
       return declaration;
     }
-    parseClassId(node2, isStatement, optionalId, bindingType) {
+    parseClassId(node, isStatement, optionalId, bindingType) {
       if ((!isStatement || optionalId) && this.isContextual(113)) {
         return;
       }
-      super.parseClassId(node2, isStatement, optionalId, node2.declare ? 1024 : 8331);
+      super.parseClassId(node, isStatement, optionalId, node.declare ? 1024 : 8331);
       const typeParameters = this.tsTryParseTypeParameters(this.tsParseInOutConstModifiers);
-      if (typeParameters) node2.typeParameters = typeParameters;
+      if (typeParameters) node.typeParameters = typeParameters;
     }
-    parseClassPropertyAnnotation(node2) {
-      if (!node2.optional) {
+    parseClassPropertyAnnotation(node) {
+      if (!node.optional) {
         if (this.eat(35)) {
-          node2.definite = true;
+          node.definite = true;
         } else if (this.eat(17)) {
-          node2.optional = true;
+          node.optional = true;
         }
       }
       const type = this.tsTryParseTypeAnnotation();
-      if (type) node2.typeAnnotation = type;
+      if (type) node.typeAnnotation = type;
     }
-    parseClassProperty(node2) {
-      this.parseClassPropertyAnnotation(node2);
-      if (this.state.isAmbientContext && !(node2.readonly && !node2.typeAnnotation) && this.match(29)) {
+    parseClassProperty(node) {
+      this.parseClassPropertyAnnotation(node);
+      if (this.state.isAmbientContext && !(node.readonly && !node.typeAnnotation) && this.match(29)) {
         this.raise(TSErrors.DeclareClassFieldHasInitializer, this.state.startLoc);
       }
-      if (node2.abstract && this.match(29)) {
+      if (node.abstract && this.match(29)) {
         const {
           key
-        } = node2;
+        } = node;
         this.raise(TSErrors.AbstractPropertyHasInitializer, this.state.startLoc, {
-          propertyName: key.type === "Identifier" && !node2.computed ? key.name : `[${this.input.slice(this.offsetToSourcePos(key.start), this.offsetToSourcePos(key.end))}]`
+          propertyName: key.type === "Identifier" && !node.computed ? key.name : `[${this.input.slice(this.offsetToSourcePos(key.start), this.offsetToSourcePos(key.end))}]`
         });
       }
-      return super.parseClassProperty(node2);
+      return super.parseClassProperty(node);
     }
-    parseClassPrivateProperty(node2) {
-      if (node2.abstract) {
-        this.raise(TSErrors.PrivateElementHasAbstract, node2);
+    parseClassPrivateProperty(node) {
+      if (node.abstract) {
+        this.raise(TSErrors.PrivateElementHasAbstract, node);
       }
-      if (node2.accessibility) {
-        this.raise(TSErrors.PrivateElementHasAccessibility, node2, {
-          modifier: node2.accessibility
+      if (node.accessibility) {
+        this.raise(TSErrors.PrivateElementHasAccessibility, node, {
+          modifier: node.accessibility
         });
       }
-      this.parseClassPropertyAnnotation(node2);
-      return super.parseClassPrivateProperty(node2);
+      this.parseClassPropertyAnnotation(node);
+      return super.parseClassPrivateProperty(node);
     }
-    parseClassAccessorProperty(node2) {
-      this.parseClassPropertyAnnotation(node2);
-      if (node2.optional) {
-        this.raise(TSErrors.AccessorCannotBeOptional, node2);
+    parseClassAccessorProperty(node) {
+      this.parseClassPropertyAnnotation(node);
+      if (node.optional) {
+        this.raise(TSErrors.AccessorCannotBeOptional, node);
       }
-      return super.parseClassAccessorProperty(node2);
+      return super.parseClassAccessorProperty(node);
     }
     pushClassMethod(classBody, method, isGenerator, isAsync, isConstructor, allowsDirectSuper) {
       const typeParameters = this.tsTryParseTypeParameters(this.tsParseConstModifier);
@@ -12646,22 +12619,22 @@ function requireLib() {
       if (typeParameters) method.typeParameters = typeParameters;
       super.pushClassPrivateMethod(classBody, method, isGenerator, isAsync);
     }
-    declareClassPrivateMethodInScope(node2, kind) {
-      if (node2.type === "TSDeclareMethod") return;
-      if (node2.type === "MethodDefinition" && !hasOwnProperty.call(node2.value, "body")) {
+    declareClassPrivateMethodInScope(node, kind) {
+      if (node.type === "TSDeclareMethod") return;
+      if (node.type === "MethodDefinition" && !hasOwnProperty.call(node.value, "body")) {
         return;
       }
-      super.declareClassPrivateMethodInScope(node2, kind);
+      super.declareClassPrivateMethodInScope(node, kind);
     }
-    parseClassSuper(node2) {
-      super.parseClassSuper(node2);
-      if (node2.superClass && (this.match(47) || this.match(51))) {
+    parseClassSuper(node) {
+      super.parseClassSuper(node);
+      if (node.superClass && (this.match(47) || this.match(51))) {
         {
-          node2.superTypeParameters = this.tsParseTypeArgumentsInExpression();
+          node.superTypeParameters = this.tsParseTypeArgumentsInExpression();
         }
       }
       if (this.eatContextual(113)) {
-        node2.implements = this.tsParseHeritageClause("implements");
+        node.implements = this.tsParseHeritageClause("implements");
       }
     }
     parseObjPropValue(prop, startLoc, isGenerator, isAsync, isPattern, isAccessor, refExpressionErrors) {
@@ -12669,10 +12642,10 @@ function requireLib() {
       if (typeParameters) prop.typeParameters = typeParameters;
       return super.parseObjPropValue(prop, startLoc, isGenerator, isAsync, isPattern, isAccessor, refExpressionErrors);
     }
-    parseFunctionParams(node2, isConstructor) {
+    parseFunctionParams(node, isConstructor) {
       const typeParameters = this.tsTryParseTypeParameters(this.tsParseConstModifier);
-      if (typeParameters) node2.typeParameters = typeParameters;
-      super.parseFunctionParams(node2, isConstructor);
+      if (typeParameters) node.typeParameters = typeParameters;
+      super.parseFunctionParams(node, isConstructor);
     }
     parseVarId(decl, kind) {
       super.parseVarId(decl, kind);
@@ -12685,11 +12658,11 @@ function requireLib() {
         this.resetEndLocation(decl.id);
       }
     }
-    parseAsyncArrowFromCallExpression(node2, call) {
+    parseAsyncArrowFromCallExpression(node, call) {
       if (this.match(14)) {
-        node2.returnType = this.tsParseTypeAnnotation();
+        node.returnType = this.tsParseTypeAnnotation();
       }
-      return super.parseAsyncArrowFromCallExpression(node2, call);
+      return super.parseAsyncArrowFromCallExpression(node, call);
     }
     parseMaybeAssign(refExpressionErrors, afterLeftParse) {
       var _jsx, _jsx2, _typeCast, _jsx3, _typeCast2;
@@ -12750,10 +12723,10 @@ function requireLib() {
       }
       throw ((_jsx3 = jsx2) == null ? void 0 : _jsx3.error) || arrow.error || ((_typeCast2 = typeCast) == null ? void 0 : _typeCast2.error);
     }
-    reportReservedArrowTypeParam(node2) {
+    reportReservedArrowTypeParam(node) {
       var _node$extra2;
-      if (node2.params.length === 1 && !node2.params[0].constraint && !((_node$extra2 = node2.extra) != null && _node$extra2.trailingComma) && this.getPluginOption("typescript", "disallowAmbiguousJSXLike")) {
-        this.raise(TSErrors.ReservedArrowTypeParam, node2);
+      if (node.params.length === 1 && !node.params[0].constraint && !((_node$extra2 = node.extra) != null && _node$extra2.trailingComma) && this.getPluginOption("typescript", "disallowAmbiguousJSXLike")) {
+        this.raise(TSErrors.ReservedArrowTypeParam, node);
       }
     }
     parseMaybeUnary(refExpressionErrors, sawUnary) {
@@ -12762,7 +12735,7 @@ function requireLib() {
       }
       return super.parseMaybeUnary(refExpressionErrors, sawUnary);
     }
-    parseArrow(node2) {
+    parseArrow(node) {
       if (this.match(14)) {
         const result = this.tryParse((abort) => {
           const returnType = this.tsParseTypeOrTypePredicateAnnotation(14);
@@ -12772,10 +12745,10 @@ function requireLib() {
         if (result.aborted) return;
         if (!result.thrown) {
           if (result.error) this.state = result.failState;
-          node2.returnType = result.node;
+          node.returnType = result.node;
         }
       }
-      return super.parseArrow(node2);
+      return super.parseArrow(node);
     }
     parseFunctionParamType(param) {
       if (this.eat(17)) {
@@ -12786,63 +12759,63 @@ function requireLib() {
       this.resetEndLocation(param);
       return param;
     }
-    isAssignable(node2, isBinding) {
-      switch (node2.type) {
+    isAssignable(node, isBinding) {
+      switch (node.type) {
         case "TSTypeCastExpression":
-          return this.isAssignable(node2.expression, isBinding);
+          return this.isAssignable(node.expression, isBinding);
         case "TSParameterProperty":
           return true;
         default:
-          return super.isAssignable(node2, isBinding);
+          return super.isAssignable(node, isBinding);
       }
     }
-    toAssignable(node2, isLHS = false) {
-      switch (node2.type) {
+    toAssignable(node, isLHS = false) {
+      switch (node.type) {
         case "ParenthesizedExpression":
-          this.toAssignableParenthesizedExpression(node2, isLHS);
+          this.toAssignableParenthesizedExpression(node, isLHS);
           break;
         case "TSAsExpression":
         case "TSSatisfiesExpression":
         case "TSNonNullExpression":
         case "TSTypeAssertion":
           if (isLHS) {
-            this.expressionScope.recordArrowParameterBindingError(TSErrors.UnexpectedTypeCastInParameter, node2);
+            this.expressionScope.recordArrowParameterBindingError(TSErrors.UnexpectedTypeCastInParameter, node);
           } else {
-            this.raise(TSErrors.UnexpectedTypeCastInParameter, node2);
+            this.raise(TSErrors.UnexpectedTypeCastInParameter, node);
           }
-          this.toAssignable(node2.expression, isLHS);
+          this.toAssignable(node.expression, isLHS);
           break;
         case "AssignmentExpression":
-          if (!isLHS && node2.left.type === "TSTypeCastExpression") {
-            node2.left = this.typeCastToParameter(node2.left);
+          if (!isLHS && node.left.type === "TSTypeCastExpression") {
+            node.left = this.typeCastToParameter(node.left);
           }
         default:
-          super.toAssignable(node2, isLHS);
+          super.toAssignable(node, isLHS);
       }
     }
-    toAssignableParenthesizedExpression(node2, isLHS) {
-      switch (node2.expression.type) {
+    toAssignableParenthesizedExpression(node, isLHS) {
+      switch (node.expression.type) {
         case "TSAsExpression":
         case "TSSatisfiesExpression":
         case "TSNonNullExpression":
         case "TSTypeAssertion":
         case "ParenthesizedExpression":
-          this.toAssignable(node2.expression, isLHS);
+          this.toAssignable(node.expression, isLHS);
           break;
         default:
-          super.toAssignable(node2, isLHS);
+          super.toAssignable(node, isLHS);
       }
     }
-    checkToRestConversion(node2, allowPattern) {
-      switch (node2.type) {
+    checkToRestConversion(node, allowPattern) {
+      switch (node.type) {
         case "TSAsExpression":
         case "TSSatisfiesExpression":
         case "TSTypeAssertion":
         case "TSNonNullExpression":
-          this.checkToRestConversion(node2.expression, false);
+          this.checkToRestConversion(node.expression, false);
           break;
         default:
-          super.checkToRestConversion(node2, allowPattern);
+          super.checkToRestConversion(node, allowPattern);
       }
     }
     isValidLVal(type, isUnparenthesizedInAssign, binding) {
@@ -12895,11 +12868,11 @@ function requireLib() {
       return this.match(35) || this.match(14) || super.isClassProperty();
     }
     parseMaybeDefault(startLoc, left) {
-      const node2 = super.parseMaybeDefault(startLoc, left);
-      if (node2.type === "AssignmentPattern" && node2.typeAnnotation && node2.right.start < node2.typeAnnotation.start) {
-        this.raise(TSErrors.TypeAnnotationAfterAssign, node2.typeAnnotation);
+      const node = super.parseMaybeDefault(startLoc, left);
+      if (node.type === "AssignmentPattern" && node.typeAnnotation && node.right.start < node.typeAnnotation.start) {
+        this.raise(TSErrors.TypeAnnotationAfterAssign, node.typeAnnotation);
       }
-      return node2;
+      return node;
     }
     getTokenFromCode(code2) {
       if (this.state.inType) {
@@ -12938,16 +12911,16 @@ function requireLib() {
       return type;
     }
     toAssignableListItem(exprList, index, isLHS) {
-      const node2 = exprList[index];
-      if (node2.type === "TSTypeCastExpression") {
-        exprList[index] = this.typeCastToParameter(node2);
+      const node = exprList[index];
+      if (node.type === "TSTypeCastExpression") {
+        exprList[index] = this.typeCastToParameter(node);
       }
       super.toAssignableListItem(exprList, index, isLHS);
     }
-    typeCastToParameter(node2) {
-      node2.expression.typeAnnotation = node2.typeAnnotation;
-      this.resetEndLocation(node2.expression, node2.typeAnnotation.loc.end);
-      return node2.expression;
+    typeCastToParameter(node) {
+      node.expression.typeAnnotation = node.typeAnnotation;
+      this.resetEndLocation(node.expression, node.typeAnnotation.loc.end);
+      return node.expression;
     }
     shouldParseArrow(params) {
       if (this.match(14)) {
@@ -12961,16 +12934,16 @@ function requireLib() {
     canHaveLeadingDecorator() {
       return super.canHaveLeadingDecorator() || this.isAbstractClass();
     }
-    jsxParseOpeningElementAfterName(node2) {
+    jsxParseOpeningElementAfterName(node) {
       if (this.match(47) || this.match(51)) {
         const typeArguments = this.tsTryParseAndCatch(() => this.tsParseTypeArgumentsInExpression());
         if (typeArguments) {
           {
-            node2.typeParameters = typeArguments;
+            node.typeParameters = typeArguments;
           }
         }
       }
-      return super.jsxParseOpeningElementAfterName(node2);
+      return super.jsxParseOpeningElementAfterName(node);
     }
     getGetterSetterExpectedParamCount(method) {
       const baseCount = super.getGetterSetterExpectedParamCount(method);
@@ -13002,31 +12975,31 @@ function requireLib() {
         this.state.strict = oldStrict;
       }
     }
-    parseClass(node2, isStatement, optionalId) {
+    parseClass(node, isStatement, optionalId) {
       const oldInAbstractClass = this.state.inAbstractClass;
-      this.state.inAbstractClass = !!node2.abstract;
+      this.state.inAbstractClass = !!node.abstract;
       try {
-        return super.parseClass(node2, isStatement, optionalId);
+        return super.parseClass(node, isStatement, optionalId);
       } finally {
         this.state.inAbstractClass = oldInAbstractClass;
       }
     }
-    tsParseAbstractDeclaration(node2, decorators) {
+    tsParseAbstractDeclaration(node, decorators) {
       if (this.match(80)) {
-        node2.abstract = true;
-        return this.maybeTakeDecorators(decorators, this.parseClass(node2, true, false));
+        node.abstract = true;
+        return this.maybeTakeDecorators(decorators, this.parseClass(node, true, false));
       } else if (this.isContextual(129)) {
         if (!this.hasFollowingLineBreak()) {
-          node2.abstract = true;
-          this.raise(TSErrors.NonClassMethodPropertyHasAbstractModifer, node2);
-          return this.tsParseInterfaceDeclaration(node2);
+          node.abstract = true;
+          this.raise(TSErrors.NonClassMethodPropertyHasAbstractModifer, node);
+          return this.tsParseInterfaceDeclaration(node);
         }
       } else {
         this.unexpected(null, 80);
       }
     }
-    parseMethod(node2, isGenerator, isAsync, isConstructor, allowDirectSuper, type, inClassScope) {
-      const method = super.parseMethod(node2, isGenerator, isAsync, isConstructor, allowDirectSuper, type, inClassScope);
+    parseMethod(node, isGenerator, isAsync, isConstructor, allowDirectSuper, type, inClassScope) {
+      const method = super.parseMethod(node, isGenerator, isAsync, isConstructor, allowDirectSuper, type, inClassScope);
       if (method.abstract) {
         const hasEstreePlugin = this.hasPlugin("estree");
         const methodFn = hasEstreePlugin ? method.value : method;
@@ -13060,13 +13033,13 @@ function requireLib() {
       }
       return super.getExpression();
     }
-    parseExportSpecifier(node2, isString, isInTypeExport, isMaybeTypeOnly) {
+    parseExportSpecifier(node, isString, isInTypeExport, isMaybeTypeOnly) {
       if (!isString && isMaybeTypeOnly) {
-        this.parseTypeOnlyImportExportSpecifier(node2, false, isInTypeExport);
-        return this.finishNode(node2, "ExportSpecifier");
+        this.parseTypeOnlyImportExportSpecifier(node, false, isInTypeExport);
+        return this.finishNode(node, "ExportSpecifier");
       }
-      node2.exportKind = "value";
-      return super.parseExportSpecifier(node2, isString, isInTypeExport, isMaybeTypeOnly);
+      node.exportKind = "value";
+      return super.parseExportSpecifier(node, isString, isInTypeExport, isMaybeTypeOnly);
     }
     parseImportSpecifier(specifier, importedIsString, isInTypeOnlyImport, isMaybeTypeOnly, bindingType) {
       if (!importedIsString && isMaybeTypeOnly) {
@@ -13076,10 +13049,10 @@ function requireLib() {
       specifier.importKind = "value";
       return super.parseImportSpecifier(specifier, importedIsString, isInTypeOnlyImport, isMaybeTypeOnly, isInTypeOnlyImport ? 4098 : 4096);
     }
-    parseTypeOnlyImportExportSpecifier(node2, isImport, isInTypeOnlyImportExport) {
+    parseTypeOnlyImportExportSpecifier(node, isImport, isInTypeOnlyImportExport) {
       const leftOfAsKey = isImport ? "imported" : "local";
       const rightOfAsKey = isImport ? "local" : "exported";
-      let leftOfAs = node2[leftOfAsKey];
+      let leftOfAs = node[leftOfAsKey];
       let rightOfAs;
       let hasTypeSpecifier = false;
       let canParseAsKeyword = true;
@@ -13118,18 +13091,18 @@ function requireLib() {
       if (hasTypeSpecifier && isInTypeOnlyImportExport) {
         this.raise(isImport ? TSErrors.TypeModifierIsUsedInTypeImports : TSErrors.TypeModifierIsUsedInTypeExports, loc);
       }
-      node2[leftOfAsKey] = leftOfAs;
-      node2[rightOfAsKey] = rightOfAs;
+      node[leftOfAsKey] = leftOfAs;
+      node[rightOfAsKey] = rightOfAs;
       const kindKey = isImport ? "importKind" : "exportKind";
-      node2[kindKey] = hasTypeSpecifier ? "type" : "value";
+      node[kindKey] = hasTypeSpecifier ? "type" : "value";
       if (canParseAsKeyword && this.eatContextual(93)) {
-        node2[rightOfAsKey] = isImport ? this.parseIdentifier() : this.parseModuleExportName();
+        node[rightOfAsKey] = isImport ? this.parseIdentifier() : this.parseModuleExportName();
       }
-      if (!node2[rightOfAsKey]) {
-        node2[rightOfAsKey] = cloneIdentifier(node2[leftOfAsKey]);
+      if (!node[rightOfAsKey]) {
+        node[rightOfAsKey] = cloneIdentifier(node[leftOfAsKey]);
       }
       if (isImport) {
-        this.checkIdentifier(node2[rightOfAsKey], hasTypeSpecifier ? 4098 : 4096);
+        this.checkIdentifier(node[rightOfAsKey], hasTypeSpecifier ? 4098 : 4096);
       }
     }
   };
@@ -13209,17 +13182,17 @@ function requireLib() {
   var placeholders = (superClass) => class PlaceholdersParserMixin extends superClass {
     parsePlaceholder(expectedNode) {
       if (this.match(133)) {
-        const node2 = this.startNode();
+        const node = this.startNode();
         this.next();
         this.assertNoSpace();
-        node2.name = super.parseIdentifier(true);
+        node.name = super.parseIdentifier(true);
         this.assertNoSpace();
         this.expect(133);
-        return this.finishPlaceholder(node2, expectedNode);
+        return this.finishPlaceholder(node, expectedNode);
       }
     }
-    finishPlaceholder(node2, expectedNode) {
-      let placeholder = node2;
+    finishPlaceholder(node, expectedNode) {
+      let placeholder = node;
       if (!placeholder.expectedNode || !placeholder.type) {
         placeholder = this.finishNode(placeholder, "Placeholder");
       }
@@ -13250,11 +13223,11 @@ function requireLib() {
     isValidLVal(type, isParenthesized, binding) {
       return type === "Placeholder" || super.isValidLVal(type, isParenthesized, binding);
     }
-    toAssignable(node2, isLHS) {
-      if (node2 && node2.type === "Placeholder" && node2.expectedNode === "Expression") {
-        node2.expectedNode = "Pattern";
+    toAssignable(node, isLHS) {
+      if (node && node.type === "Placeholder" && node.expectedNode === "Expression") {
+        node.expectedNode = "Pattern";
       } else {
-        super.toAssignable(node2, isLHS);
+        super.toAssignable(node, isLHS);
       }
     }
     chStartsBindingIdentifier(ch, pos) {
@@ -13267,24 +13240,24 @@ function requireLib() {
       }
       return false;
     }
-    verifyBreakContinue(node2, isBreak) {
-      if (node2.label && node2.label.type === "Placeholder") return;
-      super.verifyBreakContinue(node2, isBreak);
+    verifyBreakContinue(node, isBreak) {
+      if (node.label && node.label.type === "Placeholder") return;
+      super.verifyBreakContinue(node, isBreak);
     }
-    parseExpressionStatement(node2, expr) {
+    parseExpressionStatement(node, expr) {
       var _expr$extra;
       if (expr.type !== "Placeholder" || (_expr$extra = expr.extra) != null && _expr$extra.parenthesized) {
-        return super.parseExpressionStatement(node2, expr);
+        return super.parseExpressionStatement(node, expr);
       }
       if (this.match(14)) {
-        const stmt = node2;
+        const stmt = node;
         stmt.label = this.finishPlaceholder(expr, "Identifier");
         this.next();
         stmt.body = super.parseStatementOrSloppyAnnexBFunctionDeclaration();
         return this.finishNode(stmt, "LabeledStatement");
       }
       this.semicolon();
-      const stmtPlaceholder = node2;
+      const stmtPlaceholder = node;
       stmtPlaceholder.name = expr.name;
       return this.finishPlaceholder(stmtPlaceholder, "Statement");
     }
@@ -13294,43 +13267,43 @@ function requireLib() {
     parseFunctionId(requireId) {
       return this.parsePlaceholder("Identifier") || super.parseFunctionId(requireId);
     }
-    parseClass(node2, isStatement, optionalId) {
+    parseClass(node, isStatement, optionalId) {
       const type = isStatement ? "ClassDeclaration" : "ClassExpression";
       this.next();
       const oldStrict = this.state.strict;
       const placeholder = this.parsePlaceholder("Identifier");
       if (placeholder) {
         if (this.match(81) || this.match(133) || this.match(5)) {
-          node2.id = placeholder;
+          node.id = placeholder;
         } else if (optionalId || !isStatement) {
-          node2.id = null;
-          node2.body = this.finishPlaceholder(placeholder, "ClassBody");
-          return this.finishNode(node2, type);
+          node.id = null;
+          node.body = this.finishPlaceholder(placeholder, "ClassBody");
+          return this.finishNode(node, type);
         } else {
           throw this.raise(PlaceholderErrors.ClassNameIsRequired, this.state.startLoc);
         }
       } else {
-        this.parseClassId(node2, isStatement, optionalId);
+        this.parseClassId(node, isStatement, optionalId);
       }
-      super.parseClassSuper(node2);
-      node2.body = this.parsePlaceholder("ClassBody") || super.parseClassBody(!!node2.superClass, oldStrict);
-      return this.finishNode(node2, type);
+      super.parseClassSuper(node);
+      node.body = this.parsePlaceholder("ClassBody") || super.parseClassBody(!!node.superClass, oldStrict);
+      return this.finishNode(node, type);
     }
-    parseExport(node2, decorators) {
+    parseExport(node, decorators) {
       const placeholder = this.parsePlaceholder("Identifier");
-      if (!placeholder) return super.parseExport(node2, decorators);
-      const node22 = node2;
+      if (!placeholder) return super.parseExport(node, decorators);
+      const node2 = node;
       if (!this.isContextual(98) && !this.match(12)) {
-        node22.specifiers = [];
-        node22.source = null;
-        node22.declaration = this.finishPlaceholder(placeholder, "Declaration");
-        return this.finishNode(node22, "ExportNamedDeclaration");
+        node2.specifiers = [];
+        node2.source = null;
+        node2.declaration = this.finishPlaceholder(placeholder, "Declaration");
+        return this.finishNode(node2, "ExportNamedDeclaration");
       }
       this.expectPlugin("exportDefaultFrom");
       const specifier = this.startNode();
       specifier.exported = placeholder;
-      node22.specifiers = [this.finishNode(specifier, "ExportDefaultSpecifier")];
-      return super.parseExport(node22, decorators);
+      node2.specifiers = [this.finishNode(specifier, "ExportDefaultSpecifier")];
+      return super.parseExport(node2, decorators);
     }
     isExportDefaultSpecifier() {
       if (this.match(65)) {
@@ -13343,43 +13316,43 @@ function requireLib() {
       }
       return super.isExportDefaultSpecifier();
     }
-    maybeParseExportDefaultSpecifier(node2, maybeDefaultIdentifier) {
+    maybeParseExportDefaultSpecifier(node, maybeDefaultIdentifier) {
       var _specifiers;
-      if ((_specifiers = node2.specifiers) != null && _specifiers.length) {
+      if ((_specifiers = node.specifiers) != null && _specifiers.length) {
         return true;
       }
-      return super.maybeParseExportDefaultSpecifier(node2, maybeDefaultIdentifier);
+      return super.maybeParseExportDefaultSpecifier(node, maybeDefaultIdentifier);
     }
-    checkExport(node2) {
+    checkExport(node) {
       const {
         specifiers
-      } = node2;
+      } = node;
       if (specifiers != null && specifiers.length) {
-        node2.specifiers = specifiers.filter((node3) => node3.exported.type === "Placeholder");
+        node.specifiers = specifiers.filter((node2) => node2.exported.type === "Placeholder");
       }
-      super.checkExport(node2);
-      node2.specifiers = specifiers;
+      super.checkExport(node);
+      node.specifiers = specifiers;
     }
-    parseImport(node2) {
+    parseImport(node) {
       const placeholder = this.parsePlaceholder("Identifier");
-      if (!placeholder) return super.parseImport(node2);
-      node2.specifiers = [];
+      if (!placeholder) return super.parseImport(node);
+      node.specifiers = [];
       if (!this.isContextual(98) && !this.match(12)) {
-        node2.source = this.finishPlaceholder(placeholder, "StringLiteral");
+        node.source = this.finishPlaceholder(placeholder, "StringLiteral");
         this.semicolon();
-        return this.finishNode(node2, "ImportDeclaration");
+        return this.finishNode(node, "ImportDeclaration");
       }
       const specifier = this.startNodeAtNode(placeholder);
       specifier.local = placeholder;
-      node2.specifiers.push(this.finishNode(specifier, "ImportDefaultSpecifier"));
+      node.specifiers.push(this.finishNode(specifier, "ImportDefaultSpecifier"));
       if (this.eat(12)) {
-        const hasStarImport = this.maybeParseStarImportSpecifier(node2);
-        if (!hasStarImport) this.parseNamedImportSpecifiers(node2);
+        const hasStarImport = this.maybeParseStarImportSpecifier(node);
+        if (!hasStarImport) this.parseNamedImportSpecifiers(node);
       }
       this.expectContextual(98);
-      node2.source = this.parseImportSource();
+      node.source = this.parseImportSource();
       this.semicolon();
-      return this.finishNode(node2, "ImportDeclaration");
+      return this.finishNode(node, "ImportDeclaration");
     }
     parseImportSource() {
       return this.parsePlaceholder("StringLiteral") || super.parseImportSource();
@@ -13394,11 +13367,11 @@ function requireLib() {
     parseV8Intrinsic() {
       if (this.match(54)) {
         const v8IntrinsicStartLoc = this.state.startLoc;
-        const node2 = this.startNode();
+        const node = this.startNode();
         this.next();
         if (tokenIsIdentifier(this.state.type)) {
           const name = this.parseIdentifierName();
-          const identifier = this.createIdentifier(node2, name);
+          const identifier = this.createIdentifier(node, name);
           identifier.type = "V8IntrinsicIdentifier";
           if (this.match(10)) {
             return identifier;
@@ -13563,13 +13536,13 @@ function requireLib() {
       const startLoc = this.state.startLoc;
       const expr = this.parseMaybeAssign(refExpressionErrors);
       if (this.match(12)) {
-        const node2 = this.startNodeAt(startLoc);
-        node2.expressions = [expr];
+        const node = this.startNodeAt(startLoc);
+        node.expressions = [expr];
         while (this.eat(12)) {
-          node2.expressions.push(this.parseMaybeAssign(refExpressionErrors));
+          node.expressions.push(this.parseMaybeAssign(refExpressionErrors));
         }
-        this.toReferencedList(node2.expressions);
-        return this.finishNode(node2, "SequenceExpression");
+        this.toReferencedList(node.expressions);
+        return this.finishNode(node, "SequenceExpression");
       }
       return expr;
     }
@@ -13613,12 +13586,12 @@ function requireLib() {
         left = afterLeftParse.call(this, left, startLoc);
       }
       if (tokenIsAssignment(this.state.type)) {
-        const node2 = this.startNodeAt(startLoc);
+        const node = this.startNodeAt(startLoc);
         const operator = this.state.value;
-        node2.operator = operator;
+        node.operator = operator;
         if (this.match(29)) {
           this.toAssignable(left, true);
-          node2.left = left;
+          node.left = left;
           const startIndex = startLoc.index;
           if (refExpressionErrors.doubleProtoLoc != null && refExpressionErrors.doubleProtoLoc.index >= startIndex) {
             refExpressionErrors.doubleProtoLoc = null;
@@ -13631,12 +13604,12 @@ function requireLib() {
             refExpressionErrors.privateKeyLoc = null;
           }
         } else {
-          node2.left = left;
+          node.left = left;
         }
         this.next();
-        node2.right = this.parseMaybeAssign();
-        this.checkLVal(left, this.finishNode(node2, "AssignmentExpression"));
-        return node2;
+        node.right = this.parseMaybeAssign();
+        this.checkLVal(left, this.finishNode(node, "AssignmentExpression"));
+        return node;
       } else if (ownExpressionErrors) {
         this.checkExpressionErrors(refExpressionErrors, true);
       }
@@ -13663,12 +13636,12 @@ function requireLib() {
     }
     parseConditional(expr, startLoc, refExpressionErrors) {
       if (this.eat(17)) {
-        const node2 = this.startNodeAt(startLoc);
-        node2.test = expr;
-        node2.consequent = this.parseMaybeAssignAllowIn();
+        const node = this.startNodeAt(startLoc);
+        node.test = expr;
+        node.consequent = this.parseMaybeAssignAllowIn();
         this.expect(14);
-        node2.alternate = this.parseMaybeAssign();
-        return this.finishNode(node2, "ConditionalExpression");
+        node.alternate = this.parseMaybeAssign();
+        return this.finishNode(node, "ConditionalExpression");
       }
       return expr;
     }
@@ -13705,9 +13678,9 @@ function requireLib() {
             }
             this.checkPipelineAtInfixOperator(left, leftStartLoc);
           }
-          const node2 = this.startNodeAt(leftStartLoc);
-          node2.left = left;
-          node2.operator = this.state.value;
+          const node = this.startNodeAt(leftStartLoc);
+          node.left = left;
+          node.operator = this.state.value;
           const logical = op === 41 || op === 42;
           const coalesce = op === 40;
           if (coalesce) {
@@ -13721,8 +13694,8 @@ function requireLib() {
               throw this.raise(Errors.UnexpectedAwaitAfterPipelineBody, this.state.startLoc);
             }
           }
-          node2.right = this.parseExprOpRightExpr(op, prec);
-          const finishedNode = this.finishNode(node2, logical || coalesce ? "LogicalExpression" : "BinaryExpression");
+          node.right = this.parseExprOpRightExpr(op, prec);
+          const finishedNode = this.finishNode(node, logical || coalesce ? "LogicalExpression" : "BinaryExpression");
           const nextOp = this.state.type;
           if (coalesce && (nextOp === 41 || nextOp === 42) || logical && nextOp === 40) {
             throw this.raise(Errors.MixingCoalesceWithLogical, this.state.startLoc);
@@ -13779,9 +13752,9 @@ function requireLib() {
       }
       return body;
     }
-    checkExponentialAfterUnary(node2) {
+    checkExponentialAfterUnary(node) {
       if (this.match(57)) {
-        this.raise(Errors.UnexpectedTokenUnaryExponentiation, node2.argument);
+        this.raise(Errors.UnexpectedTokenUnaryExponentiation, node.argument);
       }
     }
     parseMaybeUnary(refExpressionErrors, sawUnary) {
@@ -13794,33 +13767,33 @@ function requireLib() {
         return expr2;
       }
       const update = this.match(34);
-      const node2 = this.startNode();
+      const node = this.startNode();
       if (tokenIsPrefix(this.state.type)) {
-        node2.operator = this.state.value;
-        node2.prefix = true;
+        node.operator = this.state.value;
+        node.prefix = true;
         if (this.match(72)) {
           this.expectPlugin("throwExpressions");
         }
         const isDelete = this.match(89);
         this.next();
-        node2.argument = this.parseMaybeUnary(null, true);
+        node.argument = this.parseMaybeUnary(null, true);
         this.checkExpressionErrors(refExpressionErrors, true);
         if (this.state.strict && isDelete) {
-          const arg = node2.argument;
+          const arg = node.argument;
           if (arg.type === "Identifier") {
-            this.raise(Errors.StrictDelete, node2);
+            this.raise(Errors.StrictDelete, node);
           } else if (this.hasPropertyAsPrivateName(arg)) {
-            this.raise(Errors.DeletePrivateField, node2);
+            this.raise(Errors.DeletePrivateField, node);
           }
         }
         if (!update) {
           if (!sawUnary) {
-            this.checkExponentialAfterUnary(node2);
+            this.checkExponentialAfterUnary(node);
           }
-          return this.finishNode(node2, "UnaryExpression");
+          return this.finishNode(node, "UnaryExpression");
         }
       }
-      const expr = this.parseUpdate(node2, update, refExpressionErrors);
+      const expr = this.parseUpdate(node, update, refExpressionErrors);
       if (isAwait) {
         const {
           type
@@ -13833,22 +13806,22 @@ function requireLib() {
       }
       return expr;
     }
-    parseUpdate(node2, update, refExpressionErrors) {
+    parseUpdate(node, update, refExpressionErrors) {
       if (update) {
-        const updateExpressionNode = node2;
+        const updateExpressionNode = node;
         this.checkLVal(updateExpressionNode.argument, this.finishNode(updateExpressionNode, "UpdateExpression"));
-        return node2;
+        return node;
       }
       const startLoc = this.state.startLoc;
       let expr = this.parseExprSubscripts(refExpressionErrors);
       if (this.checkExpressionErrors(refExpressionErrors, false)) return expr;
       while (tokenIsPostfix(this.state.type) && !this.canInsertSemicolon()) {
-        const node3 = this.startNodeAt(startLoc);
-        node3.operator = this.state.value;
-        node3.prefix = false;
-        node3.argument = expr;
+        const node2 = this.startNodeAt(startLoc);
+        node2.operator = this.state.value;
+        node2.prefix = false;
+        node2.argument = expr;
         this.next();
-        this.checkLVal(expr, expr = this.finishNode(node3, "UpdateExpression"));
+        this.checkLVal(expr, expr = this.finishNode(node2, "UpdateExpression"));
       }
       return expr;
     }
@@ -13907,43 +13880,43 @@ function requireLib() {
       }
     }
     parseMember(base, startLoc, state, computed, optional) {
-      const node2 = this.startNodeAt(startLoc);
-      node2.object = base;
-      node2.computed = computed;
+      const node = this.startNodeAt(startLoc);
+      node.object = base;
+      node.computed = computed;
       if (computed) {
-        node2.property = this.parseExpression();
+        node.property = this.parseExpression();
         this.expect(3);
       } else if (this.match(139)) {
         if (base.type === "Super") {
           this.raise(Errors.SuperPrivateField, startLoc);
         }
         this.classScope.usePrivateName(this.state.value, this.state.startLoc);
-        node2.property = this.parsePrivateName();
+        node.property = this.parsePrivateName();
       } else {
-        node2.property = this.parseIdentifier(true);
+        node.property = this.parseIdentifier(true);
       }
       if (state.optionalChainMember) {
-        node2.optional = optional;
-        return this.finishNode(node2, "OptionalMemberExpression");
+        node.optional = optional;
+        return this.finishNode(node, "OptionalMemberExpression");
       } else {
-        return this.finishNode(node2, "MemberExpression");
+        return this.finishNode(node, "MemberExpression");
       }
     }
     parseBind(base, startLoc, noCalls, state) {
-      const node2 = this.startNodeAt(startLoc);
-      node2.object = base;
+      const node = this.startNodeAt(startLoc);
+      node.object = base;
       this.next();
-      node2.callee = this.parseNoCallExpr();
+      node.callee = this.parseNoCallExpr();
       state.stop = true;
-      return this.parseSubscripts(this.finishNode(node2, "BindExpression"), startLoc, noCalls);
+      return this.parseSubscripts(this.finishNode(node, "BindExpression"), startLoc, noCalls);
     }
     parseCoverCallAndAsyncArrowHead(base, startLoc, state, optional) {
       const oldMaybeInArrowParameters = this.state.maybeInArrowParameters;
       let refExpressionErrors = null;
       this.state.maybeInArrowParameters = true;
       this.next();
-      const node2 = this.startNodeAt(startLoc);
-      node2.callee = base;
+      const node = this.startNodeAt(startLoc);
+      node.callee = base;
       const {
         maybeAsyncArrow,
         optionalChainMember
@@ -13953,14 +13926,14 @@ function requireLib() {
         refExpressionErrors = new ExpressionErrors();
       }
       if (optionalChainMember) {
-        node2.optional = optional;
+        node.optional = optional;
       }
       if (optional) {
-        node2.arguments = this.parseCallExpressionArguments(11);
+        node.arguments = this.parseCallExpressionArguments(11);
       } else {
-        node2.arguments = this.parseCallExpressionArguments(11, base.type !== "Super", node2, refExpressionErrors);
+        node.arguments = this.parseCallExpressionArguments(11, base.type !== "Super", node, refExpressionErrors);
       }
-      let finishedNode = this.finishCallExpression(node2, optionalChainMember);
+      let finishedNode = this.finishCallExpression(node, optionalChainMember);
       if (maybeAsyncArrow && this.shouldParseAsyncArrow() && !optional) {
         state.stop = true;
         this.checkDestructuringPrivate(refExpressionErrors);
@@ -13977,34 +13950,34 @@ function requireLib() {
       this.state.maybeInArrowParameters = oldMaybeInArrowParameters;
       return finishedNode;
     }
-    toReferencedArguments(node2, isParenthesizedExpr) {
-      this.toReferencedListDeep(node2.arguments, isParenthesizedExpr);
+    toReferencedArguments(node, isParenthesizedExpr) {
+      this.toReferencedListDeep(node.arguments, isParenthesizedExpr);
     }
     parseTaggedTemplateExpression(base, startLoc, state) {
-      const node2 = this.startNodeAt(startLoc);
-      node2.tag = base;
-      node2.quasi = this.parseTemplate(true);
+      const node = this.startNodeAt(startLoc);
+      node.tag = base;
+      node.quasi = this.parseTemplate(true);
       if (state.optionalChainMember) {
         this.raise(Errors.OptionalChainingNoTemplate, startLoc);
       }
-      return this.finishNode(node2, "TaggedTemplateExpression");
+      return this.finishNode(node, "TaggedTemplateExpression");
     }
     atPossibleAsyncArrow(base) {
       return base.type === "Identifier" && base.name === "async" && this.state.lastTokEndLoc.index === base.end && !this.canInsertSemicolon() && base.end - base.start === 5 && this.offsetToSourcePos(base.start) === this.state.potentialArrowAt;
     }
-    finishCallExpression(node2, optional) {
-      if (node2.callee.type === "Import") {
-        if (node2.arguments.length === 0 || node2.arguments.length > 2) {
-          this.raise(Errors.ImportCallArity, node2);
+    finishCallExpression(node, optional) {
+      if (node.callee.type === "Import") {
+        if (node.arguments.length === 0 || node.arguments.length > 2) {
+          this.raise(Errors.ImportCallArity, node);
         } else {
-          for (const arg of node2.arguments) {
+          for (const arg of node.arguments) {
             if (arg.type === "SpreadElement") {
               this.raise(Errors.ImportCallSpreadArgument, arg);
             }
           }
         }
       }
-      return this.finishNode(node2, optional ? "OptionalCallExpression" : "CallExpression");
+      return this.finishNode(node, optional ? "OptionalCallExpression" : "CallExpression");
     }
     parseCallExpressionArguments(close, allowPlaceholder, nodeForExtra, refExpressionErrors) {
       const elts = [];
@@ -14032,25 +14005,25 @@ function requireLib() {
     shouldParseAsyncArrow() {
       return this.match(19) && !this.canInsertSemicolon();
     }
-    parseAsyncArrowFromCallExpression(node2, call) {
+    parseAsyncArrowFromCallExpression(node, call) {
       var _call$extra;
       this.resetPreviousNodeTrailingComments(call);
       this.expect(19);
-      this.parseArrowExpression(node2, call.arguments, true, (_call$extra = call.extra) == null ? void 0 : _call$extra.trailingCommaLoc);
+      this.parseArrowExpression(node, call.arguments, true, (_call$extra = call.extra) == null ? void 0 : _call$extra.trailingCommaLoc);
       if (call.innerComments) {
-        setInnerComments(node2, call.innerComments);
+        setInnerComments(node, call.innerComments);
       }
       if (call.callee.trailingComments) {
-        setInnerComments(node2, call.callee.trailingComments);
+        setInnerComments(node, call.callee.trailingComments);
       }
-      return node2;
+      return node;
     }
     parseNoCallExpr() {
       const startLoc = this.state.startLoc;
       return this.parseSubscripts(this.parseExprAtom(), startLoc, true);
     }
     parseExprAtom(refExpressionErrors) {
-      let node2;
+      let node;
       let decorators = null;
       const {
         type
@@ -14059,25 +14032,25 @@ function requireLib() {
         case 79:
           return this.parseSuper();
         case 83:
-          node2 = this.startNode();
+          node = this.startNode();
           this.next();
           if (this.match(16)) {
-            return this.parseImportMetaProperty(node2);
+            return this.parseImportMetaProperty(node);
           }
           if (this.match(10)) {
             if (this.optionFlags & 512) {
-              return this.parseImportCall(node2);
+              return this.parseImportCall(node);
             } else {
-              return this.finishNode(node2, "Import");
+              return this.finishNode(node, "Import");
             }
           } else {
             this.raise(Errors.UnsupportedImport, this.state.lastTokStartLoc);
-            return this.finishNode(node2, "Import");
+            return this.finishNode(node, "Import");
           }
         case 78:
-          node2 = this.startNode();
+          node = this.startNode();
           this.next();
-          return this.finishNode(node2, "ThisExpression");
+          return this.finishNode(node, "ThisExpression");
         case 90: {
           return this.parseDo(this.startNode(), false);
         }
@@ -14128,12 +14101,12 @@ function requireLib() {
         case 24:
           return this.parseTemplate(false);
         case 15: {
-          node2 = this.startNode();
+          node = this.startNode();
           this.next();
-          node2.object = null;
-          const callee = node2.callee = this.parseNoCallExpr();
+          node.object = null;
+          const callee = node.callee = this.parseNoCallExpr();
           if (callee.type === "MemberExpression") {
-            return this.finishNode(node2, "BindExpression");
+            return this.finishNode(node, "BindExpression");
           } else {
             throw this.raise(Errors.UnsupportedBind, callee);
           }
@@ -14227,26 +14200,26 @@ function requireLib() {
       }
     }
     parseTopicReference(pipeProposal) {
-      const node2 = this.startNode();
+      const node = this.startNode();
       const startLoc = this.state.startLoc;
       const tokenType = this.state.type;
       this.next();
-      return this.finishTopicReference(node2, startLoc, pipeProposal, tokenType);
+      return this.finishTopicReference(node, startLoc, pipeProposal, tokenType);
     }
-    finishTopicReference(node2, startLoc, pipeProposal, tokenType) {
+    finishTopicReference(node, startLoc, pipeProposal, tokenType) {
       if (this.testTopicReferenceConfiguration(pipeProposal, startLoc, tokenType)) {
         if (pipeProposal === "hack") {
           if (!this.topicReferenceIsAllowedInCurrentContext()) {
             this.raise(Errors.PipeTopicUnbound, startLoc);
           }
           this.registerTopicReference();
-          return this.finishNode(node2, "TopicReference");
+          return this.finishNode(node, "TopicReference");
         } else {
           if (!this.topicReferenceIsAllowedInCurrentContext()) {
             this.raise(Errors.PrimaryTopicNotAllowed, startLoc);
           }
           this.registerTopicReference();
-          return this.finishNode(node2, "PipelinePrimaryTopicReference");
+          return this.finishNode(node, "PipelinePrimaryTopicReference");
         }
       } else {
         throw this.raise(Errors.PipeTopicUnconfiguredToken, startLoc, {
@@ -14267,7 +14240,7 @@ function requireLib() {
           throw this.raise(Errors.PipeTopicRequiresHackPipes, startLoc);
       }
     }
-    parseAsyncArrowUnaryFunction(node2) {
+    parseAsyncArrowUnaryFunction(node) {
       this.prodParam.enter(functionFlags(true, this.prodParam.hasYield));
       const params = [this.parseIdentifier()];
       this.prodParam.exit();
@@ -14275,77 +14248,77 @@ function requireLib() {
         this.raise(Errors.LineTerminatorBeforeArrow, this.state.curPosition());
       }
       this.expect(19);
-      return this.parseArrowExpression(node2, params, true);
+      return this.parseArrowExpression(node, params, true);
     }
-    parseDo(node2, isAsync) {
+    parseDo(node, isAsync) {
       this.expectPlugin("doExpressions");
       if (isAsync) {
         this.expectPlugin("asyncDoExpressions");
       }
-      node2.async = isAsync;
+      node.async = isAsync;
       this.next();
       const oldLabels = this.state.labels;
       this.state.labels = [];
       if (isAsync) {
         this.prodParam.enter(2);
-        node2.body = this.parseBlock();
+        node.body = this.parseBlock();
         this.prodParam.exit();
       } else {
-        node2.body = this.parseBlock();
+        node.body = this.parseBlock();
       }
       this.state.labels = oldLabels;
-      return this.finishNode(node2, "DoExpression");
+      return this.finishNode(node, "DoExpression");
     }
     parseSuper() {
-      const node2 = this.startNode();
+      const node = this.startNode();
       this.next();
       if (this.match(10) && !this.scope.allowDirectSuper && !(this.optionFlags & 16)) {
-        this.raise(Errors.SuperNotAllowed, node2);
+        this.raise(Errors.SuperNotAllowed, node);
       } else if (!this.scope.allowSuper && !(this.optionFlags & 16)) {
-        this.raise(Errors.UnexpectedSuper, node2);
+        this.raise(Errors.UnexpectedSuper, node);
       }
       if (!this.match(10) && !this.match(0) && !this.match(16)) {
-        this.raise(Errors.UnsupportedSuper, node2);
+        this.raise(Errors.UnsupportedSuper, node);
       }
-      return this.finishNode(node2, "Super");
+      return this.finishNode(node, "Super");
     }
     parsePrivateName() {
-      const node2 = this.startNode();
+      const node = this.startNode();
       const id = this.startNodeAt(createPositionWithColumnOffset(this.state.startLoc, 1));
       const name = this.state.value;
       this.next();
-      node2.id = this.createIdentifier(id, name);
-      return this.finishNode(node2, "PrivateName");
+      node.id = this.createIdentifier(id, name);
+      return this.finishNode(node, "PrivateName");
     }
     parseFunctionOrFunctionSent() {
-      const node2 = this.startNode();
+      const node = this.startNode();
       this.next();
       if (this.prodParam.hasYield && this.match(16)) {
-        const meta = this.createIdentifier(this.startNodeAtNode(node2), "function");
+        const meta = this.createIdentifier(this.startNodeAtNode(node), "function");
         this.next();
         if (this.match(103)) {
           this.expectPlugin("functionSent");
         } else if (!this.hasPlugin("functionSent")) {
           this.unexpected();
         }
-        return this.parseMetaProperty(node2, meta, "sent");
+        return this.parseMetaProperty(node, meta, "sent");
       }
-      return this.parseFunction(node2);
+      return this.parseFunction(node);
     }
-    parseMetaProperty(node2, meta, propertyName) {
-      node2.meta = meta;
+    parseMetaProperty(node, meta, propertyName) {
+      node.meta = meta;
       const containsEsc = this.state.containsEsc;
-      node2.property = this.parseIdentifier(true);
-      if (node2.property.name !== propertyName || containsEsc) {
-        this.raise(Errors.UnsupportedMetaProperty, node2.property, {
+      node.property = this.parseIdentifier(true);
+      if (node.property.name !== propertyName || containsEsc) {
+        this.raise(Errors.UnsupportedMetaProperty, node.property, {
           target: meta.name,
           onlyValidPropertyName: propertyName
         });
       }
-      return this.finishNode(node2, "MetaProperty");
+      return this.finishNode(node, "MetaProperty");
     }
-    parseImportMetaProperty(node2) {
-      const id = this.createIdentifier(this.startNodeAtNode(node2), "import");
+    parseImportMetaProperty(node) {
+      const id = this.createIdentifier(this.startNodeAtNode(node), "import");
       this.next();
       if (this.isContextual(101)) {
         if (!this.inModule) {
@@ -14361,21 +14334,21 @@ function requireLib() {
           });
         }
         this.next();
-        node2.phase = isSource ? "source" : "defer";
-        return this.parseImportCall(node2);
+        node.phase = isSource ? "source" : "defer";
+        return this.parseImportCall(node);
       }
-      return this.parseMetaProperty(node2, id, "meta");
+      return this.parseMetaProperty(node, id, "meta");
     }
-    parseLiteralAtNode(value, type, node2) {
-      this.addExtra(node2, "rawValue", value);
-      this.addExtra(node2, "raw", this.input.slice(this.offsetToSourcePos(node2.start), this.state.end));
-      node2.value = value;
+    parseLiteralAtNode(value, type, node) {
+      this.addExtra(node, "rawValue", value);
+      this.addExtra(node, "raw", this.input.slice(this.offsetToSourcePos(node.start), this.state.end));
+      node.value = value;
       this.next();
-      return this.finishNode(node2, type);
+      return this.finishNode(node, type);
     }
     parseLiteral(value, type) {
-      const node2 = this.startNode();
-      return this.parseLiteralAtNode(value, type, node2);
+      const node = this.startNode();
+      return this.parseLiteralAtNode(value, type, node);
     }
     parseStringLiteral(value) {
       return this.parseLiteral(value, "StringLiteral");
@@ -14390,23 +14363,23 @@ function requireLib() {
       return this.parseLiteral(value, "DecimalLiteral");
     }
     parseRegExpLiteral(value) {
-      const node2 = this.startNode();
-      this.addExtra(node2, "raw", this.input.slice(this.offsetToSourcePos(node2.start), this.state.end));
-      node2.pattern = value.pattern;
-      node2.flags = value.flags;
+      const node = this.startNode();
+      this.addExtra(node, "raw", this.input.slice(this.offsetToSourcePos(node.start), this.state.end));
+      node.pattern = value.pattern;
+      node.flags = value.flags;
       this.next();
-      return this.finishNode(node2, "RegExpLiteral");
+      return this.finishNode(node, "RegExpLiteral");
     }
     parseBooleanLiteral(value) {
-      const node2 = this.startNode();
-      node2.value = value;
+      const node = this.startNode();
+      node.value = value;
       this.next();
-      return this.finishNode(node2, "BooleanLiteral");
+      return this.finishNode(node, "BooleanLiteral");
     }
     parseNullLiteral() {
-      const node2 = this.startNode();
+      const node = this.startNode();
       this.next();
-      return this.finishNode(node2, "NullLiteral");
+      return this.finishNode(node, "NullLiteral");
     }
     parseParenAndDistinguishExpression(canBeArrow) {
       const startLoc = this.state.startLoc;
@@ -14488,43 +14461,43 @@ function requireLib() {
     shouldParseArrow(params) {
       return !this.canInsertSemicolon();
     }
-    parseArrow(node2) {
+    parseArrow(node) {
       if (this.eat(19)) {
-        return node2;
+        return node;
       }
     }
-    parseParenItem(node2, startLoc) {
-      return node2;
+    parseParenItem(node, startLoc) {
+      return node;
     }
     parseNewOrNewTarget() {
-      const node2 = this.startNode();
+      const node = this.startNode();
       this.next();
       if (this.match(16)) {
-        const meta = this.createIdentifier(this.startNodeAtNode(node2), "new");
+        const meta = this.createIdentifier(this.startNodeAtNode(node), "new");
         this.next();
-        const metaProp = this.parseMetaProperty(node2, meta, "target");
+        const metaProp = this.parseMetaProperty(node, meta, "target");
         if (!this.scope.inNonArrowFunction && !this.scope.inClass && !(this.optionFlags & 4)) {
           this.raise(Errors.UnexpectedNewTarget, metaProp);
         }
         return metaProp;
       }
-      return this.parseNew(node2);
+      return this.parseNew(node);
     }
-    parseNew(node2) {
-      this.parseNewCallee(node2);
+    parseNew(node) {
+      this.parseNewCallee(node);
       if (this.eat(10)) {
         const args = this.parseExprList(11);
         this.toReferencedList(args);
-        node2.arguments = args;
+        node.arguments = args;
       } else {
-        node2.arguments = [];
+        node.arguments = [];
       }
-      return this.finishNode(node2, "NewExpression");
+      return this.finishNode(node, "NewExpression");
     }
-    parseNewCallee(node2) {
+    parseNewCallee(node) {
       const isImport = this.match(83);
       const callee = this.parseNoCallExpr();
-      node2.callee = callee;
+      node.callee = callee;
       if (isImport && (callee.type === "Import" || callee.type === "ImportExpression")) {
         this.raise(Errors.ImportCallNotNewExpression, callee);
       }
@@ -14557,7 +14530,7 @@ function requireLib() {
       return finishedNode;
     }
     parseTemplate(isTagged) {
-      const node2 = this.startNode();
+      const node = this.startNode();
       let curElt = this.parseTemplateElement(isTagged);
       const quasis = [curElt];
       const substitutions = [];
@@ -14566,9 +14539,9 @@ function requireLib() {
         this.readTemplateContinuation();
         quasis.push(curElt = this.parseTemplateElement(isTagged));
       }
-      node2.expressions = substitutions;
-      node2.quasis = quasis;
-      return this.finishNode(node2, "TemplateLiteral");
+      node.expressions = substitutions;
+      node.quasis = quasis;
+      return this.finishNode(node, "TemplateLiteral");
     }
     parseTemplateSubstitution() {
       return this.parseExpression();
@@ -14581,8 +14554,8 @@ function requireLib() {
       this.state.inFSharpPipelineDirectBody = false;
       let sawProto = false;
       let first = true;
-      const node2 = this.startNode();
-      node2.properties = [];
+      const node = this.startNode();
+      node.properties = [];
       this.next();
       while (!this.match(close)) {
         if (first) {
@@ -14590,7 +14563,7 @@ function requireLib() {
         } else {
           this.expect(12);
           if (this.match(close)) {
-            this.addTrailingCommaExtraToNode(node2);
+            this.addTrailingCommaExtraToNode(node);
             break;
           }
         }
@@ -14609,7 +14582,7 @@ function requireLib() {
             this.addExtra(prop, "shorthand", true);
           }
         }
-        node2.properties.push(prop);
+        node.properties.push(prop);
       }
       this.next();
       this.state.inFSharpPipelineDirectBody = oldInFSharpPipelineDirectBody;
@@ -14619,11 +14592,11 @@ function requireLib() {
       } else if (isRecord) {
         type = "RecordExpression";
       }
-      return this.finishNode(node2, type);
+      return this.finishNode(node, type);
     }
-    addTrailingCommaExtraToNode(node2) {
-      this.addExtra(node2, "trailingComma", this.state.lastTokStartLoc.index);
-      this.addExtra(node2, "trailingCommaLoc", this.state.lastTokStartLoc, false);
+    addTrailingCommaExtraToNode(node) {
+      this.addExtra(node, "trailingComma", this.state.lastTokStartLoc.index);
+      this.addExtra(node, "trailingCommaLoc", this.state.lastTokStartLoc, false);
     }
     maybeAsyncOrAccessorProp(prop) {
       return !prop.computed && prop.key.type === "Identifier" && (this.isLiteralPropertyName() || this.match(0) || this.match(55));
@@ -14743,9 +14716,9 @@ function requireLib() {
       }
     }
     parseObjPropValue(prop, startLoc, isGenerator, isAsync, isPattern, isAccessor, refExpressionErrors) {
-      const node2 = this.parseObjectMethod(prop, isGenerator, isAsync, isPattern, isAccessor) || this.parseObjectProperty(prop, startLoc, isPattern, refExpressionErrors);
-      if (!node2) this.unexpected();
-      return node2;
+      const node = this.parseObjectMethod(prop, isGenerator, isAsync, isPattern, isAccessor) || this.parseObjectProperty(prop, startLoc, isPattern, refExpressionErrors);
+      if (!node) this.unexpected();
+      return node;
     }
     parsePropertyName(prop, refExpressionErrors) {
       if (this.eat(0)) {
@@ -14797,18 +14770,18 @@ function requireLib() {
         }
       }
     }
-    initFunction(node2, isAsync) {
-      node2.id = null;
-      node2.generator = false;
-      node2.async = isAsync;
+    initFunction(node, isAsync) {
+      node.id = null;
+      node.generator = false;
+      node.async = isAsync;
     }
-    parseMethod(node2, isGenerator, isAsync, isConstructor, allowDirectSuper, type, inClassScope = false) {
-      this.initFunction(node2, isAsync);
-      node2.generator = isGenerator;
+    parseMethod(node, isGenerator, isAsync, isConstructor, allowDirectSuper, type, inClassScope = false) {
+      this.initFunction(node, isAsync);
+      node.generator = isGenerator;
       this.scope.enter(2 | 16 | (inClassScope ? 64 : 0) | (allowDirectSuper ? 32 : 0));
-      this.prodParam.enter(functionFlags(isAsync, node2.generator));
-      this.parseFunctionParams(node2, isConstructor);
-      const finishedNode = this.parseFunctionBodyAndFinish(node2, type, true);
+      this.prodParam.enter(functionFlags(isAsync, node.generator));
+      this.parseFunctionParams(node, isConstructor);
+      const finishedNode = this.parseFunctionBodyAndFinish(node, type, true);
       this.prodParam.exit();
       this.scope.exit();
       return finishedNode;
@@ -14819,60 +14792,60 @@ function requireLib() {
       }
       const oldInFSharpPipelineDirectBody = this.state.inFSharpPipelineDirectBody;
       this.state.inFSharpPipelineDirectBody = false;
-      const node2 = this.startNode();
+      const node = this.startNode();
       this.next();
-      node2.elements = this.parseExprList(close, !isTuple, refExpressionErrors, node2);
+      node.elements = this.parseExprList(close, !isTuple, refExpressionErrors, node);
       this.state.inFSharpPipelineDirectBody = oldInFSharpPipelineDirectBody;
-      return this.finishNode(node2, isTuple ? "TupleExpression" : "ArrayExpression");
+      return this.finishNode(node, isTuple ? "TupleExpression" : "ArrayExpression");
     }
-    parseArrowExpression(node2, params, isAsync, trailingCommaLoc) {
+    parseArrowExpression(node, params, isAsync, trailingCommaLoc) {
       this.scope.enter(2 | 4);
       let flags = functionFlags(isAsync, false);
       if (!this.match(5) && this.prodParam.hasIn) {
         flags |= 8;
       }
       this.prodParam.enter(flags);
-      this.initFunction(node2, isAsync);
+      this.initFunction(node, isAsync);
       const oldMaybeInArrowParameters = this.state.maybeInArrowParameters;
       if (params) {
         this.state.maybeInArrowParameters = true;
-        this.setArrowFunctionParameters(node2, params, trailingCommaLoc);
+        this.setArrowFunctionParameters(node, params, trailingCommaLoc);
       }
       this.state.maybeInArrowParameters = false;
-      this.parseFunctionBody(node2, true);
+      this.parseFunctionBody(node, true);
       this.prodParam.exit();
       this.scope.exit();
       this.state.maybeInArrowParameters = oldMaybeInArrowParameters;
-      return this.finishNode(node2, "ArrowFunctionExpression");
+      return this.finishNode(node, "ArrowFunctionExpression");
     }
-    setArrowFunctionParameters(node2, params, trailingCommaLoc) {
+    setArrowFunctionParameters(node, params, trailingCommaLoc) {
       this.toAssignableList(params, trailingCommaLoc, false);
-      node2.params = params;
+      node.params = params;
     }
-    parseFunctionBodyAndFinish(node2, type, isMethod = false) {
-      this.parseFunctionBody(node2, false, isMethod);
-      return this.finishNode(node2, type);
+    parseFunctionBodyAndFinish(node, type, isMethod = false) {
+      this.parseFunctionBody(node, false, isMethod);
+      return this.finishNode(node, type);
     }
-    parseFunctionBody(node2, allowExpression, isMethod = false) {
+    parseFunctionBody(node, allowExpression, isMethod = false) {
       const isExpression = allowExpression && !this.match(5);
       this.expressionScope.enter(newExpressionScope());
       if (isExpression) {
-        node2.body = this.parseMaybeAssign();
-        this.checkParams(node2, false, allowExpression, false);
+        node.body = this.parseMaybeAssign();
+        this.checkParams(node, false, allowExpression, false);
       } else {
         const oldStrict = this.state.strict;
         const oldLabels = this.state.labels;
         this.state.labels = [];
         this.prodParam.enter(this.prodParam.currentFlags() | 4);
-        node2.body = this.parseBlock(true, false, (hasStrictModeDirective) => {
-          const nonSimple = !this.isSimpleParamList(node2.params);
+        node.body = this.parseBlock(true, false, (hasStrictModeDirective) => {
+          const nonSimple = !this.isSimpleParamList(node.params);
           if (hasStrictModeDirective && nonSimple) {
-            this.raise(Errors.IllegalLanguageModeDirective, (node2.kind === "method" || node2.kind === "constructor") && !!node2.key ? node2.key.loc.end : node2);
+            this.raise(Errors.IllegalLanguageModeDirective, (node.kind === "method" || node.kind === "constructor") && !!node.key ? node.key.loc.end : node);
           }
           const strictModeChanged = !oldStrict && this.state.strict;
-          this.checkParams(node2, !this.state.strict && !allowExpression && !isMethod && !nonSimple, allowExpression, strictModeChanged);
-          if (this.state.strict && node2.id) {
-            this.checkIdentifier(node2.id, 65, strictModeChanged);
+          this.checkParams(node, !this.state.strict && !allowExpression && !isMethod && !nonSimple, allowExpression, strictModeChanged);
+          if (this.state.strict && node.id) {
+            this.checkIdentifier(node.id, 65, strictModeChanged);
           }
         });
         this.prodParam.exit();
@@ -14880,8 +14853,8 @@ function requireLib() {
       }
       this.expressionScope.exit();
     }
-    isSimpleParameter(node2) {
-      return node2.type === "Identifier";
+    isSimpleParameter(node) {
+      return node.type === "Identifier";
     }
     isSimpleParamList(params) {
       for (let i = 0, len = params.length; i < len; i++) {
@@ -14889,12 +14862,12 @@ function requireLib() {
       }
       return true;
     }
-    checkParams(node2, allowDuplicates, isArrowFunction, strictModeChanged = true) {
+    checkParams(node, allowDuplicates, isArrowFunction, strictModeChanged = true) {
       const checkClashes = !allowDuplicates && /* @__PURE__ */ new Set();
       const formalParameters = {
         type: "FormalParameters"
       };
-      for (const param of node2.params) {
+      for (const param of node.params) {
         this.checkLVal(param, formalParameters, 5, checkClashes, strictModeChanged);
       }
     }
@@ -14935,23 +14908,23 @@ function requireLib() {
         if (!allowPlaceholder) {
           this.raise(Errors.UnexpectedArgumentPlaceholder, this.state.startLoc);
         }
-        const node2 = this.startNode();
+        const node = this.startNode();
         this.next();
-        elt = this.finishNode(node2, "ArgumentPlaceholder");
+        elt = this.finishNode(node, "ArgumentPlaceholder");
       } else {
         elt = this.parseMaybeAssignAllowIn(refExpressionErrors, this.parseParenItem);
       }
       return elt;
     }
     parseIdentifier(liberal) {
-      const node2 = this.startNode();
+      const node = this.startNode();
       const name = this.parseIdentifierName(liberal);
-      return this.createIdentifier(node2, name);
+      return this.createIdentifier(node, name);
     }
-    createIdentifier(node2, name) {
-      node2.name = name;
-      node2.loc.identifierName = name;
-      return this.finishNode(node2, "Identifier");
+    createIdentifier(node, name) {
+      node.name = name;
+      node.loc.identifierName = name;
+      return this.finishNode(node, "Identifier");
     }
     parseIdentifierName(liberal) {
       let name;
@@ -15024,10 +14997,10 @@ function requireLib() {
       return isAwaitAllowed;
     }
     parseAwait(startLoc) {
-      const node2 = this.startNodeAt(startLoc);
-      this.expressionScope.recordParameterInitializerError(Errors.AwaitExpressionFormalParameter, node2);
+      const node = this.startNodeAt(startLoc);
+      this.expressionScope.recordParameterInitializerError(Errors.AwaitExpressionFormalParameter, node);
       if (this.eat(55)) {
-        this.raise(Errors.ObsoleteAwaitStar, node2);
+        this.raise(Errors.ObsoleteAwaitStar, node);
       }
       if (!this.scope.inFunction && !(this.optionFlags & 1)) {
         if (this.isAmbiguousPrefixOrIdentifier()) {
@@ -15037,9 +15010,9 @@ function requireLib() {
         }
       }
       if (!this.state.soloAwait) {
-        node2.argument = this.parseMaybeUnary(null, true);
+        node.argument = this.parseMaybeUnary(null, true);
       }
-      return this.finishNode(node2, "AwaitExpression");
+      return this.finishNode(node, "AwaitExpression");
     }
     isAmbiguousPrefixOrIdentifier() {
       if (this.hasPrecedingLineBreak()) return true;
@@ -15049,8 +15022,8 @@ function requireLib() {
       return type === 53 || type === 10 || type === 0 || tokenIsTemplate(type) || type === 102 && !this.state.containsEsc || type === 138 || type === 56 || this.hasPlugin("v8intrinsic") && type === 54;
     }
     parseYield(startLoc) {
-      const node2 = this.startNodeAt(startLoc);
-      this.expressionScope.recordParameterInitializerError(Errors.YieldInParameter, node2);
+      const node = this.startNodeAt(startLoc);
+      this.expressionScope.recordParameterInitializerError(Errors.YieldInParameter, node);
       let delegating = false;
       let argument = null;
       if (!this.hasPrecedingLineBreak()) {
@@ -15069,27 +15042,27 @@ function requireLib() {
             argument = this.parseMaybeAssign();
         }
       }
-      node2.delegate = delegating;
-      node2.argument = argument;
-      return this.finishNode(node2, "YieldExpression");
+      node.delegate = delegating;
+      node.argument = argument;
+      return this.finishNode(node, "YieldExpression");
     }
-    parseImportCall(node2) {
+    parseImportCall(node) {
       this.next();
-      node2.source = this.parseMaybeAssignAllowIn();
-      node2.options = null;
+      node.source = this.parseMaybeAssignAllowIn();
+      node.options = null;
       if (this.eat(12)) {
         if (!this.match(11)) {
-          node2.options = this.parseMaybeAssignAllowIn();
+          node.options = this.parseMaybeAssignAllowIn();
           if (this.eat(12) && !this.match(11)) {
             do {
               this.parseMaybeAssignAllowIn();
             } while (this.eat(12) && !this.match(11));
-            this.raise(Errors.ImportCallArity, node2);
+            this.raise(Errors.ImportCallArity, node);
           }
         }
       }
       this.expect(11);
-      return this.finishNode(node2, "ImportExpression");
+      return this.finishNode(node, "ImportExpression");
     }
     checkPipelineAtInfixOperator(left, leftStartLoc) {
       if (this.hasPlugin(["pipelineOperator", {
@@ -15215,7 +15188,7 @@ function requireLib() {
     }
     parseModuleExpression() {
       this.expectPlugin("moduleBlocks");
-      const node2 = this.startNode();
+      const node = this.startNode();
       this.next();
       if (!this.match(5)) {
         this.unexpected(null, 5);
@@ -15225,11 +15198,11 @@ function requireLib() {
       const revertScopes = this.initializeScopes(true);
       this.enterInitialScopes();
       try {
-        node2.body = this.parseProgram(program, 8, "module");
+        node.body = this.parseProgram(program, 8, "module");
       } finally {
         revertScopes();
       }
-      return this.finishNode(node2, "ModuleExpression");
+      return this.finishNode(node, "ModuleExpression");
     }
     parsePropertyNamePrefixOperator(prop) {
     }
@@ -15398,10 +15371,10 @@ function requireLib() {
       if (!this.match(28)) {
         return null;
       }
-      const node2 = this.startNode();
-      node2.value = this.state.value;
+      const node = this.startNode();
+      node.value = this.state.value;
       this.next();
-      return this.finishNode(node2, "InterpreterDirective");
+      return this.finishNode(node, "InterpreterDirective");
     }
     isLet() {
       if (!this.isContextual(100)) {
@@ -15490,49 +15463,49 @@ function requireLib() {
     }
     parseStatementContent(flags, decorators) {
       const startType = this.state.type;
-      const node2 = this.startNode();
+      const node = this.startNode();
       const allowDeclaration = !!(flags & 2);
       const allowFunctionDeclaration = !!(flags & 4);
       const topLevel = flags & 1;
       switch (startType) {
         case 60:
-          return this.parseBreakContinueStatement(node2, true);
+          return this.parseBreakContinueStatement(node, true);
         case 63:
-          return this.parseBreakContinueStatement(node2, false);
+          return this.parseBreakContinueStatement(node, false);
         case 64:
-          return this.parseDebuggerStatement(node2);
+          return this.parseDebuggerStatement(node);
         case 90:
-          return this.parseDoWhileStatement(node2);
+          return this.parseDoWhileStatement(node);
         case 91:
-          return this.parseForStatement(node2);
+          return this.parseForStatement(node);
         case 68:
           if (this.lookaheadCharCode() === 46) break;
           if (!allowFunctionDeclaration) {
             this.raise(this.state.strict ? Errors.StrictFunction : this.options.annexB ? Errors.SloppyFunctionAnnexB : Errors.SloppyFunction, this.state.startLoc);
           }
-          return this.parseFunctionStatement(node2, false, !allowDeclaration && allowFunctionDeclaration);
+          return this.parseFunctionStatement(node, false, !allowDeclaration && allowFunctionDeclaration);
         case 80:
           if (!allowDeclaration) this.unexpected();
-          return this.parseClass(this.maybeTakeDecorators(decorators, node2), true);
+          return this.parseClass(this.maybeTakeDecorators(decorators, node), true);
         case 69:
-          return this.parseIfStatement(node2);
+          return this.parseIfStatement(node);
         case 70:
-          return this.parseReturnStatement(node2);
+          return this.parseReturnStatement(node);
         case 71:
-          return this.parseSwitchStatement(node2);
+          return this.parseSwitchStatement(node);
         case 72:
-          return this.parseThrowStatement(node2);
+          return this.parseThrowStatement(node);
         case 73:
-          return this.parseTryStatement(node2);
+          return this.parseTryStatement(node);
         case 96:
           if (!this.state.containsEsc && this.startsAwaitUsing()) {
             if (!this.recordAwaitIfAllowed()) {
-              this.raise(Errors.AwaitUsingNotInAsyncContext, node2);
+              this.raise(Errors.AwaitUsingNotInAsyncContext, node);
             } else if (!allowDeclaration) {
-              this.raise(Errors.UnexpectedLexicalDeclaration, node2);
+              this.raise(Errors.UnexpectedLexicalDeclaration, node);
             }
             this.next();
-            return this.parseVarStatement(node2, "await using");
+            return this.parseVarStatement(node, "await using");
           }
           break;
         case 107:
@@ -15545,7 +15518,7 @@ function requireLib() {
           } else if (!allowDeclaration) {
             this.raise(Errors.UnexpectedLexicalDeclaration, this.state.startLoc);
           }
-          return this.parseVarStatement(node2, "using");
+          return this.parseVarStatement(node, "using");
         case 100: {
           if (this.state.containsEsc) {
             break;
@@ -15566,16 +15539,16 @@ function requireLib() {
         }
         case 74: {
           const kind = this.state.value;
-          return this.parseVarStatement(node2, kind);
+          return this.parseVarStatement(node, kind);
         }
         case 92:
-          return this.parseWhileStatement(node2);
+          return this.parseWhileStatement(node);
         case 76:
-          return this.parseWithStatement(node2);
+          return this.parseWithStatement(node);
         case 5:
           return this.parseBlock();
         case 13:
-          return this.parseEmptyStatement(node2);
+          return this.parseEmptyStatement(node);
         case 83: {
           const nextTokenCharCode = this.lookaheadCharCode();
           if (nextTokenCharCode === 40 || nextTokenCharCode === 46) {
@@ -15589,9 +15562,9 @@ function requireLib() {
           this.next();
           let result;
           if (startType === 83) {
-            result = this.parseImport(node2);
+            result = this.parseImport(node);
           } else {
-            result = this.parseExport(node2, decorators);
+            result = this.parseExport(node, decorators);
           }
           this.assertModuleNodeAllowed(result);
           return result;
@@ -15602,21 +15575,21 @@ function requireLib() {
               this.raise(Errors.AsyncFunctionInSingleStatementContext, this.state.startLoc);
             }
             this.next();
-            return this.parseFunctionStatement(node2, true, !allowDeclaration && allowFunctionDeclaration);
+            return this.parseFunctionStatement(node, true, !allowDeclaration && allowFunctionDeclaration);
           }
         }
       }
       const maybeName = this.state.value;
       const expr = this.parseExpression();
       if (tokenIsIdentifier(startType) && expr.type === "Identifier" && this.eat(14)) {
-        return this.parseLabeledStatement(node2, maybeName, expr, flags);
+        return this.parseLabeledStatement(node, maybeName, expr, flags);
       } else {
-        return this.parseExpressionStatement(node2, expr, decorators);
+        return this.parseExpressionStatement(node, expr, decorators);
       }
     }
-    assertModuleNodeAllowed(node2) {
+    assertModuleNodeAllowed(node) {
       if (!(this.optionFlags & 8) && !this.inModule) {
-        this.raise(Errors.ImportOutsideModule, node2);
+        this.raise(Errors.ImportOutsideModule, node);
       }
     }
     decoratorsEnabledBeforeExport() {
@@ -15661,7 +15634,7 @@ function requireLib() {
     }
     parseDecorator() {
       this.expectOnePlugin(["decorators", "decorators-legacy"]);
-      const node2 = this.startNode();
+      const node = this.startNode();
       this.next();
       if (this.hasPlugin("decorators")) {
         const startLoc = this.state.startLoc;
@@ -15673,74 +15646,74 @@ function requireLib() {
           this.expect(11);
           expr = this.wrapParenthesis(startLoc2, expr);
           const paramsStartLoc = this.state.startLoc;
-          node2.expression = this.parseMaybeDecoratorArguments(expr, startLoc2);
-          if (this.getPluginOption("decorators", "allowCallParenthesized") === false && node2.expression !== expr) {
+          node.expression = this.parseMaybeDecoratorArguments(expr, startLoc2);
+          if (this.getPluginOption("decorators", "allowCallParenthesized") === false && node.expression !== expr) {
             this.raise(Errors.DecoratorArgumentsOutsideParentheses, paramsStartLoc);
           }
         } else {
           expr = this.parseIdentifier(false);
           while (this.eat(16)) {
-            const node3 = this.startNodeAt(startLoc);
-            node3.object = expr;
+            const node2 = this.startNodeAt(startLoc);
+            node2.object = expr;
             if (this.match(139)) {
               this.classScope.usePrivateName(this.state.value, this.state.startLoc);
-              node3.property = this.parsePrivateName();
+              node2.property = this.parsePrivateName();
             } else {
-              node3.property = this.parseIdentifier(true);
+              node2.property = this.parseIdentifier(true);
             }
-            node3.computed = false;
-            expr = this.finishNode(node3, "MemberExpression");
+            node2.computed = false;
+            expr = this.finishNode(node2, "MemberExpression");
           }
-          node2.expression = this.parseMaybeDecoratorArguments(expr, startLoc);
+          node.expression = this.parseMaybeDecoratorArguments(expr, startLoc);
         }
       } else {
-        node2.expression = this.parseExprSubscripts();
+        node.expression = this.parseExprSubscripts();
       }
-      return this.finishNode(node2, "Decorator");
+      return this.finishNode(node, "Decorator");
     }
     parseMaybeDecoratorArguments(expr, startLoc) {
       if (this.eat(10)) {
-        const node2 = this.startNodeAt(startLoc);
-        node2.callee = expr;
-        node2.arguments = this.parseCallExpressionArguments(11);
-        this.toReferencedList(node2.arguments);
-        return this.finishNode(node2, "CallExpression");
+        const node = this.startNodeAt(startLoc);
+        node.callee = expr;
+        node.arguments = this.parseCallExpressionArguments(11);
+        this.toReferencedList(node.arguments);
+        return this.finishNode(node, "CallExpression");
       }
       return expr;
     }
-    parseBreakContinueStatement(node2, isBreak) {
+    parseBreakContinueStatement(node, isBreak) {
       this.next();
       if (this.isLineTerminator()) {
-        node2.label = null;
+        node.label = null;
       } else {
-        node2.label = this.parseIdentifier();
+        node.label = this.parseIdentifier();
         this.semicolon();
       }
-      this.verifyBreakContinue(node2, isBreak);
-      return this.finishNode(node2, isBreak ? "BreakStatement" : "ContinueStatement");
+      this.verifyBreakContinue(node, isBreak);
+      return this.finishNode(node, isBreak ? "BreakStatement" : "ContinueStatement");
     }
-    verifyBreakContinue(node2, isBreak) {
+    verifyBreakContinue(node, isBreak) {
       let i;
       for (i = 0; i < this.state.labels.length; ++i) {
         const lab = this.state.labels[i];
-        if (node2.label == null || lab.name === node2.label.name) {
+        if (node.label == null || lab.name === node.label.name) {
           if (lab.kind != null && (isBreak || lab.kind === 1)) {
             break;
           }
-          if (node2.label && isBreak) break;
+          if (node.label && isBreak) break;
         }
       }
       if (i === this.state.labels.length) {
         const type = isBreak ? "BreakStatement" : "ContinueStatement";
-        this.raise(Errors.IllegalBreakContinue, node2, {
+        this.raise(Errors.IllegalBreakContinue, node, {
           type
         });
       }
     }
-    parseDebuggerStatement(node2) {
+    parseDebuggerStatement(node) {
       this.next();
       this.semicolon();
-      return this.finishNode(node2, "DebuggerStatement");
+      return this.finishNode(node, "DebuggerStatement");
     }
     parseHeaderExpression() {
       this.expect(10);
@@ -15748,17 +15721,17 @@ function requireLib() {
       this.expect(11);
       return val;
     }
-    parseDoWhileStatement(node2) {
+    parseDoWhileStatement(node) {
       this.next();
       this.state.labels.push(loopLabel);
-      node2.body = this.withSmartMixTopicForbiddingContext(() => this.parseStatement());
+      node.body = this.withSmartMixTopicForbiddingContext(() => this.parseStatement());
       this.state.labels.pop();
       this.expect(92);
-      node2.test = this.parseHeaderExpression();
+      node.test = this.parseHeaderExpression();
       this.eat(13);
-      return this.finishNode(node2, "DoWhileStatement");
+      return this.finishNode(node, "DoWhileStatement");
     }
-    parseForStatement(node2) {
+    parseForStatement(node) {
       this.next();
       this.state.labels.push(loopLabel);
       let awaitAt = null;
@@ -15772,7 +15745,7 @@ function requireLib() {
         if (awaitAt !== null) {
           this.unexpected(awaitAt);
         }
-        return this.parseFor(node2, null);
+        return this.parseFor(node, null);
       }
       const startsWithLet = this.isContextual(100);
       {
@@ -15799,12 +15772,12 @@ function requireLib() {
             this.raise(Errors.ForInUsing, init2);
           }
           if ((isForIn || this.isContextual(102)) && init2.declarations.length === 1) {
-            return this.parseForIn(node2, init2, awaitAt);
+            return this.parseForIn(node, init2, awaitAt);
           }
           if (awaitAt !== null) {
             this.unexpected(awaitAt);
           }
-          return this.parseFor(node2, init2);
+          return this.parseFor(node, init2);
         }
       }
       const startsWithAsync = this.isContextual(95);
@@ -15826,43 +15799,43 @@ function requireLib() {
         this.checkLVal(init, {
           type
         });
-        return this.parseForIn(node2, init, awaitAt);
+        return this.parseForIn(node, init, awaitAt);
       } else {
         this.checkExpressionErrors(refExpressionErrors, true);
       }
       if (awaitAt !== null) {
         this.unexpected(awaitAt);
       }
-      return this.parseFor(node2, init);
+      return this.parseFor(node, init);
     }
-    parseFunctionStatement(node2, isAsync, isHangingDeclaration) {
+    parseFunctionStatement(node, isAsync, isHangingDeclaration) {
       this.next();
-      return this.parseFunction(node2, 1 | (isHangingDeclaration ? 2 : 0) | (isAsync ? 8 : 0));
+      return this.parseFunction(node, 1 | (isHangingDeclaration ? 2 : 0) | (isAsync ? 8 : 0));
     }
-    parseIfStatement(node2) {
+    parseIfStatement(node) {
       this.next();
-      node2.test = this.parseHeaderExpression();
-      node2.consequent = this.parseStatementOrSloppyAnnexBFunctionDeclaration();
-      node2.alternate = this.eat(66) ? this.parseStatementOrSloppyAnnexBFunctionDeclaration() : null;
-      return this.finishNode(node2, "IfStatement");
+      node.test = this.parseHeaderExpression();
+      node.consequent = this.parseStatementOrSloppyAnnexBFunctionDeclaration();
+      node.alternate = this.eat(66) ? this.parseStatementOrSloppyAnnexBFunctionDeclaration() : null;
+      return this.finishNode(node, "IfStatement");
     }
-    parseReturnStatement(node2) {
+    parseReturnStatement(node) {
       if (!this.prodParam.hasReturn && !(this.optionFlags & 2)) {
         this.raise(Errors.IllegalReturn, this.state.startLoc);
       }
       this.next();
       if (this.isLineTerminator()) {
-        node2.argument = null;
+        node.argument = null;
       } else {
-        node2.argument = this.parseExpression();
+        node.argument = this.parseExpression();
         this.semicolon();
       }
-      return this.finishNode(node2, "ReturnStatement");
+      return this.finishNode(node, "ReturnStatement");
     }
-    parseSwitchStatement(node2) {
+    parseSwitchStatement(node) {
       this.next();
-      node2.discriminant = this.parseHeaderExpression();
-      const cases = node2.cases = [];
+      node.discriminant = this.parseHeaderExpression();
+      const cases = node.cases = [];
       this.expect(5);
       this.state.labels.push(switchLabel);
       this.scope.enter(0);
@@ -15896,16 +15869,16 @@ function requireLib() {
       if (cur) this.finishNode(cur, "SwitchCase");
       this.next();
       this.state.labels.pop();
-      return this.finishNode(node2, "SwitchStatement");
+      return this.finishNode(node, "SwitchStatement");
     }
-    parseThrowStatement(node2) {
+    parseThrowStatement(node) {
       this.next();
       if (this.hasPrecedingLineBreak()) {
         this.raise(Errors.NewlineAfterThrow, this.state.lastTokEndLoc);
       }
-      node2.argument = this.parseExpression();
+      node.argument = this.parseExpression();
       this.semicolon();
-      return this.finishNode(node2, "ThrowStatement");
+      return this.finishNode(node, "ThrowStatement");
     }
     parseCatchClauseParam() {
       const param = this.parseBindingAtom();
@@ -15915,10 +15888,10 @@ function requireLib() {
       }, 9);
       return param;
     }
-    parseTryStatement(node2) {
+    parseTryStatement(node) {
       this.next();
-      node2.block = this.parseBlock();
-      node2.handler = null;
+      node.block = this.parseBlock();
+      node.handler = null;
       if (this.match(62)) {
         const clause = this.startNode();
         this.next();
@@ -15932,42 +15905,42 @@ function requireLib() {
         }
         clause.body = this.withSmartMixTopicForbiddingContext(() => this.parseBlock(false, false));
         this.scope.exit();
-        node2.handler = this.finishNode(clause, "CatchClause");
+        node.handler = this.finishNode(clause, "CatchClause");
       }
-      node2.finalizer = this.eat(67) ? this.parseBlock() : null;
-      if (!node2.handler && !node2.finalizer) {
-        this.raise(Errors.NoCatchOrFinally, node2);
+      node.finalizer = this.eat(67) ? this.parseBlock() : null;
+      if (!node.handler && !node.finalizer) {
+        this.raise(Errors.NoCatchOrFinally, node);
       }
-      return this.finishNode(node2, "TryStatement");
+      return this.finishNode(node, "TryStatement");
     }
-    parseVarStatement(node2, kind, allowMissingInitializer = false) {
+    parseVarStatement(node, kind, allowMissingInitializer = false) {
       this.next();
-      this.parseVar(node2, false, kind, allowMissingInitializer);
+      this.parseVar(node, false, kind, allowMissingInitializer);
       this.semicolon();
-      return this.finishNode(node2, "VariableDeclaration");
+      return this.finishNode(node, "VariableDeclaration");
     }
-    parseWhileStatement(node2) {
+    parseWhileStatement(node) {
       this.next();
-      node2.test = this.parseHeaderExpression();
+      node.test = this.parseHeaderExpression();
       this.state.labels.push(loopLabel);
-      node2.body = this.withSmartMixTopicForbiddingContext(() => this.parseStatement());
+      node.body = this.withSmartMixTopicForbiddingContext(() => this.parseStatement());
       this.state.labels.pop();
-      return this.finishNode(node2, "WhileStatement");
+      return this.finishNode(node, "WhileStatement");
     }
-    parseWithStatement(node2) {
+    parseWithStatement(node) {
       if (this.state.strict) {
         this.raise(Errors.StrictWith, this.state.startLoc);
       }
       this.next();
-      node2.object = this.parseHeaderExpression();
-      node2.body = this.withSmartMixTopicForbiddingContext(() => this.parseStatement());
-      return this.finishNode(node2, "WithStatement");
+      node.object = this.parseHeaderExpression();
+      node.body = this.withSmartMixTopicForbiddingContext(() => this.parseStatement());
+      return this.finishNode(node, "WithStatement");
     }
-    parseEmptyStatement(node2) {
+    parseEmptyStatement(node) {
       this.next();
-      return this.finishNode(node2, "EmptyStatement");
+      return this.finishNode(node, "EmptyStatement");
     }
-    parseLabeledStatement(node2, maybeName, expr, flags) {
+    parseLabeledStatement(node, maybeName, expr, flags) {
       for (const label of this.state.labels) {
         if (label.name === maybeName) {
           this.raise(Errors.LabelRedeclaration, expr, {
@@ -15978,7 +15951,7 @@ function requireLib() {
       const kind = tokenIsLoop(this.state.type) ? 1 : this.match(71) ? 2 : null;
       for (let i = this.state.labels.length - 1; i >= 0; i--) {
         const label = this.state.labels[i];
-        if (label.statementStart === node2.start) {
+        if (label.statementStart === node.start) {
           label.statementStart = this.sourceToOffsetPos(this.state.start);
           label.kind = kind;
         } else {
@@ -15990,18 +15963,18 @@ function requireLib() {
         kind,
         statementStart: this.sourceToOffsetPos(this.state.start)
       });
-      node2.body = flags & 8 ? this.parseStatementOrSloppyAnnexBFunctionDeclaration(true) : this.parseStatement();
+      node.body = flags & 8 ? this.parseStatementOrSloppyAnnexBFunctionDeclaration(true) : this.parseStatement();
       this.state.labels.pop();
-      node2.label = expr;
-      return this.finishNode(node2, "LabeledStatement");
+      node.label = expr;
+      return this.finishNode(node, "LabeledStatement");
     }
-    parseExpressionStatement(node2, expr, decorators) {
-      node2.expression = expr;
+    parseExpressionStatement(node, expr, decorators) {
+      node.expression = expr;
       this.semicolon();
-      return this.finishNode(node2, "ExpressionStatement");
+      return this.finishNode(node, "ExpressionStatement");
     }
     parseBlock(allowDirectives = false, createNewLexicalScope = true, afterBlockParse) {
-      const node2 = this.startNode();
+      const node = this.startNode();
       if (allowDirectives) {
         this.state.strictErrors.clear();
       }
@@ -16009,18 +15982,18 @@ function requireLib() {
       if (createNewLexicalScope) {
         this.scope.enter(0);
       }
-      this.parseBlockBody(node2, allowDirectives, false, 8, afterBlockParse);
+      this.parseBlockBody(node, allowDirectives, false, 8, afterBlockParse);
       if (createNewLexicalScope) {
         this.scope.exit();
       }
-      return this.finishNode(node2, "BlockStatement");
+      return this.finishNode(node, "BlockStatement");
     }
     isValidDirective(stmt) {
       return stmt.type === "ExpressionStatement" && stmt.expression.type === "StringLiteral" && !stmt.expression.extra.parenthesized;
     }
-    parseBlockBody(node2, allowDirectives, topLevel, end, afterBlockParse) {
-      const body = node2.body = [];
-      const directives = node2.directives = [];
+    parseBlockBody(node, allowDirectives, topLevel, end, afterBlockParse) {
+      const body = node.body = [];
+      const directives = node.directives = [];
       this.parseBlockOrModuleBlockBody(body, allowDirectives ? directives : void 0, topLevel, end, afterBlockParse);
     }
     parseBlockOrModuleBlockBody(body, directives, topLevel, end, afterBlockParse) {
@@ -16050,25 +16023,25 @@ function requireLib() {
       }
       this.next();
     }
-    parseFor(node2, init) {
-      node2.init = init;
+    parseFor(node, init) {
+      node.init = init;
       this.semicolon(false);
-      node2.test = this.match(13) ? null : this.parseExpression();
+      node.test = this.match(13) ? null : this.parseExpression();
       this.semicolon(false);
-      node2.update = this.match(11) ? null : this.parseExpression();
+      node.update = this.match(11) ? null : this.parseExpression();
       this.expect(11);
-      node2.body = this.withSmartMixTopicForbiddingContext(() => this.parseStatement());
+      node.body = this.withSmartMixTopicForbiddingContext(() => this.parseStatement());
       this.scope.exit();
       this.state.labels.pop();
-      return this.finishNode(node2, "ForStatement");
+      return this.finishNode(node, "ForStatement");
     }
-    parseForIn(node2, init, awaitAt) {
+    parseForIn(node, init, awaitAt) {
       const isForIn = this.match(58);
       this.next();
       if (isForIn) {
         if (awaitAt !== null) this.unexpected(awaitAt);
       } else {
-        node2.await = awaitAt !== null;
+        node.await = awaitAt !== null;
       }
       if (init.type === "VariableDeclaration" && init.declarations[0].init != null && (!isForIn || !this.options.annexB || this.state.strict || init.kind !== "var" || init.declarations[0].id.type !== "Identifier")) {
         this.raise(Errors.ForInOfLoopInitializer, init, {
@@ -16082,17 +16055,17 @@ function requireLib() {
           }
         });
       }
-      node2.left = init;
-      node2.right = isForIn ? this.parseExpression() : this.parseMaybeAssignAllowIn();
+      node.left = init;
+      node.right = isForIn ? this.parseExpression() : this.parseMaybeAssignAllowIn();
       this.expect(11);
-      node2.body = this.withSmartMixTopicForbiddingContext(() => this.parseStatement());
+      node.body = this.withSmartMixTopicForbiddingContext(() => this.parseStatement());
       this.scope.exit();
       this.state.labels.pop();
-      return this.finishNode(node2, isForIn ? "ForInStatement" : "ForOfStatement");
+      return this.finishNode(node, isForIn ? "ForInStatement" : "ForOfStatement");
     }
-    parseVar(node2, isFor, kind, allowMissingInitializer = false) {
-      const declarations = node2.declarations = [];
-      node2.kind = kind;
+    parseVar(node, isFor, kind, allowMissingInitializer = false) {
+      const declarations = node.declarations = [];
+      node.kind = kind;
       for (; ; ) {
         const decl = this.startNode();
         this.parseVarId(decl, kind);
@@ -16111,7 +16084,7 @@ function requireLib() {
         declarations.push(this.finishNode(decl, "VariableDeclarator"));
         if (!this.eat(12)) break;
       }
-      return node2;
+      return node;
     }
     parseVarId(decl, kind) {
       const id = this.parseBindingAtom();
@@ -16125,65 +16098,65 @@ function requireLib() {
       }, kind === "var" ? 5 : 8201);
       decl.id = id;
     }
-    parseAsyncFunctionExpression(node2) {
-      return this.parseFunction(node2, 8);
+    parseAsyncFunctionExpression(node) {
+      return this.parseFunction(node, 8);
     }
-    parseFunction(node2, flags = 0) {
+    parseFunction(node, flags = 0) {
       const hangingDeclaration = flags & 2;
       const isDeclaration = !!(flags & 1);
       const requireId = isDeclaration && !(flags & 4);
       const isAsync = !!(flags & 8);
-      this.initFunction(node2, isAsync);
+      this.initFunction(node, isAsync);
       if (this.match(55)) {
         if (hangingDeclaration) {
           this.raise(Errors.GeneratorInSingleStatementContext, this.state.startLoc);
         }
         this.next();
-        node2.generator = true;
+        node.generator = true;
       }
       if (isDeclaration) {
-        node2.id = this.parseFunctionId(requireId);
+        node.id = this.parseFunctionId(requireId);
       }
       const oldMaybeInArrowParameters = this.state.maybeInArrowParameters;
       this.state.maybeInArrowParameters = false;
       this.scope.enter(2);
-      this.prodParam.enter(functionFlags(isAsync, node2.generator));
+      this.prodParam.enter(functionFlags(isAsync, node.generator));
       if (!isDeclaration) {
-        node2.id = this.parseFunctionId();
+        node.id = this.parseFunctionId();
       }
-      this.parseFunctionParams(node2, false);
+      this.parseFunctionParams(node, false);
       this.withSmartMixTopicForbiddingContext(() => {
-        this.parseFunctionBodyAndFinish(node2, isDeclaration ? "FunctionDeclaration" : "FunctionExpression");
+        this.parseFunctionBodyAndFinish(node, isDeclaration ? "FunctionDeclaration" : "FunctionExpression");
       });
       this.prodParam.exit();
       this.scope.exit();
       if (isDeclaration && !hangingDeclaration) {
-        this.registerFunctionStatementId(node2);
+        this.registerFunctionStatementId(node);
       }
       this.state.maybeInArrowParameters = oldMaybeInArrowParameters;
-      return node2;
+      return node;
     }
     parseFunctionId(requireId) {
       return requireId || tokenIsIdentifier(this.state.type) ? this.parseIdentifier() : null;
     }
-    parseFunctionParams(node2, isConstructor) {
+    parseFunctionParams(node, isConstructor) {
       this.expect(10);
       this.expressionScope.enter(newParameterDeclarationScope());
-      node2.params = this.parseBindingList(11, 41, 2 | (isConstructor ? 4 : 0));
+      node.params = this.parseBindingList(11, 41, 2 | (isConstructor ? 4 : 0));
       this.expressionScope.exit();
     }
-    registerFunctionStatementId(node2) {
-      if (!node2.id) return;
-      this.scope.declareName(node2.id.name, !this.options.annexB || this.state.strict || node2.generator || node2.async ? this.scope.treatFunctionsAsVar ? 5 : 8201 : 17, node2.id.loc.start);
+    registerFunctionStatementId(node) {
+      if (!node.id) return;
+      this.scope.declareName(node.id.name, !this.options.annexB || this.state.strict || node.generator || node.async ? this.scope.treatFunctionsAsVar ? 5 : 8201 : 17, node.id.loc.start);
     }
-    parseClass(node2, isStatement, optionalId) {
+    parseClass(node, isStatement, optionalId) {
       this.next();
       const oldStrict = this.state.strict;
       this.state.strict = true;
-      this.parseClassId(node2, isStatement, optionalId);
-      this.parseClassSuper(node2);
-      node2.body = this.parseClassBody(!!node2.superClass, oldStrict);
-      return this.finishNode(node2, isStatement ? "ClassDeclaration" : "ClassExpression");
+      this.parseClassId(node, isStatement, optionalId);
+      this.parseClassSuper(node);
+      node.body = this.parseClassBody(!!node.superClass, oldStrict);
+      return this.finishNode(node, isStatement ? "ClassDeclaration" : "ClassExpression");
     }
     isClassProperty() {
       return this.match(29) || this.match(13) || this.match(8);
@@ -16419,93 +16392,93 @@ function requireLib() {
       classBody.body.push(this.parseClassProperty(prop));
     }
     pushClassPrivateProperty(classBody, prop) {
-      const node2 = this.parseClassPrivateProperty(prop);
-      classBody.body.push(node2);
-      this.classScope.declarePrivateName(this.getPrivateNameSV(node2.key), 0, node2.key.loc.start);
+      const node = this.parseClassPrivateProperty(prop);
+      classBody.body.push(node);
+      this.classScope.declarePrivateName(this.getPrivateNameSV(node.key), 0, node.key.loc.start);
     }
     pushClassAccessorProperty(classBody, prop, isPrivate) {
       if (!isPrivate && !prop.computed && this.nameIsConstructor(prop.key)) {
         this.raise(Errors.ConstructorClassField, prop.key);
       }
-      const node2 = this.parseClassAccessorProperty(prop);
-      classBody.body.push(node2);
+      const node = this.parseClassAccessorProperty(prop);
+      classBody.body.push(node);
       if (isPrivate) {
-        this.classScope.declarePrivateName(this.getPrivateNameSV(node2.key), 0, node2.key.loc.start);
+        this.classScope.declarePrivateName(this.getPrivateNameSV(node.key), 0, node.key.loc.start);
       }
     }
     pushClassMethod(classBody, method, isGenerator, isAsync, isConstructor, allowsDirectSuper) {
       classBody.body.push(this.parseMethod(method, isGenerator, isAsync, isConstructor, allowsDirectSuper, "ClassMethod", true));
     }
     pushClassPrivateMethod(classBody, method, isGenerator, isAsync) {
-      const node2 = this.parseMethod(method, isGenerator, isAsync, false, false, "ClassPrivateMethod", true);
-      classBody.body.push(node2);
-      const kind = node2.kind === "get" ? node2.static ? 6 : 2 : node2.kind === "set" ? node2.static ? 5 : 1 : 0;
-      this.declareClassPrivateMethodInScope(node2, kind);
+      const node = this.parseMethod(method, isGenerator, isAsync, false, false, "ClassPrivateMethod", true);
+      classBody.body.push(node);
+      const kind = node.kind === "get" ? node.static ? 6 : 2 : node.kind === "set" ? node.static ? 5 : 1 : 0;
+      this.declareClassPrivateMethodInScope(node, kind);
     }
-    declareClassPrivateMethodInScope(node2, kind) {
-      this.classScope.declarePrivateName(this.getPrivateNameSV(node2.key), kind, node2.key.loc.start);
+    declareClassPrivateMethodInScope(node, kind) {
+      this.classScope.declarePrivateName(this.getPrivateNameSV(node.key), kind, node.key.loc.start);
     }
     parsePostMemberNameModifiers(methodOrProp) {
     }
-    parseClassPrivateProperty(node2) {
-      this.parseInitializer(node2);
+    parseClassPrivateProperty(node) {
+      this.parseInitializer(node);
       this.semicolon();
-      return this.finishNode(node2, "ClassPrivateProperty");
+      return this.finishNode(node, "ClassPrivateProperty");
     }
-    parseClassProperty(node2) {
-      this.parseInitializer(node2);
+    parseClassProperty(node) {
+      this.parseInitializer(node);
       this.semicolon();
-      return this.finishNode(node2, "ClassProperty");
+      return this.finishNode(node, "ClassProperty");
     }
-    parseClassAccessorProperty(node2) {
-      this.parseInitializer(node2);
+    parseClassAccessorProperty(node) {
+      this.parseInitializer(node);
       this.semicolon();
-      return this.finishNode(node2, "ClassAccessorProperty");
+      return this.finishNode(node, "ClassAccessorProperty");
     }
-    parseInitializer(node2) {
+    parseInitializer(node) {
       this.scope.enter(64 | 16);
       this.expressionScope.enter(newExpressionScope());
       this.prodParam.enter(0);
-      node2.value = this.eat(29) ? this.parseMaybeAssignAllowIn() : null;
+      node.value = this.eat(29) ? this.parseMaybeAssignAllowIn() : null;
       this.expressionScope.exit();
       this.prodParam.exit();
       this.scope.exit();
     }
-    parseClassId(node2, isStatement, optionalId, bindingType = 8331) {
+    parseClassId(node, isStatement, optionalId, bindingType = 8331) {
       if (tokenIsIdentifier(this.state.type)) {
-        node2.id = this.parseIdentifier();
+        node.id = this.parseIdentifier();
         if (isStatement) {
-          this.declareNameFromIdentifier(node2.id, bindingType);
+          this.declareNameFromIdentifier(node.id, bindingType);
         }
       } else {
         if (optionalId || !isStatement) {
-          node2.id = null;
+          node.id = null;
         } else {
           throw this.raise(Errors.MissingClassName, this.state.startLoc);
         }
       }
     }
-    parseClassSuper(node2) {
-      node2.superClass = this.eat(81) ? this.parseExprSubscripts() : null;
+    parseClassSuper(node) {
+      node.superClass = this.eat(81) ? this.parseExprSubscripts() : null;
     }
-    parseExport(node2, decorators) {
-      const maybeDefaultIdentifier = this.parseMaybeImportPhase(node2, true);
-      const hasDefault = this.maybeParseExportDefaultSpecifier(node2, maybeDefaultIdentifier);
+    parseExport(node, decorators) {
+      const maybeDefaultIdentifier = this.parseMaybeImportPhase(node, true);
+      const hasDefault = this.maybeParseExportDefaultSpecifier(node, maybeDefaultIdentifier);
       const parseAfterDefault = !hasDefault || this.eat(12);
-      const hasStar = parseAfterDefault && this.eatExportStar(node2);
-      const hasNamespace = hasStar && this.maybeParseExportNamespaceSpecifier(node2);
+      const hasStar = parseAfterDefault && this.eatExportStar(node);
+      const hasNamespace = hasStar && this.maybeParseExportNamespaceSpecifier(node);
       const parseAfterNamespace = parseAfterDefault && (!hasNamespace || this.eat(12));
       const isFromRequired = hasDefault || hasStar;
       if (hasStar && !hasNamespace) {
         if (hasDefault) this.unexpected();
         if (decorators) {
-          throw this.raise(Errors.UnsupportedDecoratorExport, node2);
+          throw this.raise(Errors.UnsupportedDecoratorExport, node);
         }
-        this.parseExportFrom(node2, true);
+        this.parseExportFrom(node, true);
         this.sawUnambiguousESM = true;
-        return this.finishNode(node2, "ExportAllDeclaration");
+        return this.finishNode(node, "ExportAllDeclaration");
       }
-      const hasSpecifiers = this.maybeParseExportNamedSpecifiers(node2);
+      const hasSpecifiers = this.maybeParseExportNamedSpecifiers(node);
       if (hasDefault && parseAfterDefault && !hasStar && !hasSpecifiers) {
         this.unexpected(null, 5);
       }
@@ -16516,92 +16489,92 @@ function requireLib() {
       if (isFromRequired || hasSpecifiers) {
         hasDeclaration = false;
         if (decorators) {
-          throw this.raise(Errors.UnsupportedDecoratorExport, node2);
+          throw this.raise(Errors.UnsupportedDecoratorExport, node);
         }
-        this.parseExportFrom(node2, isFromRequired);
+        this.parseExportFrom(node, isFromRequired);
       } else {
-        hasDeclaration = this.maybeParseExportDeclaration(node2);
+        hasDeclaration = this.maybeParseExportDeclaration(node);
       }
       if (isFromRequired || hasSpecifiers || hasDeclaration) {
         var _node2$declaration;
-        const node22 = node2;
-        this.checkExport(node22, true, false, !!node22.source);
-        if (((_node2$declaration = node22.declaration) == null ? void 0 : _node2$declaration.type) === "ClassDeclaration") {
-          this.maybeTakeDecorators(decorators, node22.declaration, node22);
+        const node2 = node;
+        this.checkExport(node2, true, false, !!node2.source);
+        if (((_node2$declaration = node2.declaration) == null ? void 0 : _node2$declaration.type) === "ClassDeclaration") {
+          this.maybeTakeDecorators(decorators, node2.declaration, node2);
         } else if (decorators) {
-          throw this.raise(Errors.UnsupportedDecoratorExport, node2);
+          throw this.raise(Errors.UnsupportedDecoratorExport, node);
         }
         this.sawUnambiguousESM = true;
-        return this.finishNode(node22, "ExportNamedDeclaration");
+        return this.finishNode(node2, "ExportNamedDeclaration");
       }
       if (this.eat(65)) {
-        const node22 = node2;
+        const node2 = node;
         const decl = this.parseExportDefaultExpression();
-        node22.declaration = decl;
+        node2.declaration = decl;
         if (decl.type === "ClassDeclaration") {
-          this.maybeTakeDecorators(decorators, decl, node22);
+          this.maybeTakeDecorators(decorators, decl, node2);
         } else if (decorators) {
-          throw this.raise(Errors.UnsupportedDecoratorExport, node2);
+          throw this.raise(Errors.UnsupportedDecoratorExport, node);
         }
-        this.checkExport(node22, true, true);
+        this.checkExport(node2, true, true);
         this.sawUnambiguousESM = true;
-        return this.finishNode(node22, "ExportDefaultDeclaration");
+        return this.finishNode(node2, "ExportDefaultDeclaration");
       }
       this.unexpected(null, 5);
     }
-    eatExportStar(node2) {
+    eatExportStar(node) {
       return this.eat(55);
     }
-    maybeParseExportDefaultSpecifier(node2, maybeDefaultIdentifier) {
+    maybeParseExportDefaultSpecifier(node, maybeDefaultIdentifier) {
       if (maybeDefaultIdentifier || this.isExportDefaultSpecifier()) {
         this.expectPlugin("exportDefaultFrom", maybeDefaultIdentifier == null ? void 0 : maybeDefaultIdentifier.loc.start);
         const id = maybeDefaultIdentifier || this.parseIdentifier(true);
         const specifier = this.startNodeAtNode(id);
         specifier.exported = id;
-        node2.specifiers = [this.finishNode(specifier, "ExportDefaultSpecifier")];
+        node.specifiers = [this.finishNode(specifier, "ExportDefaultSpecifier")];
         return true;
       }
       return false;
     }
-    maybeParseExportNamespaceSpecifier(node2) {
+    maybeParseExportNamespaceSpecifier(node) {
       if (this.isContextual(93)) {
         var _ref, _ref$specifiers;
-        (_ref$specifiers = (_ref = node2).specifiers) != null ? _ref$specifiers : _ref.specifiers = [];
+        (_ref$specifiers = (_ref = node).specifiers) != null ? _ref$specifiers : _ref.specifiers = [];
         const specifier = this.startNodeAt(this.state.lastTokStartLoc);
         this.next();
         specifier.exported = this.parseModuleExportName();
-        node2.specifiers.push(this.finishNode(specifier, "ExportNamespaceSpecifier"));
+        node.specifiers.push(this.finishNode(specifier, "ExportNamespaceSpecifier"));
         return true;
       }
       return false;
     }
-    maybeParseExportNamedSpecifiers(node2) {
+    maybeParseExportNamedSpecifiers(node) {
       if (this.match(5)) {
-        const node22 = node2;
-        if (!node22.specifiers) node22.specifiers = [];
-        const isTypeExport = node22.exportKind === "type";
-        node22.specifiers.push(...this.parseExportSpecifiers(isTypeExport));
-        node22.source = null;
-        if (this.hasPlugin("importAssertions")) {
-          node22.assertions = [];
-        } else {
-          node22.attributes = [];
-        }
-        node22.declaration = null;
-        return true;
-      }
-      return false;
-    }
-    maybeParseExportDeclaration(node2) {
-      if (this.shouldParseExportDeclaration()) {
-        node2.specifiers = [];
+        const node2 = node;
+        if (!node2.specifiers) node2.specifiers = [];
+        const isTypeExport = node2.exportKind === "type";
+        node2.specifiers.push(...this.parseExportSpecifiers(isTypeExport));
         node2.source = null;
         if (this.hasPlugin("importAssertions")) {
           node2.assertions = [];
         } else {
           node2.attributes = [];
         }
-        node2.declaration = this.parseExportDeclaration(node2);
+        node2.declaration = null;
+        return true;
+      }
+      return false;
+    }
+    maybeParseExportDeclaration(node) {
+      if (this.shouldParseExportDeclaration()) {
+        node.specifiers = [];
+        node.source = null;
+        if (this.hasPlugin("importAssertions")) {
+          node.assertions = [];
+        } else {
+          node.attributes = [];
+        }
+        node.declaration = this.parseExportDeclaration(node);
         return true;
       }
       return false;
@@ -16637,10 +16610,10 @@ function requireLib() {
       this.semicolon();
       return res;
     }
-    parseExportDeclaration(node2) {
+    parseExportDeclaration(node) {
       if (this.match(80)) {
-        const node3 = this.parseClass(this.startNode(), true, false);
-        return node3;
+        const node2 = this.parseClass(this.startNode(), true, false);
+        return node2;
       }
       return this.parseStatementListItem();
     }
@@ -16675,12 +16648,12 @@ function requireLib() {
       }
       return false;
     }
-    parseExportFrom(node2, expect) {
+    parseExportFrom(node, expect) {
       if (this.eatContextual(98)) {
-        node2.source = this.parseImportSource();
-        this.checkExport(node2);
-        this.maybeParseImportAttributes(node2);
-        this.checkJSONModuleImport(node2);
+        node.source = this.parseImportSource();
+        this.checkExport(node);
+        this.maybeParseImportAttributes(node);
+        this.checkJSONModuleImport(node);
       } else if (expect) {
         this.unexpected();
       }
@@ -16709,20 +16682,20 @@ function requireLib() {
       }
       return type === 74 || type === 75 || type === 68 || type === 80 || this.isLet() || this.isAsyncFunction();
     }
-    checkExport(node2, checkNames, isDefault, isFrom) {
+    checkExport(node, checkNames, isDefault, isFrom) {
       if (checkNames) {
         var _node$specifiers;
         if (isDefault) {
-          this.checkDuplicateExports(node2, "default");
+          this.checkDuplicateExports(node, "default");
           if (this.hasPlugin("exportDefaultFrom")) {
             var _declaration$extra;
-            const declaration = node2.declaration;
+            const declaration = node.declaration;
             if (declaration.type === "Identifier" && declaration.name === "from" && declaration.end - declaration.start === 4 && !((_declaration$extra = declaration.extra) != null && _declaration$extra.parenthesized)) {
               this.raise(Errors.ExportDefaultFromAsIdentifier, declaration);
             }
           }
-        } else if ((_node$specifiers = node2.specifiers) != null && _node$specifiers.length) {
-          for (const specifier of node2.specifiers) {
+        } else if ((_node$specifiers = node.specifiers) != null && _node$specifiers.length) {
+          for (const specifier of node.specifiers) {
             const {
               exported
             } = specifier;
@@ -16743,14 +16716,14 @@ function requireLib() {
               }
             }
           }
-        } else if (node2.declaration) {
-          const decl = node2.declaration;
+        } else if (node.declaration) {
+          const decl = node.declaration;
           if (decl.type === "FunctionDeclaration" || decl.type === "ClassDeclaration") {
             const {
               id
             } = decl;
             if (!id) throw new Error("Assertion failure");
-            this.checkDuplicateExports(node2, id.name);
+            this.checkDuplicateExports(node, id.name);
           } else if (decl.type === "VariableDeclaration") {
             for (const declaration of decl.declarations) {
               this.checkDeclaration(declaration.id);
@@ -16759,33 +16732,33 @@ function requireLib() {
         }
       }
     }
-    checkDeclaration(node2) {
-      if (node2.type === "Identifier") {
-        this.checkDuplicateExports(node2, node2.name);
-      } else if (node2.type === "ObjectPattern") {
-        for (const prop of node2.properties) {
+    checkDeclaration(node) {
+      if (node.type === "Identifier") {
+        this.checkDuplicateExports(node, node.name);
+      } else if (node.type === "ObjectPattern") {
+        for (const prop of node.properties) {
           this.checkDeclaration(prop);
         }
-      } else if (node2.type === "ArrayPattern") {
-        for (const elem of node2.elements) {
+      } else if (node.type === "ArrayPattern") {
+        for (const elem of node.elements) {
           if (elem) {
             this.checkDeclaration(elem);
           }
         }
-      } else if (node2.type === "ObjectProperty") {
-        this.checkDeclaration(node2.value);
-      } else if (node2.type === "RestElement") {
-        this.checkDeclaration(node2.argument);
-      } else if (node2.type === "AssignmentPattern") {
-        this.checkDeclaration(node2.left);
+      } else if (node.type === "ObjectProperty") {
+        this.checkDeclaration(node.value);
+      } else if (node.type === "RestElement") {
+        this.checkDeclaration(node.argument);
+      } else if (node.type === "AssignmentPattern") {
+        this.checkDeclaration(node.left);
       }
     }
-    checkDuplicateExports(node2, exportName) {
+    checkDuplicateExports(node, exportName) {
       if (this.exportedIdentifiers.has(exportName)) {
         if (exportName === "default") {
-          this.raise(Errors.DuplicateDefaultExport, node2);
+          this.raise(Errors.DuplicateDefaultExport, node);
         } else {
-          this.raise(Errors.DuplicateExport, node2, {
+          this.raise(Errors.DuplicateExport, node, {
             exportName
           });
         }
@@ -16805,21 +16778,21 @@ function requireLib() {
         }
         const isMaybeTypeOnly = this.isContextual(130);
         const isString = this.match(134);
-        const node2 = this.startNode();
-        node2.local = this.parseModuleExportName();
-        nodes.push(this.parseExportSpecifier(node2, isString, isInTypeExport, isMaybeTypeOnly));
+        const node = this.startNode();
+        node.local = this.parseModuleExportName();
+        nodes.push(this.parseExportSpecifier(node, isString, isInTypeExport, isMaybeTypeOnly));
       }
       return nodes;
     }
-    parseExportSpecifier(node2, isString, isInTypeExport, isMaybeTypeOnly) {
+    parseExportSpecifier(node, isString, isInTypeExport, isMaybeTypeOnly) {
       if (this.eatContextual(93)) {
-        node2.exported = this.parseModuleExportName();
+        node.exported = this.parseModuleExportName();
       } else if (isString) {
-        node2.exported = cloneStringLiteral(node2.local);
-      } else if (!node2.exported) {
-        node2.exported = cloneIdentifier(node2.local);
+        node.exported = cloneStringLiteral(node.local);
+      } else if (!node.exported) {
+        node.exported = cloneIdentifier(node.local);
       }
-      return this.finishNode(node2, "ExportSpecifier");
+      return this.finishNode(node, "ExportSpecifier");
     }
     parseModuleExportName() {
       if (this.match(134)) {
@@ -16834,9 +16807,9 @@ function requireLib() {
       }
       return this.parseIdentifier(true);
     }
-    isJSONModuleImport(node2) {
-      if (node2.assertions != null) {
-        return node2.assertions.some(({
+    isJSONModuleImport(node) {
+      if (node.assertions != null) {
+        return node.assertions.some(({
           key,
           value
         }) => {
@@ -16845,34 +16818,34 @@ function requireLib() {
       }
       return false;
     }
-    checkImportReflection(node2) {
+    checkImportReflection(node) {
       const {
         specifiers
-      } = node2;
+      } = node;
       const singleBindingType = specifiers.length === 1 ? specifiers[0].type : null;
-      if (node2.phase === "source") {
+      if (node.phase === "source") {
         if (singleBindingType !== "ImportDefaultSpecifier") {
           this.raise(Errors.SourcePhaseImportRequiresDefault, specifiers[0].loc.start);
         }
-      } else if (node2.phase === "defer") {
+      } else if (node.phase === "defer") {
         if (singleBindingType !== "ImportNamespaceSpecifier") {
           this.raise(Errors.DeferImportRequiresNamespace, specifiers[0].loc.start);
         }
-      } else if (node2.module) {
+      } else if (node.module) {
         var _node$assertions;
         if (singleBindingType !== "ImportDefaultSpecifier") {
           this.raise(Errors.ImportReflectionNotBinding, specifiers[0].loc.start);
         }
-        if (((_node$assertions = node2.assertions) == null ? void 0 : _node$assertions.length) > 0) {
+        if (((_node$assertions = node.assertions) == null ? void 0 : _node$assertions.length) > 0) {
           this.raise(Errors.ImportReflectionHasAssertion, specifiers[0].loc.start);
         }
       }
     }
-    checkJSONModuleImport(node2) {
-      if (this.isJSONModuleImport(node2) && node2.type !== "ExportAllDeclaration") {
+    checkJSONModuleImport(node) {
+      if (this.isJSONModuleImport(node) && node.type !== "ExportAllDeclaration") {
         const {
           specifiers
-        } = node2;
+        } = node;
         if (specifiers != null) {
           const nonDefaultNamedSpecifier = specifiers.find((specifier) => {
             let imported;
@@ -16895,29 +16868,29 @@ function requireLib() {
       if (isExport) return false;
       return this.isContextual(105) || this.isContextual(97) || this.isContextual(127);
     }
-    applyImportPhase(node2, isExport, phase, loc) {
+    applyImportPhase(node, isExport, phase, loc) {
       if (isExport) {
         return;
       }
       if (phase === "module") {
         this.expectPlugin("importReflection", loc);
-        node2.module = true;
+        node.module = true;
       } else if (this.hasPlugin("importReflection")) {
-        node2.module = false;
+        node.module = false;
       }
       if (phase === "source") {
         this.expectPlugin("sourcePhaseImports", loc);
-        node2.phase = "source";
+        node.phase = "source";
       } else if (phase === "defer") {
         this.expectPlugin("deferredImportEvaluation", loc);
-        node2.phase = "defer";
+        node.phase = "defer";
       } else if (this.hasPlugin("sourcePhaseImports")) {
-        node2.phase = null;
+        node.phase = null;
       }
     }
-    parseMaybeImportPhase(node2, isExport) {
+    parseMaybeImportPhase(node, isExport) {
       if (!this.isPotentialImportPhase(isExport)) {
-        this.applyImportPhase(node2, isExport, null);
+        this.applyImportPhase(node, isExport, null);
         return null;
       }
       const phaseIdentifier = this.parseIdentifier(true);
@@ -16927,10 +16900,10 @@ function requireLib() {
       const isImportPhase = tokenIsKeywordOrIdentifier(type) ? type !== 98 || this.lookaheadCharCode() === 102 : type !== 12;
       if (isImportPhase) {
         this.resetPreviousIdentifierLeadingComments(phaseIdentifier);
-        this.applyImportPhase(node2, isExport, phaseIdentifier.name, phaseIdentifier.loc.start);
+        this.applyImportPhase(node, isExport, phaseIdentifier.name, phaseIdentifier.loc.start);
         return null;
       } else {
-        this.applyImportPhase(node2, isExport, null);
+        this.applyImportPhase(node, isExport, null);
         return phaseIdentifier;
       }
     }
@@ -16940,39 +16913,39 @@ function requireLib() {
       } = this.state;
       return tokenIsIdentifier(type) ? type !== 98 || this.lookaheadCharCode() === 102 : type !== 12;
     }
-    parseImport(node2) {
+    parseImport(node) {
       if (this.match(134)) {
-        return this.parseImportSourceAndAttributes(node2);
+        return this.parseImportSourceAndAttributes(node);
       }
-      return this.parseImportSpecifiersAndAfter(node2, this.parseMaybeImportPhase(node2, false));
+      return this.parseImportSpecifiersAndAfter(node, this.parseMaybeImportPhase(node, false));
     }
-    parseImportSpecifiersAndAfter(node2, maybeDefaultIdentifier) {
-      node2.specifiers = [];
-      const hasDefault = this.maybeParseDefaultImportSpecifier(node2, maybeDefaultIdentifier);
+    parseImportSpecifiersAndAfter(node, maybeDefaultIdentifier) {
+      node.specifiers = [];
+      const hasDefault = this.maybeParseDefaultImportSpecifier(node, maybeDefaultIdentifier);
       const parseNext = !hasDefault || this.eat(12);
-      const hasStar = parseNext && this.maybeParseStarImportSpecifier(node2);
-      if (parseNext && !hasStar) this.parseNamedImportSpecifiers(node2);
+      const hasStar = parseNext && this.maybeParseStarImportSpecifier(node);
+      if (parseNext && !hasStar) this.parseNamedImportSpecifiers(node);
       this.expectContextual(98);
-      return this.parseImportSourceAndAttributes(node2);
+      return this.parseImportSourceAndAttributes(node);
     }
-    parseImportSourceAndAttributes(node2) {
+    parseImportSourceAndAttributes(node) {
       var _node$specifiers2;
-      (_node$specifiers2 = node2.specifiers) != null ? _node$specifiers2 : node2.specifiers = [];
-      node2.source = this.parseImportSource();
-      this.maybeParseImportAttributes(node2);
-      this.checkImportReflection(node2);
-      this.checkJSONModuleImport(node2);
+      (_node$specifiers2 = node.specifiers) != null ? _node$specifiers2 : node.specifiers = [];
+      node.source = this.parseImportSource();
+      this.maybeParseImportAttributes(node);
+      this.checkImportReflection(node);
+      this.checkJSONModuleImport(node);
       this.semicolon();
       this.sawUnambiguousESM = true;
-      return this.finishNode(node2, "ImportDeclaration");
+      return this.finishNode(node, "ImportDeclaration");
     }
     parseImportSource() {
       if (!this.match(134)) this.unexpected();
       return this.parseExprAtom();
     }
-    parseImportSpecifierLocal(node2, specifier, type) {
+    parseImportSpecifierLocal(node, specifier, type) {
       specifier.local = this.parseIdentifier();
-      node2.specifiers.push(this.finishImportSpecifier(specifier, type));
+      node.specifiers.push(this.finishImportSpecifier(specifier, type));
     }
     finishImportSpecifier(specifier, type, bindingType = 8201) {
       this.checkLVal(specifier.local, {
@@ -16988,7 +16961,7 @@ function requireLib() {
         if (this.match(8)) {
           break;
         }
-        const node2 = this.startNode();
+        const node = this.startNode();
         const keyName = this.state.value;
         if (attrNames.has(keyName)) {
           this.raise(Errors.ModuleAttributesWithDuplicateKeys, this.state.startLoc, {
@@ -16997,16 +16970,16 @@ function requireLib() {
         }
         attrNames.add(keyName);
         if (this.match(134)) {
-          node2.key = this.parseStringLiteral(keyName);
+          node.key = this.parseStringLiteral(keyName);
         } else {
-          node2.key = this.parseIdentifier(true);
+          node.key = this.parseIdentifier(true);
         }
         this.expect(14);
         if (!this.match(134)) {
           throw this.raise(Errors.ModuleAttributeInvalidValue, this.state.startLoc);
         }
-        node2.value = this.parseStringLiteral(this.state.value);
-        attrs.push(this.finishNode(node2, "ImportAttribute"));
+        node.value = this.parseStringLiteral(this.state.value);
+        attrs.push(this.finishNode(node, "ImportAttribute"));
       } while (this.eat(12));
       this.expect(8);
       return attrs;
@@ -17015,27 +16988,27 @@ function requireLib() {
       const attrs = [];
       const attributes = /* @__PURE__ */ new Set();
       do {
-        const node2 = this.startNode();
-        node2.key = this.parseIdentifier(true);
-        if (node2.key.name !== "type") {
-          this.raise(Errors.ModuleAttributeDifferentFromType, node2.key);
+        const node = this.startNode();
+        node.key = this.parseIdentifier(true);
+        if (node.key.name !== "type") {
+          this.raise(Errors.ModuleAttributeDifferentFromType, node.key);
         }
-        if (attributes.has(node2.key.name)) {
-          this.raise(Errors.ModuleAttributesWithDuplicateKeys, node2.key, {
-            key: node2.key.name
+        if (attributes.has(node.key.name)) {
+          this.raise(Errors.ModuleAttributesWithDuplicateKeys, node.key, {
+            key: node.key.name
           });
         }
-        attributes.add(node2.key.name);
+        attributes.add(node.key.name);
         this.expect(14);
         if (!this.match(134)) {
           throw this.raise(Errors.ModuleAttributeInvalidValue, this.state.startLoc);
         }
-        node2.value = this.parseStringLiteral(this.state.value);
-        attrs.push(this.finishNode(node2, "ImportAttribute"));
+        node.value = this.parseStringLiteral(this.state.value);
+        attrs.push(this.finishNode(node, "ImportAttribute"));
       } while (this.eat(12));
       return attrs;
     }
-    maybeParseImportAttributes(node2) {
+    maybeParseImportAttributes(node) {
       let attributes;
       {
         var useWith = false;
@@ -17047,7 +17020,7 @@ function requireLib() {
         this.next();
         if (this.hasPlugin("moduleAttributes")) {
           attributes = this.parseModuleAttributes();
-          this.addExtra(node2, "deprecatedWithLegacySyntax", true);
+          this.addExtra(node, "deprecatedWithLegacySyntax", true);
         } else {
           attributes = this.parseImportAttributes();
         }
@@ -17059,7 +17032,7 @@ function requireLib() {
           this.raise(Errors.ImportAttributesUseAssert, this.state.startLoc);
         }
         if (!this.hasPlugin("importAssertions")) {
-          this.addExtra(node2, "deprecatedAssertSyntax", true);
+          this.addExtra(node, "deprecatedAssertSyntax", true);
         }
         this.next();
         attributes = this.parseImportAttributes();
@@ -17067,34 +17040,34 @@ function requireLib() {
         attributes = [];
       }
       if (!useWith && this.hasPlugin("importAssertions")) {
-        node2.assertions = attributes;
+        node.assertions = attributes;
       } else {
-        node2.attributes = attributes;
+        node.attributes = attributes;
       }
     }
-    maybeParseDefaultImportSpecifier(node2, maybeDefaultIdentifier) {
+    maybeParseDefaultImportSpecifier(node, maybeDefaultIdentifier) {
       if (maybeDefaultIdentifier) {
         const specifier = this.startNodeAtNode(maybeDefaultIdentifier);
         specifier.local = maybeDefaultIdentifier;
-        node2.specifiers.push(this.finishImportSpecifier(specifier, "ImportDefaultSpecifier"));
+        node.specifiers.push(this.finishImportSpecifier(specifier, "ImportDefaultSpecifier"));
         return true;
       } else if (tokenIsKeywordOrIdentifier(this.state.type)) {
-        this.parseImportSpecifierLocal(node2, this.startNode(), "ImportDefaultSpecifier");
+        this.parseImportSpecifierLocal(node, this.startNode(), "ImportDefaultSpecifier");
         return true;
       }
       return false;
     }
-    maybeParseStarImportSpecifier(node2) {
+    maybeParseStarImportSpecifier(node) {
       if (this.match(55)) {
         const specifier = this.startNode();
         this.next();
         this.expectContextual(93);
-        this.parseImportSpecifierLocal(node2, specifier, "ImportNamespaceSpecifier");
+        this.parseImportSpecifierLocal(node, specifier, "ImportNamespaceSpecifier");
         return true;
       }
       return false;
     }
-    parseNamedImportSpecifiers(node2) {
+    parseNamedImportSpecifiers(node) {
       let first = true;
       this.expect(5);
       while (!this.eat(8)) {
@@ -17111,8 +17084,8 @@ function requireLib() {
         const importedIsString = this.match(134);
         const isMaybeTypeOnly = this.isContextual(130);
         specifier.imported = this.parseModuleExportName();
-        const importSpecifier = this.parseImportSpecifier(specifier, importedIsString, node2.importKind === "type" || node2.importKind === "typeof", isMaybeTypeOnly, void 0);
-        node2.specifiers.push(importSpecifier);
+        const importSpecifier = this.parseImportSpecifier(specifier, importedIsString, node.importKind === "type" || node.importKind === "typeof", isMaybeTypeOnly, void 0);
+        node.specifiers.push(importSpecifier);
       }
     }
     parseImportSpecifier(specifier, importedIsString, isInTypeOnlyImport, isMaybeTypeOnly, bindingType) {
@@ -17316,7 +17289,7 @@ function requireEstreeWalker() {
           this.context = {
             skip: () => this.should_skip = true,
             remove: () => this.should_remove = true,
-            replace: (node2) => this.replacement = node2
+            replace: (node) => this.replacement = node
           };
         }
         /**
@@ -17326,12 +17299,12 @@ function requireEstreeWalker() {
          * @param {number} index
          * @param {BaseNode} node
          */
-        replace(parent, prop, index, node2) {
+        replace(parent, prop, index, node) {
           if (parent) {
             if (index !== null) {
-              parent[prop][index] = node2;
+              parent[prop][index] = node;
             } else {
-              parent[prop] = node2;
+              parent[prop] = node;
             }
           }
         }
@@ -17370,8 +17343,8 @@ function requireEstreeWalker() {
          * @param {number} [index]
          * @returns {BaseNode}
          */
-        visit(node2, parent, prop, index) {
-          if (node2) {
+        visit(node, parent, prop, index) {
+          if (node) {
             if (this.enter) {
               const _should_skip = this.should_skip;
               const _should_remove = this.should_remove;
@@ -17379,10 +17352,10 @@ function requireEstreeWalker() {
               this.should_skip = false;
               this.should_remove = false;
               this.replacement = null;
-              this.enter.call(this.context, node2, parent, prop, index);
+              this.enter.call(this.context, node, parent, prop, index);
               if (this.replacement) {
-                node2 = this.replacement;
-                this.replace(parent, prop, index, node2);
+                node = this.replacement;
+                this.replace(parent, prop, index, node);
               }
               if (this.should_remove) {
                 this.remove(parent, prop, index);
@@ -17392,23 +17365,23 @@ function requireEstreeWalker() {
               this.should_skip = _should_skip;
               this.should_remove = _should_remove;
               this.replacement = _replacement;
-              if (skipped) return node2;
+              if (skipped) return node;
               if (removed) return null;
             }
-            for (const key in node2) {
-              const value = node2[key];
+            for (const key in node) {
+              const value = node[key];
               if (typeof value !== "object") {
                 continue;
               } else if (Array.isArray(value)) {
                 for (let i = 0; i < value.length; i += 1) {
                   if (value[i] !== null && typeof value[i].type === "string") {
-                    if (!this.visit(value[i], node2, key, i)) {
+                    if (!this.visit(value[i], node, key, i)) {
                       i--;
                     }
                   }
                 }
               } else if (value !== null && typeof value.type === "string") {
-                this.visit(value, node2, key, null);
+                this.visit(value, node, key, null);
               }
             }
             if (this.leave) {
@@ -17416,10 +17389,10 @@ function requireEstreeWalker() {
               const _should_remove = this.should_remove;
               this.replacement = null;
               this.should_remove = false;
-              this.leave.call(this.context, node2, parent, prop, index);
+              this.leave.call(this.context, node, parent, prop, index);
               if (this.replacement) {
-                node2 = this.replacement;
-                this.replace(parent, prop, index, node2);
+                node = this.replacement;
+                this.replace(parent, prop, index, node);
               }
               if (this.should_remove) {
                 this.remove(parent, prop, index);
@@ -17430,7 +17403,7 @@ function requireEstreeWalker() {
               if (removed) return null;
             }
           }
-          return node2;
+          return node;
         }
       }
       class AsyncWalker extends WalkerBase {
@@ -17452,8 +17425,8 @@ function requireEstreeWalker() {
          * @param {number} [index]
          * @returns {Promise<BaseNode>}
          */
-        async visit(node2, parent, prop, index) {
-          if (node2) {
+        async visit(node, parent, prop, index) {
+          if (node) {
             if (this.enter) {
               const _should_skip = this.should_skip;
               const _should_remove = this.should_remove;
@@ -17461,10 +17434,10 @@ function requireEstreeWalker() {
               this.should_skip = false;
               this.should_remove = false;
               this.replacement = null;
-              await this.enter.call(this.context, node2, parent, prop, index);
+              await this.enter.call(this.context, node, parent, prop, index);
               if (this.replacement) {
-                node2 = this.replacement;
-                this.replace(parent, prop, index, node2);
+                node = this.replacement;
+                this.replace(parent, prop, index, node);
               }
               if (this.should_remove) {
                 this.remove(parent, prop, index);
@@ -17474,23 +17447,23 @@ function requireEstreeWalker() {
               this.should_skip = _should_skip;
               this.should_remove = _should_remove;
               this.replacement = _replacement;
-              if (skipped) return node2;
+              if (skipped) return node;
               if (removed) return null;
             }
-            for (const key in node2) {
-              const value = node2[key];
+            for (const key in node) {
+              const value = node[key];
               if (typeof value !== "object") {
                 continue;
               } else if (Array.isArray(value)) {
                 for (let i = 0; i < value.length; i += 1) {
                   if (value[i] !== null && typeof value[i].type === "string") {
-                    if (!await this.visit(value[i], node2, key, i)) {
+                    if (!await this.visit(value[i], node, key, i)) {
                       i--;
                     }
                   }
                 }
               } else if (value !== null && typeof value.type === "string") {
-                await this.visit(value, node2, key, null);
+                await this.visit(value, node, key, null);
               }
             }
             if (this.leave) {
@@ -17498,10 +17471,10 @@ function requireEstreeWalker() {
               const _should_remove = this.should_remove;
               this.replacement = null;
               this.should_remove = false;
-              await this.leave.call(this.context, node2, parent, prop, index);
+              await this.leave.call(this.context, node, parent, prop, index);
               if (this.replacement) {
-                node2 = this.replacement;
-                this.replace(parent, prop, index, node2);
+                node = this.replacement;
+                this.replace(parent, prop, index, node);
               }
               if (this.should_remove) {
                 this.remove(parent, prop, index);
@@ -17512,7 +17485,7 @@ function requireEstreeWalker() {
               if (removed) return null;
             }
           }
-          return node2;
+          return node;
         }
       }
       function walk(ast, { enter, leave }) {
@@ -19193,7 +19166,7 @@ function requireSourceNode() {
     if (aChunks != null) this.add(aChunks);
   }
   SourceNode.fromStringWithSourceMap = function SourceNode_fromStringWithSourceMap(aGeneratedCode, aSourceMapConsumer, aRelativePath) {
-    var node2 = new SourceNode();
+    var node = new SourceNode();
     var remainingLines = aGeneratedCode.split(REGEX_NEWLINE);
     var remainingLinesIndex = 0;
     var shiftNextLine = function() {
@@ -19223,12 +19196,12 @@ function requireSourceNode() {
         }
       }
       while (lastGeneratedLine < mapping.generatedLine) {
-        node2.add(shiftNextLine());
+        node.add(shiftNextLine());
         lastGeneratedLine++;
       }
       if (lastGeneratedColumn < mapping.generatedColumn) {
         var nextLine = remainingLines[remainingLinesIndex] || "";
-        node2.add(nextLine.substr(0, mapping.generatedColumn));
+        node.add(nextLine.substr(0, mapping.generatedColumn));
         remainingLines[remainingLinesIndex] = nextLine.substr(mapping.generatedColumn);
         lastGeneratedColumn = mapping.generatedColumn;
       }
@@ -19238,7 +19211,7 @@ function requireSourceNode() {
       if (lastMapping) {
         addMappingWithCode(lastMapping, shiftNextLine());
       }
-      node2.add(remainingLines.splice(remainingLinesIndex).join(""));
+      node.add(remainingLines.splice(remainingLinesIndex).join(""));
     }
     aSourceMapConsumer.sources.forEach(function(sourceFile) {
       var content = aSourceMapConsumer.sourceContentFor(sourceFile);
@@ -19246,16 +19219,16 @@ function requireSourceNode() {
         if (aRelativePath != null) {
           sourceFile = util2.join(aRelativePath, sourceFile);
         }
-        node2.setSourceContent(sourceFile, content);
+        node.setSourceContent(sourceFile, content);
       }
     });
-    return node2;
+    return node;
     function addMappingWithCode(mapping, code) {
       if (mapping === null || mapping.source === void 0) {
-        node2.add(code);
+        node.add(code);
       } else {
         var source = aRelativePath ? util2.join(aRelativePath, mapping.source) : mapping.source;
-        node2.add(new SourceNode(
+        node.add(new SourceNode(
           mapping.originalLine,
           mapping.originalColumn,
           source,
@@ -19849,12 +19822,12 @@ function requireCompilerCore_cjs() {
   function getVNodeBlockHelper(ssr, isComponent2) {
     return ssr || isComponent2 ? CREATE_BLOCK : CREATE_ELEMENT_BLOCK;
   }
-  function convertToBlock(node2, { helper, removeHelper, inSSR }) {
-    if (!node2.isBlock) {
-      node2.isBlock = true;
-      removeHelper(getVNodeHelper(inSSR, node2.isComponent));
+  function convertToBlock(node, { helper, removeHelper, inSSR }) {
+    if (!node.isBlock) {
+      node.isBlock = true;
+      removeHelper(getVNodeHelper(inSSR, node.isComponent));
       helper(OPEN_BLOCK);
-      helper(getVNodeBlockHelper(inSSR, node2.isComponent));
+      helper(getVNodeBlockHelper(inSSR, node.isComponent));
     }
   }
   const defaultDelimitersOpen = new Uint8Array([123, 123]);
@@ -20978,54 +20951,54 @@ Use a v-bind binding combined with a v-on listener that emits update:x event ins
   function walkIdentifiers(root, onIdentifier, includeAll = false, parentStack = [], knownIds = /* @__PURE__ */ Object.create(null)) {
     const rootExp = root.type === "Program" ? root.body[0].type === "ExpressionStatement" && root.body[0].expression : root;
     estreeWalker2.walk(root, {
-      enter(node2, parent) {
+      enter(node, parent) {
         parent && parentStack.push(parent);
         if (parent && parent.type.startsWith("TS") && !TS_NODE_TYPES.includes(parent.type)) {
           return this.skip();
         }
-        if (node2.type === "Identifier") {
-          const isLocal = !!knownIds[node2.name];
-          const isRefed = isReferencedIdentifier(node2, parent, parentStack);
+        if (node.type === "Identifier") {
+          const isLocal = !!knownIds[node.name];
+          const isRefed = isReferencedIdentifier(node, parent, parentStack);
           if (includeAll || isRefed && !isLocal) {
-            onIdentifier(node2, parent, parentStack, isRefed, isLocal);
+            onIdentifier(node, parent, parentStack, isRefed, isLocal);
           }
-        } else if (node2.type === "ObjectProperty" && // eslint-disable-next-line no-restricted-syntax
+        } else if (node.type === "ObjectProperty" && // eslint-disable-next-line no-restricted-syntax
         (parent == null ? void 0 : parent.type) === "ObjectPattern") {
-          node2.inPattern = true;
-        } else if (isFunctionType(node2)) {
-          if (node2.scopeIds) {
-            node2.scopeIds.forEach((id) => markKnownIds(id, knownIds));
+          node.inPattern = true;
+        } else if (isFunctionType(node)) {
+          if (node.scopeIds) {
+            node.scopeIds.forEach((id) => markKnownIds(id, knownIds));
           } else {
             walkFunctionParams(
-              node2,
-              (id) => markScopeIdentifier(node2, id, knownIds)
+              node,
+              (id) => markScopeIdentifier(node, id, knownIds)
             );
           }
-        } else if (node2.type === "BlockStatement") {
-          if (node2.scopeIds) {
-            node2.scopeIds.forEach((id) => markKnownIds(id, knownIds));
+        } else if (node.type === "BlockStatement") {
+          if (node.scopeIds) {
+            node.scopeIds.forEach((id) => markKnownIds(id, knownIds));
           } else {
             walkBlockDeclarations(
-              node2,
-              (id) => markScopeIdentifier(node2, id, knownIds)
+              node,
+              (id) => markScopeIdentifier(node, id, knownIds)
             );
           }
-        } else if (node2.type === "CatchClause" && node2.param) {
-          for (const id of extractIdentifiers(node2.param)) {
-            markScopeIdentifier(node2, id, knownIds);
+        } else if (node.type === "CatchClause" && node.param) {
+          for (const id of extractIdentifiers(node.param)) {
+            markScopeIdentifier(node, id, knownIds);
           }
-        } else if (isForStatement(node2)) {
+        } else if (isForStatement(node)) {
           walkForStatement(
-            node2,
+            node,
             false,
-            (id) => markScopeIdentifier(node2, id, knownIds)
+            (id) => markScopeIdentifier(node, id, knownIds)
           );
         }
       },
-      leave(node2, parent) {
+      leave(node, parent) {
         parent && parentStack.pop();
-        if (node2 !== rootExp && node2.scopeIds) {
-          for (const id of node2.scopeIds) {
+        if (node !== rootExp && node.scopeIds) {
+          for (const id of node.scopeIds) {
             knownIds[id]--;
             if (knownIds[id] === 0) {
               delete knownIds[id];
@@ -21081,8 +21054,8 @@ Use a v-bind binding combined with a v-on listener that emits update:x event ins
     }
     return false;
   }
-  function walkFunctionParams(node2, onIdent) {
-    for (const p of node2.params) {
+  function walkFunctionParams(node, onIdent) {
+    for (const p of node.params) {
       for (const id of extractIdentifiers(p)) {
         onIdent(id);
       }
@@ -21160,61 +21133,61 @@ Use a v-bind binding combined with a v-on listener that emits update:x event ins
       knownIds[name] = 1;
     }
   }
-  function markScopeIdentifier(node2, child, knownIds) {
+  function markScopeIdentifier(node, child, knownIds) {
     const { name } = child;
-    if (node2.scopeIds && node2.scopeIds.has(name)) {
+    if (node.scopeIds && node.scopeIds.has(name)) {
       return;
     }
     markKnownIds(name, knownIds);
-    (node2.scopeIds || (node2.scopeIds = /* @__PURE__ */ new Set())).add(name);
+    (node.scopeIds || (node.scopeIds = /* @__PURE__ */ new Set())).add(name);
   }
-  const isFunctionType = (node2) => {
-    return /Function(?:Expression|Declaration)$|Method$/.test(node2.type);
+  const isFunctionType = (node) => {
+    return /Function(?:Expression|Declaration)$|Method$/.test(node.type);
   };
-  const isStaticProperty = (node2) => node2 && (node2.type === "ObjectProperty" || node2.type === "ObjectMethod") && !node2.computed;
-  const isStaticPropertyKey = (node2, parent) => isStaticProperty(parent) && parent.key === node2;
-  function isReferenced(node2, parent, grandparent) {
+  const isStaticProperty = (node) => node && (node.type === "ObjectProperty" || node.type === "ObjectMethod") && !node.computed;
+  const isStaticPropertyKey = (node, parent) => isStaticProperty(parent) && parent.key === node;
+  function isReferenced(node, parent, grandparent) {
     switch (parent.type) {
       case "MemberExpression":
       case "OptionalMemberExpression":
-        if (parent.property === node2) {
+        if (parent.property === node) {
           return !!parent.computed;
         }
-        return parent.object === node2;
+        return parent.object === node;
       case "JSXMemberExpression":
-        return parent.object === node2;
+        return parent.object === node;
       case "VariableDeclarator":
-        return parent.init === node2;
+        return parent.init === node;
       case "ArrowFunctionExpression":
-        return parent.body === node2;
+        return parent.body === node;
       case "PrivateName":
         return false;
       case "ClassMethod":
       case "ClassPrivateMethod":
       case "ObjectMethod":
-        if (parent.key === node2) {
+        if (parent.key === node) {
           return !!parent.computed;
         }
         return false;
       case "ObjectProperty":
-        if (parent.key === node2) {
+        if (parent.key === node) {
           return !!parent.computed;
         }
         return true;
       case "ClassProperty":
-        if (parent.key === node2) {
+        if (parent.key === node) {
           return !!parent.computed;
         }
         return true;
       case "ClassPrivateProperty":
-        return parent.key !== node2;
+        return parent.key !== node;
       case "ClassDeclaration":
       case "ClassExpression":
-        return parent.superClass === node2;
+        return parent.superClass === node;
       case "AssignmentExpression":
-        return parent.right === node2;
+        return parent.right === node;
       case "AssignmentPattern":
-        return parent.right === node2;
+        return parent.right === node;
       case "LabeledStatement":
         return false;
       case "CatchClause":
@@ -21231,7 +21204,7 @@ Use a v-bind binding combined with a v-on listener that emits update:x event ins
       case "ExportDefaultSpecifier":
         return false;
       case "ExportSpecifier":
-        return parent.local === node2;
+        return parent.local === node;
       case "ImportDefaultSpecifier":
       case "ImportNamespaceSpecifier":
       case "ImportSpecifier":
@@ -21246,11 +21219,11 @@ Use a v-bind binding combined with a v-on listener that emits update:x event ins
       case "MetaProperty":
         return false;
       case "ObjectTypeProperty":
-        return parent.key !== node2;
+        return parent.key !== node;
       case "TSEnumMember":
-        return parent.id !== node2;
+        return parent.id !== node;
       case "TSPropertySignature":
-        if (parent.key === node2) {
+        if (parent.key === node) {
           return !!parent.computed;
         }
         return true;
@@ -21269,11 +21242,11 @@ Use a v-bind binding combined with a v-on listener that emits update:x event ins
     "TSSatisfiesExpression"
     // foo satisfies T
   ];
-  function unwrapTSNode(node2) {
-    if (TS_NODE_TYPES.includes(node2.type)) {
-      return unwrapTSNode(node2.expression);
+  function unwrapTSNode(node) {
+    if (TS_NODE_TYPES.includes(node.type)) {
+      return unwrapTSNode(node.expression);
     } else {
-      return node2;
+      return node;
     }
   }
   const isStaticExp = (p) => p.type === 4 && p.isStatic;
@@ -21423,17 +21396,17 @@ Use a v-bind binding combined with a v-on listener that emits update:x event ins
       throw new Error(msg || `unexpected compiler condition`);
     }
   }
-  function findDir(node2, name, allowEmpty = false) {
-    for (let i = 0; i < node2.props.length; i++) {
-      const p = node2.props[i];
+  function findDir(node, name, allowEmpty = false) {
+    for (let i = 0; i < node.props.length; i++) {
+      const p = node.props[i];
       if (p.type === 7 && (allowEmpty || p.exp) && (shared.isString(name) ? p.name === name : name.test(p.name))) {
         return p;
       }
     }
   }
-  function findProp(node2, name, dynamicOnly = false, allowEmpty = false) {
-    for (let i = 0; i < node2.props.length; i++) {
-      const p = node2.props[i];
+  function findProp(node, name, dynamicOnly = false, allowEmpty = false) {
+    for (let i = 0; i < node.props.length; i++) {
+      const p = node.props[i];
       if (p.type === 6) {
         if (dynamicOnly) continue;
         if (p.name === name && (p.value || allowEmpty)) {
@@ -21447,25 +21420,25 @@ Use a v-bind binding combined with a v-on listener that emits update:x event ins
   function isStaticArgOf(arg, name) {
     return !!(arg && isStaticExp(arg) && arg.content === name);
   }
-  function hasDynamicKeyVBind(node2) {
-    return node2.props.some(
+  function hasDynamicKeyVBind(node) {
+    return node.props.some(
       (p) => p.type === 7 && p.name === "bind" && (!p.arg || // v-bind="obj"
       p.arg.type !== 4 || // v-bind:[_ctx.foo]
       !p.arg.isStatic)
       // v-bind:[foo]
     );
   }
-  function isText$1(node2) {
-    return node2.type === 5 || node2.type === 2;
+  function isText$1(node) {
+    return node.type === 5 || node.type === 2;
   }
   function isVSlot(p) {
     return p.type === 7 && p.name === "slot";
   }
-  function isTemplateNode(node2) {
-    return node2.type === 1 && node2.tagType === 3;
+  function isTemplateNode(node) {
+    return node.type === 1 && node.tagType === 3;
   }
-  function isSlotOutlet(node2) {
-    return node2.type === 1 && node2.tagType === 2;
+  function isSlotOutlet(node) {
+    return node.type === 1 && node.tagType === 2;
   }
   const propsHelperSet = /* @__PURE__ */ new Set([NORMALIZE_PROPS, GUARD_REACTIVE_PROPS]);
   function getUnnormalizedProps(props, callPath = []) {
@@ -21480,9 +21453,9 @@ Use a v-bind binding combined with a v-on listener that emits update:x event ins
     }
     return [props, callPath];
   }
-  function injectProp(node2, prop, context) {
+  function injectProp(node, prop, context) {
     let propsWithInjection;
-    let props = node2.type === 13 ? node2.props : node2.arguments[2];
+    let props = node.type === 13 ? node.props : node.arguments[2];
     let callPath = [];
     let parentCall;
     if (props && !shared.isString(props) && props.type === 14) {
@@ -21524,17 +21497,17 @@ Use a v-bind binding combined with a v-on listener that emits update:x event ins
         parentCall = callPath[callPath.length - 2];
       }
     }
-    if (node2.type === 13) {
+    if (node.type === 13) {
       if (parentCall) {
         parentCall.arguments[0] = propsWithInjection;
       } else {
-        node2.props = propsWithInjection;
+        node.props = propsWithInjection;
       }
     } else {
       if (parentCall) {
         parentCall.arguments[0] = propsWithInjection;
       } else {
-        node2.arguments[2] = propsWithInjection;
+        node.arguments[2] = propsWithInjection;
       }
     }
   }
@@ -21553,38 +21526,38 @@ Use a v-bind binding combined with a v-on listener that emits update:x event ins
       return searchValue === "-" ? "_" : name.charCodeAt(replaceValue).toString();
     })}`;
   }
-  function hasScopeRef(node2, ids) {
-    if (!node2 || Object.keys(ids).length === 0) {
+  function hasScopeRef(node, ids) {
+    if (!node || Object.keys(ids).length === 0) {
       return false;
     }
-    switch (node2.type) {
+    switch (node.type) {
       case 1:
-        for (let i = 0; i < node2.props.length; i++) {
-          const p = node2.props[i];
+        for (let i = 0; i < node.props.length; i++) {
+          const p = node.props[i];
           if (p.type === 7 && (hasScopeRef(p.arg, ids) || hasScopeRef(p.exp, ids))) {
             return true;
           }
         }
-        return node2.children.some((c) => hasScopeRef(c, ids));
+        return node.children.some((c) => hasScopeRef(c, ids));
       case 11:
-        if (hasScopeRef(node2.source, ids)) {
+        if (hasScopeRef(node.source, ids)) {
           return true;
         }
-        return node2.children.some((c) => hasScopeRef(c, ids));
+        return node.children.some((c) => hasScopeRef(c, ids));
       case 9:
-        return node2.branches.some((b) => hasScopeRef(b, ids));
+        return node.branches.some((b) => hasScopeRef(b, ids));
       case 10:
-        if (hasScopeRef(node2.condition, ids)) {
+        if (hasScopeRef(node.condition, ids)) {
           return true;
         }
-        return node2.children.some((c) => hasScopeRef(c, ids));
+        return node.children.some((c) => hasScopeRef(c, ids));
       case 4:
-        return !node2.isStatic && isSimpleIdentifier(node2.content) && !!ids[node2.content];
+        return !node.isStatic && isSimpleIdentifier(node.content) && !!ids[node.content];
       case 8:
-        return node2.children.some((c) => shared.isObject(c) && hasScopeRef(c, ids));
+        return node.children.some((c) => shared.isObject(c) && hasScopeRef(c, ids));
       case 5:
       case 12:
-        return hasScopeRef(node2.content, ids);
+        return hasScopeRef(node.content, ids);
       case 2:
       case 3:
       case 20:
@@ -21593,11 +21566,11 @@ Use a v-bind binding combined with a v-on listener that emits update:x event ins
         return false;
     }
   }
-  function getMemoedVNodeCall(node2) {
-    if (node2.type === 14 && node2.callee === WITH_MEMO) {
-      return node2.arguments[1].returns;
+  function getMemoedVNodeCall(node) {
+    if (node.type === 14 && node.callee === WITH_MEMO) {
+      return node.arguments[1].returns;
     } else {
-      return node2;
+      return node;
     }
   }
   const forAliasRE = /([\s\S]*?)\s+(?:in|of)\s+(\S[\s\S]*)/;
@@ -22198,23 +22171,23 @@ Use a v-bind binding combined with a v-on listener that emits update:x event ins
     const shouldCondense = currentOptions.whitespace !== "preserve";
     let removedWhitespace = false;
     for (let i = 0; i < nodes.length; i++) {
-      const node2 = nodes[i];
-      if (node2.type === 2) {
+      const node = nodes[i];
+      if (node.type === 2) {
         if (!inPre) {
-          if (isAllWhitespace(node2.content)) {
+          if (isAllWhitespace(node.content)) {
             const prev = nodes[i - 1] && nodes[i - 1].type;
             const next = nodes[i + 1] && nodes[i + 1].type;
-            if (!prev || !next || shouldCondense && (prev === 3 && (next === 3 || next === 1) || prev === 1 && (next === 3 || next === 1 && hasNewlineChar(node2.content)))) {
+            if (!prev || !next || shouldCondense && (prev === 3 && (next === 3 || next === 1) || prev === 1 && (next === 3 || next === 1 && hasNewlineChar(node.content)))) {
               removedWhitespace = true;
               nodes[i] = null;
             } else {
-              node2.content = " ";
+              node.content = " ";
             }
           } else if (shouldCondense) {
-            node2.content = condense(node2.content);
+            node.content = condense(node.content);
           }
         } else {
-          node2.content = node2.content.replace(windowsNewlineRE, "\n");
+          node.content = node.content.replace(windowsNewlineRE, "\n");
         }
       }
     }
@@ -22253,8 +22226,8 @@ Use a v-bind binding combined with a v-on listener that emits update:x event ins
     }
     return ret;
   }
-  function addNode(node2) {
-    (stack[0] || currentRoot).children.push(node2);
+  function addNode(node) {
+    (stack[0] || currentRoot).children.push(node);
   }
   function getLoc(start, end) {
     return {
@@ -22386,8 +22359,8 @@ Use a v-bind binding combined with a v-on listener that emits update:x event ins
     const { children } = root;
     return children.length === 1 && child.type === 1 && !isSlotOutlet(child);
   }
-  function walk(node2, parent, context, doNotHoistNode = false, inFor = false) {
-    const { children } = node2;
+  function walk(node, parent, context, doNotHoistNode = false, inFor = false) {
+    const { children } = node;
     const toCache = [];
     for (let i = 0; i < children.length; i++) {
       const child = children[i];
@@ -22426,17 +22399,17 @@ Use a v-bind binding combined with a v-on listener that emits update:x event ins
         if (isComponent2) {
           context.scopes.vSlot++;
         }
-        walk(child, node2, context, false, inFor);
+        walk(child, node, context, false, inFor);
         if (isComponent2) {
           context.scopes.vSlot--;
         }
       } else if (child.type === 11) {
-        walk(child, node2, context, child.children.length === 1, true);
+        walk(child, node, context, child.children.length === 1, true);
       } else if (child.type === 9) {
         for (let i2 = 0; i2 < child.branches.length; i2++) {
           walk(
             child.branches[i2],
-            node2,
+            node,
             context,
             child.branches[i2].children.length === 1,
             inFor
@@ -22445,22 +22418,22 @@ Use a v-bind binding combined with a v-on listener that emits update:x event ins
       }
     }
     let cachedAsArray = false;
-    if (toCache.length === children.length && node2.type === 1) {
-      if (node2.tagType === 0 && node2.codegenNode && node2.codegenNode.type === 13 && shared.isArray(node2.codegenNode.children)) {
-        node2.codegenNode.children = getCacheExpression(
-          createArrayExpression(node2.codegenNode.children)
+    if (toCache.length === children.length && node.type === 1) {
+      if (node.tagType === 0 && node.codegenNode && node.codegenNode.type === 13 && shared.isArray(node.codegenNode.children)) {
+        node.codegenNode.children = getCacheExpression(
+          createArrayExpression(node.codegenNode.children)
         );
         cachedAsArray = true;
-      } else if (node2.tagType === 1 && node2.codegenNode && node2.codegenNode.type === 13 && node2.codegenNode.children && !shared.isArray(node2.codegenNode.children) && node2.codegenNode.children.type === 15) {
-        const slot = getSlotNode(node2.codegenNode, "default");
+      } else if (node.tagType === 1 && node.codegenNode && node.codegenNode.type === 13 && node.codegenNode.children && !shared.isArray(node.codegenNode.children) && node.codegenNode.children.type === 15) {
+        const slot = getSlotNode(node.codegenNode, "default");
         if (slot) {
           slot.returns = getCacheExpression(
             createArrayExpression(slot.returns)
           );
           cachedAsArray = true;
         }
-      } else if (node2.tagType === 3 && parent && parent.type === 1 && parent.tagType === 1 && parent.codegenNode && parent.codegenNode.type === 13 && parent.codegenNode.children && !shared.isArray(parent.codegenNode.children) && parent.codegenNode.children.type === 15) {
-        const slotName = findDir(node2, "slot", true);
+      } else if (node.tagType === 3 && parent && parent.type === 1 && parent.tagType === 1 && parent.codegenNode && parent.codegenNode.type === 13 && parent.codegenNode.children && !shared.isArray(parent.codegenNode.children) && parent.codegenNode.children.type === 15) {
+        const slotName = findDir(node, "slot", true);
         const slot = slotName && slotName.arg && getSlotNode(parent.codegenNode, slotName.arg);
         if (slot) {
           slot.returns = getCacheExpression(
@@ -22482,50 +22455,50 @@ Use a v-bind binding combined with a v-on listener that emits update:x event ins
       }
       return exp;
     }
-    function getSlotNode(node22, name) {
-      if (node22.children && !shared.isArray(node22.children) && node22.children.type === 15) {
-        const slot = node22.children.properties.find(
+    function getSlotNode(node2, name) {
+      if (node2.children && !shared.isArray(node2.children) && node2.children.type === 15) {
+        const slot = node2.children.properties.find(
           (p) => p.key === name || p.key.content === name
         );
         return slot && slot.value;
       }
     }
     if (toCache.length && context.transformHoist) {
-      context.transformHoist(children, context, node2);
+      context.transformHoist(children, context, node);
     }
   }
-  function getConstantType(node2, context) {
+  function getConstantType(node, context) {
     const { constantCache } = context;
-    switch (node2.type) {
+    switch (node.type) {
       case 1:
-        if (node2.tagType !== 0) {
+        if (node.tagType !== 0) {
           return 0;
         }
-        const cached = constantCache.get(node2);
+        const cached = constantCache.get(node);
         if (cached !== void 0) {
           return cached;
         }
-        const codegenNode = node2.codegenNode;
+        const codegenNode = node.codegenNode;
         if (codegenNode.type !== 13) {
           return 0;
         }
-        if (codegenNode.isBlock && node2.tag !== "svg" && node2.tag !== "foreignObject" && node2.tag !== "math") {
+        if (codegenNode.isBlock && node.tag !== "svg" && node.tag !== "foreignObject" && node.tag !== "math") {
           return 0;
         }
         if (codegenNode.patchFlag === void 0) {
           let returnType2 = 3;
-          const generatedPropsType = getGeneratedPropsConstantType(node2, context);
+          const generatedPropsType = getGeneratedPropsConstantType(node, context);
           if (generatedPropsType === 0) {
-            constantCache.set(node2, 0);
+            constantCache.set(node, 0);
             return 0;
           }
           if (generatedPropsType < returnType2) {
             returnType2 = generatedPropsType;
           }
-          for (let i = 0; i < node2.children.length; i++) {
-            const childType = getConstantType(node2.children[i], context);
+          for (let i = 0; i < node.children.length; i++) {
+            const childType = getConstantType(node.children[i], context);
             if (childType === 0) {
-              constantCache.set(node2, 0);
+              constantCache.set(node, 0);
               return 0;
             }
             if (childType < returnType2) {
@@ -22533,12 +22506,12 @@ Use a v-bind binding combined with a v-on listener that emits update:x event ins
             }
           }
           if (returnType2 > 1) {
-            for (let i = 0; i < node2.props.length; i++) {
-              const p = node2.props[i];
+            for (let i = 0; i < node.props.length; i++) {
+              const p = node.props[i];
               if (p.type === 7 && p.name === "bind" && p.exp) {
                 const expType = getConstantType(p.exp, context);
                 if (expType === 0) {
-                  constantCache.set(node2, 0);
+                  constantCache.set(node, 0);
                   return 0;
                 }
                 if (expType < returnType2) {
@@ -22548,10 +22521,10 @@ Use a v-bind binding combined with a v-on listener that emits update:x event ins
             }
           }
           if (codegenNode.isBlock) {
-            for (let i = 0; i < node2.props.length; i++) {
-              const p = node2.props[i];
+            for (let i = 0; i < node.props.length; i++) {
+              const p = node.props[i];
               if (p.type === 7) {
-                constantCache.set(node2, 0);
+                constantCache.set(node, 0);
                 return 0;
               }
             }
@@ -22562,10 +22535,10 @@ Use a v-bind binding combined with a v-on listener that emits update:x event ins
             codegenNode.isBlock = false;
             context.helper(getVNodeHelper(context.inSSR, codegenNode.isComponent));
           }
-          constantCache.set(node2, returnType2);
+          constantCache.set(node, returnType2);
           return returnType2;
         } else {
-          constantCache.set(node2, 0);
+          constantCache.set(node, 0);
           return 0;
         }
       case 2:
@@ -22577,13 +22550,13 @@ Use a v-bind binding combined with a v-on listener that emits update:x event ins
         return 0;
       case 5:
       case 12:
-        return getConstantType(node2.content, context);
+        return getConstantType(node.content, context);
       case 4:
-        return node2.constType;
+        return node.constType;
       case 8:
         let returnType = 3;
-        for (let i = 0; i < node2.children.length; i++) {
-          const child = node2.children[i];
+        for (let i = 0; i < node.children.length; i++) {
+          const child = node.children[i];
           if (shared.isString(child) || shared.isSymbol(child)) {
             continue;
           }
@@ -22618,9 +22591,9 @@ Use a v-bind binding combined with a v-on listener that emits update:x event ins
     }
     return 0;
   }
-  function getGeneratedPropsConstantType(node2, context) {
+  function getGeneratedPropsConstantType(node, context) {
     let returnType = 3;
-    const props = getNodeProps(node2);
+    const props = getNodeProps(node);
     if (props && props.type === 15) {
       const { properties } = props;
       for (let i = 0; i < properties.length; i++) {
@@ -22650,8 +22623,8 @@ Use a v-bind binding combined with a v-on listener that emits update:x event ins
     }
     return returnType;
   }
-  function getNodeProps(node2) {
-    const codegenNode = node2.codegenNode;
+  function getNodeProps(node) {
+    const codegenNode = node.codegenNode;
     if (codegenNode.type === 13) {
       return codegenNode.props;
     }
@@ -22748,7 +22721,7 @@ Use a v-bind binding combined with a v-on listener that emits update:x event ins
       helperString(name) {
         return `_${helperNameMap[context.helper(name)]}`;
       },
-      replaceNode(node2) {
+      replaceNode(node) {
         {
           if (!context.currentNode) {
             throw new Error(`Node being replaced is already removed.`);
@@ -22757,18 +22730,18 @@ Use a v-bind binding combined with a v-on listener that emits update:x event ins
             throw new Error(`Cannot replace root node.`);
           }
         }
-        context.parent.children[context.childIndex] = context.currentNode = node2;
+        context.parent.children[context.childIndex] = context.currentNode = node;
       },
-      removeNode(node2) {
+      removeNode(node) {
         if (!context.parent) {
           throw new Error(`Cannot remove root node.`);
         }
         const list = context.parent.children;
-        const removalIndex = node2 ? list.indexOf(node2) : context.currentNode ? context.childIndex : -1;
+        const removalIndex = node ? list.indexOf(node) : context.currentNode ? context.childIndex : -1;
         if (removalIndex < 0) {
           throw new Error(`node being removed is not a child of current parent`);
         }
-        if (!node2 || node2 === context.currentNode) {
+        if (!node || node === context.currentNode) {
           context.currentNode = null;
           context.onNodeRemoved();
         } else {
@@ -22909,12 +22882,12 @@ Use a v-bind binding combined with a v-on listener that emits update:x event ins
       traverseNode(child, context);
     }
   }
-  function traverseNode(node2, context) {
-    context.currentNode = node2;
+  function traverseNode(node, context) {
+    context.currentNode = node;
     const { nodeTransforms } = context;
     const exitFns = [];
     for (let i2 = 0; i2 < nodeTransforms.length; i2++) {
-      const onExit = nodeTransforms[i2](node2, context);
+      const onExit = nodeTransforms[i2](node, context);
       if (onExit) {
         if (shared.isArray(onExit)) {
           exitFns.push(...onExit);
@@ -22925,10 +22898,10 @@ Use a v-bind binding combined with a v-on listener that emits update:x event ins
       if (!context.currentNode) {
         return;
       } else {
-        node2 = context.currentNode;
+        node = context.currentNode;
       }
     }
-    switch (node2.type) {
+    switch (node.type) {
       case 3:
         if (!context.ssr) {
           context.helper(CREATE_COMMENT);
@@ -22940,18 +22913,18 @@ Use a v-bind binding combined with a v-on listener that emits update:x event ins
         }
         break;
       case 9:
-        for (let i2 = 0; i2 < node2.branches.length; i2++) {
-          traverseNode(node2.branches[i2], context);
+        for (let i2 = 0; i2 < node.branches.length; i2++) {
+          traverseNode(node.branches[i2], context);
         }
         break;
       case 10:
       case 11:
       case 1:
       case 0:
-        traverseChildren(node2, context);
+        traverseChildren(node, context);
         break;
     }
-    context.currentNode = node2;
+    context.currentNode = node;
     let i = exitFns.length;
     while (i--) {
       exitFns[i]();
@@ -22959,10 +22932,10 @@ Use a v-bind binding combined with a v-on listener that emits update:x event ins
   }
   function createStructuralDirectiveTransform(name, fn) {
     const matches = shared.isString(name) ? (n) => n === name : (n) => name.test(n);
-    return (node2, context) => {
-      if (node2.type === 1) {
-        const { props } = node2;
-        if (node2.tagType === 3 && props.some(isVSlot)) {
+    return (node, context) => {
+      if (node.type === 1) {
+        const { props } = node;
+        if (node.tagType === 3 && props.some(isVSlot)) {
           return;
         }
         const exitFns = [];
@@ -22971,7 +22944,7 @@ Use a v-bind binding combined with a v-on listener that emits update:x event ins
           if (prop.type === 7 && matches(prop.name)) {
             props.splice(i, 1);
             i--;
-            const onExit = fn(node2, prop, context);
+            const onExit = fn(node, prop, context);
             if (onExit) exitFns.push(onExit);
           }
         }
@@ -23019,18 +22992,18 @@ Use a v-bind binding combined with a v-on listener that emits update:x event ins
       helper(key) {
         return `_${helperNameMap[key]}`;
       },
-      push(code, newlineIndex = -2, node2) {
+      push(code, newlineIndex = -2, node) {
         context.code += code;
         if (context.map) {
-          if (node2) {
+          if (node) {
             let name;
-            if (node2.type === 4 && !node2.isStatic) {
-              const content = node2.content.replace(/^_ctx\./, "");
-              if (content !== node2.content && isSimpleIdentifier(content)) {
+            if (node.type === 4 && !node.isStatic) {
+              const content = node.content.replace(/^_ctx\./, "");
+              if (content !== node.content && isSimpleIdentifier(content)) {
                 name = content;
               }
             }
-            addMapping(node2.loc.start, name);
+            addMapping(node.loc.start, name);
           }
           if (newlineIndex === -3) {
             advancePositionWithMutation(context, code);
@@ -23046,8 +23019,8 @@ Use a v-bind binding combined with a v-on listener that emits update:x event ins
               context.column = code.length - newlineIndex;
             }
           }
-          if (node2 && node2.loc !== locStub) {
-            addMapping(node2.loc.end);
+          if (node && node.loc !== locStub) {
+            addMapping(node.loc.end);
           }
         }
       },
@@ -23362,17 +23335,17 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
   function genNodeList(nodes, context, multilines = false, comma = true) {
     const { push, newline } = context;
     for (let i = 0; i < nodes.length; i++) {
-      const node2 = nodes[i];
-      if (shared.isString(node2)) {
+      const node = nodes[i];
+      if (shared.isString(node)) {
         push(
-          node2,
+          node,
           -3
           /* Unknown */
         );
-      } else if (shared.isArray(node2)) {
-        genNodeListAsArray(node2, context);
+      } else if (shared.isArray(node)) {
+        genNodeListAsArray(node, context);
       } else {
-        genNode(node2, context);
+        genNode(node, context);
       }
       if (i < nodes.length - 1) {
         if (multilines) {
@@ -23384,116 +23357,116 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
       }
     }
   }
-  function genNode(node2, context) {
-    if (shared.isString(node2)) {
+  function genNode(node, context) {
+    if (shared.isString(node)) {
       context.push(
-        node2,
+        node,
         -3
         /* Unknown */
       );
       return;
     }
-    if (shared.isSymbol(node2)) {
-      context.push(context.helper(node2));
+    if (shared.isSymbol(node)) {
+      context.push(context.helper(node));
       return;
     }
-    switch (node2.type) {
+    switch (node.type) {
       case 1:
       case 9:
       case 11:
         assert(
-          node2.codegenNode != null,
+          node.codegenNode != null,
           `Codegen node is missing for element/if/for node. Apply appropriate transforms first.`
         );
-        genNode(node2.codegenNode, context);
+        genNode(node.codegenNode, context);
         break;
       case 2:
-        genText(node2, context);
+        genText(node, context);
         break;
       case 4:
-        genExpression(node2, context);
+        genExpression(node, context);
         break;
       case 5:
-        genInterpolation(node2, context);
+        genInterpolation(node, context);
         break;
       case 12:
-        genNode(node2.codegenNode, context);
+        genNode(node.codegenNode, context);
         break;
       case 8:
-        genCompoundExpression(node2, context);
+        genCompoundExpression(node, context);
         break;
       case 3:
-        genComment(node2, context);
+        genComment(node, context);
         break;
       case 13:
-        genVNodeCall(node2, context);
+        genVNodeCall(node, context);
         break;
       case 14:
-        genCallExpression(node2, context);
+        genCallExpression(node, context);
         break;
       case 15:
-        genObjectExpression(node2, context);
+        genObjectExpression(node, context);
         break;
       case 17:
-        genArrayExpression(node2, context);
+        genArrayExpression(node, context);
         break;
       case 18:
-        genFunctionExpression(node2, context);
+        genFunctionExpression(node, context);
         break;
       case 19:
-        genConditionalExpression(node2, context);
+        genConditionalExpression(node, context);
         break;
       case 20:
-        genCacheExpression(node2, context);
+        genCacheExpression(node, context);
         break;
       case 21:
-        genNodeList(node2.body, context, true, false);
+        genNodeList(node.body, context, true, false);
         break;
       case 22:
-        genTemplateLiteral(node2, context);
+        genTemplateLiteral(node, context);
         break;
       case 23:
-        genIfStatement(node2, context);
+        genIfStatement(node, context);
         break;
       case 24:
-        genAssignmentExpression(node2, context);
+        genAssignmentExpression(node, context);
         break;
       case 25:
-        genSequenceExpression(node2, context);
+        genSequenceExpression(node, context);
         break;
       case 26:
-        genReturnStatement(node2, context);
+        genReturnStatement(node, context);
         break;
       case 10:
         break;
       default: {
-        assert(false, `unhandled codegen node type: ${node2.type}`);
-        const exhaustiveCheck = node2;
+        assert(false, `unhandled codegen node type: ${node.type}`);
+        const exhaustiveCheck = node;
         return exhaustiveCheck;
       }
     }
   }
-  function genText(node2, context) {
-    context.push(JSON.stringify(node2.content), -3, node2);
+  function genText(node, context) {
+    context.push(JSON.stringify(node.content), -3, node);
   }
-  function genExpression(node2, context) {
-    const { content, isStatic } = node2;
+  function genExpression(node, context) {
+    const { content, isStatic } = node;
     context.push(
       isStatic ? JSON.stringify(content) : content,
       -3,
-      node2
+      node
     );
   }
-  function genInterpolation(node2, context) {
+  function genInterpolation(node, context) {
     const { push, helper, pure } = context;
     if (pure) push(PURE_ANNOTATION);
     push(`${helper(TO_DISPLAY_STRING)}(`);
-    genNode(node2.content, context);
+    genNode(node.content, context);
     push(`)`);
   }
-  function genCompoundExpression(node2, context) {
-    for (let i = 0; i < node2.children.length; i++) {
-      const child = node2.children[i];
+  function genCompoundExpression(node, context) {
+    for (let i = 0; i < node.children.length; i++) {
+      const child = node.children[i];
       if (shared.isString(child)) {
         context.push(
           child,
@@ -23505,31 +23478,31 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
       }
     }
   }
-  function genExpressionAsPropertyKey(node2, context) {
+  function genExpressionAsPropertyKey(node, context) {
     const { push } = context;
-    if (node2.type === 8) {
+    if (node.type === 8) {
       push(`[`);
-      genCompoundExpression(node2, context);
+      genCompoundExpression(node, context);
       push(`]`);
-    } else if (node2.isStatic) {
-      const text = isSimpleIdentifier(node2.content) ? node2.content : JSON.stringify(node2.content);
-      push(text, -2, node2);
+    } else if (node.isStatic) {
+      const text = isSimpleIdentifier(node.content) ? node.content : JSON.stringify(node.content);
+      push(text, -2, node);
     } else {
-      push(`[${node2.content}]`, -3, node2);
+      push(`[${node.content}]`, -3, node);
     }
   }
-  function genComment(node2, context) {
+  function genComment(node, context) {
     const { push, helper, pure } = context;
     if (pure) {
       push(PURE_ANNOTATION);
     }
     push(
-      `${helper(CREATE_COMMENT)}(${JSON.stringify(node2.content)})`,
+      `${helper(CREATE_COMMENT)}(${JSON.stringify(node.content)})`,
       -3,
-      node2
+      node
     );
   }
-  function genVNodeCall(node2, context) {
+  function genVNodeCall(node, context) {
     const { push, helper, pure } = context;
     const {
       tag,
@@ -23541,7 +23514,7 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
       isBlock,
       disableTracking,
       isComponent: isComponent2
-    } = node2;
+    } = node;
     let patchFlagString;
     if (patchFlag) {
       {
@@ -23563,7 +23536,7 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
       push(PURE_ANNOTATION);
     }
     const callHelper = isBlock ? getVNodeBlockHelper(context.inSSR, isComponent2) : getVNodeHelper(context.inSSR, isComponent2);
-    push(helper(callHelper) + `(`, -2, node2);
+    push(helper(callHelper) + `(`, -2, node);
     genNodeList(
       genNullableArgs([tag, props, children, patchFlagString, dynamicProps]),
       context
@@ -23585,21 +23558,21 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
     }
     return args.slice(0, i + 1).map((arg) => arg || `null`);
   }
-  function genCallExpression(node2, context) {
+  function genCallExpression(node, context) {
     const { push, helper, pure } = context;
-    const callee = shared.isString(node2.callee) ? node2.callee : helper(node2.callee);
+    const callee = shared.isString(node.callee) ? node.callee : helper(node.callee);
     if (pure) {
       push(PURE_ANNOTATION);
     }
-    push(callee + `(`, -2, node2);
-    genNodeList(node2.arguments, context);
+    push(callee + `(`, -2, node);
+    genNodeList(node.arguments, context);
     push(`)`);
   }
-  function genObjectExpression(node2, context) {
+  function genObjectExpression(node, context) {
     const { push, indent, deindent, newline } = context;
-    const { properties } = node2;
+    const { properties } = node;
     if (!properties.length) {
-      push(`{}`, -2, node2);
+      push(`{}`, -2, node);
       return;
     }
     const multilines = properties.length > 1 || properties.some((p) => p.value.type !== 4);
@@ -23618,16 +23591,16 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
     multilines && deindent();
     push(multilines ? `}` : ` }`);
   }
-  function genArrayExpression(node2, context) {
-    genNodeListAsArray(node2.elements, context);
+  function genArrayExpression(node, context) {
+    genNodeListAsArray(node.elements, context);
   }
-  function genFunctionExpression(node2, context) {
+  function genFunctionExpression(node, context) {
     const { push, indent, deindent } = context;
-    const { params, returns, body, newline, isSlot } = node2;
+    const { params, returns, body, newline, isSlot } = node;
     if (isSlot) {
       push(`_${helperNameMap[WITH_CTX]}(`);
     }
-    push(`(`, -2, node2);
+    push(`(`, -2, node);
     if (shared.isArray(params)) {
       genNodeList(params, context);
     } else if (params) {
@@ -23655,14 +23628,14 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
       push(`}`);
     }
     if (isSlot) {
-      if (node2.isNonScopedSlot) {
+      if (node.isNonScopedSlot) {
         push(`, undefined, true`);
       }
       push(`)`);
     }
   }
-  function genConditionalExpression(node2, context) {
-    const { test, consequent, alternate, newline: needNewline } = node2;
+  function genConditionalExpression(node, context) {
+    const { test, consequent, alternate, newline: needNewline } = node;
     const { push, indent, deindent, newline } = context;
     if (test.type === 4) {
       const needsParens = !isSimpleIdentifier(test.content);
@@ -23696,29 +23669,29 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
       /* without newline */
     );
   }
-  function genCacheExpression(node2, context) {
+  function genCacheExpression(node, context) {
     const { push, helper, indent, deindent, newline } = context;
-    const { needPauseTracking, needArraySpread } = node2;
+    const { needPauseTracking, needArraySpread } = node;
     if (needArraySpread) {
       push(`[...(`);
     }
-    push(`_cache[${node2.index}] || (`);
+    push(`_cache[${node.index}] || (`);
     if (needPauseTracking) {
       indent();
       push(`${helper(SET_BLOCK_TRACKING)}(-1`);
-      if (node2.inVOnce) push(`, true`);
+      if (node.inVOnce) push(`, true`);
       push(`),`);
       newline();
       push(`(`);
     }
-    push(`_cache[${node2.index}] = `);
-    genNode(node2.value, context);
+    push(`_cache[${node.index}] = `);
+    genNode(node.value, context);
     if (needPauseTracking) {
-      push(`).cacheIndex = ${node2.index},`);
+      push(`).cacheIndex = ${node.index},`);
       newline();
       push(`${helper(SET_BLOCK_TRACKING)}(1),`);
       newline();
-      push(`_cache[${node2.index}]`);
+      push(`_cache[${node.index}]`);
       deindent();
     }
     push(`)`);
@@ -23726,13 +23699,13 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
       push(`)]`);
     }
   }
-  function genTemplateLiteral(node2, context) {
+  function genTemplateLiteral(node, context) {
     const { push, indent, deindent } = context;
     push("`");
-    const l = node2.elements.length;
+    const l = node.elements.length;
     const multilines = l > 3;
     for (let i = 0; i < l; i++) {
-      const e = node2.elements[i];
+      const e = node.elements[i];
       if (shared.isString(e)) {
         push(
           e.replace(/(`|\$|\\)/g, "\\$1"),
@@ -23749,9 +23722,9 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
     }
     push("`");
   }
-  function genIfStatement(node2, context) {
+  function genIfStatement(node, context) {
     const { push, indent, deindent } = context;
-    const { test, consequent, alternate } = node2;
+    const { test, consequent, alternate } = node;
     push(`if (`);
     genNode(test, context);
     push(`) {`);
@@ -23772,14 +23745,14 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
       }
     }
   }
-  function genAssignmentExpression(node2, context) {
-    genNode(node2.left, context);
+  function genAssignmentExpression(node, context) {
+    genNode(node.left, context);
     context.push(` = `);
-    genNode(node2.right, context);
+    genNode(node.right, context);
   }
-  function genSequenceExpression(node2, context) {
+  function genSequenceExpression(node, context) {
     context.push(`(`);
-    genNodeList(node2.expressions, context);
+    genNodeList(node.expressions, context);
     context.push(`)`);
   }
   function genReturnStatement({ returns }, context) {
@@ -23791,16 +23764,16 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
     }
   }
   const isLiteralWhitelisted = /* @__PURE__ */ shared.makeMap("true,false,null,this");
-  const transformExpression = (node2, context) => {
-    if (node2.type === 5) {
-      node2.content = processExpression(
-        node2.content,
+  const transformExpression = (node, context) => {
+    if (node.type === 5) {
+      node.content = processExpression(
+        node.content,
         context
       );
-    } else if (node2.type === 1) {
-      const memo = findDir(node2, "memo");
-      for (let i = 0; i < node2.props.length; i++) {
-        const dir = node2.props[i];
+    } else if (node.type === 1) {
+      const memo = findDir(node, "memo");
+      for (let i = 0; i < node.props.length; i++) {
+        const dir = node.props[i];
         if (dir.type === 7 && dir.name !== "for") {
           const exp = dir.exp;
           const arg = dir.arg;
@@ -23820,9 +23793,9 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
       }
     }
   };
-  function processExpression(node2, context, asParams = false, asRawStatements = false, localVars = Object.create(context.identifiers)) {
-    if (!context.prefixIdentifiers || !node2.content.trim()) {
-      return node2;
+  function processExpression(node, context, asParams = false, asRawStatements = false, localVars = Object.create(context.identifiers)) {
+    if (!context.prefixIdentifiers || !node.content.trim()) {
+      return node;
     }
     const { inline, bindingMetadata } = context;
     const rewriteIdentifier = (raw, parent, id) => {
@@ -23886,10 +23859,10 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
       }
       return `_ctx.${raw}`;
     };
-    const rawExp = node2.content;
-    let ast = node2.ast;
+    const rawExp = node.content;
+    let ast = node.ast;
     if (ast === false) {
-      return node2;
+      return node;
     }
     if (ast === null || !ast && isSimpleIdentifier(rawExp)) {
       const isScopeVarReference = context.identifiers[rawExp];
@@ -23897,17 +23870,17 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
       const isLiteral = isLiteralWhitelisted(rawExp);
       if (!asParams && !isScopeVarReference && !isLiteral && (!isAllowedGlobal || bindingMetadata[rawExp])) {
         if (isConst(bindingMetadata[rawExp])) {
-          node2.constType = 1;
+          node.constType = 1;
         }
-        node2.content = rewriteIdentifier(rawExp);
+        node.content = rewriteIdentifier(rawExp);
       } else if (!isScopeVarReference) {
         if (isLiteral) {
-          node2.constType = 3;
+          node.constType = 3;
         } else {
-          node2.constType = 2;
+          node.constType = 2;
         }
       }
-      return node2;
+      return node;
     }
     if (!ast) {
       const source = asRawStatements ? ` ${rawExp} ` : `(${rawExp})${asParams ? `=>{}` : ``}`;
@@ -23920,12 +23893,12 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
         context.onError(
           createCompilerError(
             45,
-            node2.loc,
+            node.loc,
             void 0,
             e.message
           )
         );
-        return node2;
+        return node;
       }
     }
     const ids = [];
@@ -23933,25 +23906,25 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
     const knownIds = Object.create(context.identifiers);
     walkIdentifiers(
       ast,
-      (node22, parent, _, isReferenced2, isLocal) => {
-        if (isStaticPropertyKey(node22, parent)) {
+      (node2, parent, _, isReferenced2, isLocal) => {
+        if (isStaticPropertyKey(node2, parent)) {
           return;
         }
-        if (node22.name.startsWith("_filter_")) {
+        if (node2.name.startsWith("_filter_")) {
           return;
         }
-        const needPrefix = isReferenced2 && canPrefix(node22);
+        const needPrefix = isReferenced2 && canPrefix(node2);
         if (needPrefix && !isLocal) {
           if (isStaticProperty(parent) && parent.shorthand) {
-            node22.prefix = `${node22.name}: `;
+            node2.prefix = `${node2.name}: `;
           }
-          node22.name = rewriteIdentifier(node22.name, parent, node22);
-          ids.push(node22);
+          node2.name = rewriteIdentifier(node2.name, parent, node2);
+          ids.push(node2);
         } else {
           if (!(needPrefix && isLocal) && (!parent || parent.type !== "CallExpression" && parent.type !== "NewExpression" && parent.type !== "MemberExpression")) {
-            node22.isConstant = true;
+            node2.isConstant = true;
           }
-          ids.push(node22);
+          ids.push(node2);
         }
       },
       true,
@@ -23975,8 +23948,8 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
           id.name,
           false,
           {
-            start: advancePositionWithClone(node2.loc.start, source, start),
-            end: advancePositionWithClone(node2.loc.start, source, end),
+            start: advancePositionWithClone(node.loc.start, source, start),
+            end: advancePositionWithClone(node.loc.start, source, end),
             source
           },
           id.isConstant ? 3 : 0
@@ -23988,10 +23961,10 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
     });
     let ret;
     if (children.length) {
-      ret = createCompoundExpression(children, node2.loc);
+      ret = createCompoundExpression(children, node.loc);
       ret.ast = ast;
     } else {
-      ret = node2;
+      ret = node;
       ret.constType = 3;
     }
     ret.identifiers = Object.keys(knownIds);
@@ -24020,8 +23993,8 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
   }
   const transformIf = createStructuralDirectiveTransform(
     /^(if|else|else-if)$/,
-    (node2, dir, context) => {
-      return processIf(node2, dir, context, (ifNode, branch, isRoot) => {
+    (node, dir, context) => {
+      return processIf(node, dir, context, (ifNode, branch, isRoot) => {
         const siblings = context.parent.children;
         let i = siblings.indexOf(ifNode);
         let key = 0;
@@ -24050,9 +24023,9 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
       });
     }
   );
-  function processIf(node2, dir, context, processCodegen) {
+  function processIf(node, dir, context, processCodegen) {
     if (dir.name !== "else" && (!dir.exp || !dir.exp.content.trim())) {
-      const loc = dir.exp ? dir.exp.loc : node2.loc;
+      const loc = dir.exp ? dir.exp.loc : node.loc;
       context.onError(
         createCompilerError(28, dir.loc)
       );
@@ -24062,10 +24035,10 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
       dir.exp = processExpression(dir.exp, context);
     }
     if (dir.name === "if") {
-      const branch = createIfBranch(node2, dir);
+      const branch = createIfBranch(node, dir);
       const ifNode = {
         type: 9,
-        loc: cloneLoc(node2.loc),
+        loc: cloneLoc(node.loc),
         branches: [branch]
       };
       context.replaceNode(ifNode);
@@ -24075,7 +24048,7 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
     } else {
       const siblings = context.parent.children;
       const comments = [];
-      let i = siblings.indexOf(node2);
+      let i = siblings.indexOf(node);
       while (i-- >= -1) {
         const sibling = siblings[i];
         if (sibling && sibling.type === 3) {
@@ -24090,11 +24063,11 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
         if (sibling && sibling.type === 9) {
           if (dir.name === "else-if" && sibling.branches[sibling.branches.length - 1].condition === void 0) {
             context.onError(
-              createCompilerError(30, node2.loc)
+              createCompilerError(30, node.loc)
             );
           }
           context.removeNode();
-          const branch = createIfBranch(node2, dir);
+          const branch = createIfBranch(node, dir);
           if (comments.length && // #3619 ignore comments if the v-if is direct child of <transition>
           !(context.parent && context.parent.type === 1 && (context.parent.tag === "transition" || context.parent.tag === "Transition"))) {
             branch.children = [...comments, ...branch.children];
@@ -24121,21 +24094,21 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
           context.currentNode = null;
         } else {
           context.onError(
-            createCompilerError(30, node2.loc)
+            createCompilerError(30, node.loc)
           );
         }
         break;
       }
     }
   }
-  function createIfBranch(node2, dir) {
-    const isTemplateIf = node2.tagType === 3;
+  function createIfBranch(node, dir) {
+    const isTemplateIf = node.tagType === 3;
     return {
       type: 10,
-      loc: node2.loc,
+      loc: node.loc,
       condition: dir.name === "else" ? void 0 : dir.exp,
-      children: isTemplateIf && !findDir(node2, "for") ? node2.children : [node2],
-      userKey: findProp(node2, `key`),
+      children: isTemplateIf && !findDir(node, "for") ? node.children : [node],
+      userKey: findProp(node, `key`),
       isTemplateIf
     };
   }
@@ -24223,16 +24196,16 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
     }
     return true;
   }
-  function getParentCondition(node2) {
+  function getParentCondition(node) {
     while (true) {
-      if (node2.type === 19) {
-        if (node2.alternate.type === 19) {
-          node2 = node2.alternate;
+      if (node.type === 19) {
+        if (node.alternate.type === 19) {
+          node = node.alternate;
         } else {
-          return node2;
+          return node;
         }
-      } else if (node2.type === 20) {
-        node2 = node2.value;
+      } else if (node.type === 20) {
+        node = node.value;
       }
     }
   }
@@ -24321,15 +24294,15 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
   };
   const transformFor = createStructuralDirectiveTransform(
     "for",
-    (node2, dir, context) => {
+    (node, dir, context) => {
       const { helper, removeHelper } = context;
-      return processFor(node2, dir, context, (forNode) => {
+      return processFor(node, dir, context, (forNode) => {
         const renderExp = createCallExpression(helper(RENDER_LIST), [
           forNode.source
         ]);
-        const isTemplate = isTemplateNode(node2);
-        const memo = findDir(node2, "memo");
-        const keyProp = findProp(node2, `key`, false, true);
+        const isTemplate = isTemplateNode(node);
+        const memo = findDir(node, "memo");
+        const keyProp = findProp(node, `key`, false, true);
         const isDirKey = keyProp && keyProp.type === 7;
         if (isDirKey && !keyProp.exp) {
           transformBindShorthand(keyProp, context);
@@ -24371,13 +24344,13 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
           true,
           !isStableFragment,
           false,
-          node2.loc
+          node.loc
         );
         return () => {
           let childBlock;
           const { children } = forNode;
           if (isTemplate) {
-            node2.children.some((c) => {
+            node.children.some((c) => {
               if (c.type === 1) {
                 const key = findProp(c, "key");
                 if (key) {
@@ -24393,7 +24366,7 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
             });
           }
           const needFragmentWrapper = children.length !== 1 || children[0].type !== 1;
-          const slotOutlet = isSlotOutlet(node2) ? node2 : isTemplate && node2.children.length === 1 && isSlotOutlet(node2.children[0]) ? node2.children[0] : null;
+          const slotOutlet = isSlotOutlet(node) ? node : isTemplate && node.children.length === 1 && isSlotOutlet(node.children[0]) ? node.children[0] : null;
           if (slotOutlet) {
             childBlock = slotOutlet.codegenNode;
             if (isTemplate && keyProperty) {
@@ -24404,7 +24377,7 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
               context,
               helper(FRAGMENT),
               keyProperty ? createObjectExpression([keyProperty]) : void 0,
-              node2.children,
+              node.children,
               64,
               void 0,
               void 0,
@@ -24475,7 +24448,7 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
       });
     }
   );
-  function processFor(node2, dir, context, processCodegen) {
+  function processFor(node, dir, context, processCodegen) {
     if (!dir.exp) {
       context.onError(
         createCompilerError(31, dir.loc)
@@ -24500,7 +24473,7 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
       keyAlias: key,
       objectIndexAlias: index,
       parseResult,
-      children: isTemplateNode(node2) ? node2.children : [node2]
+      children: isTemplateNode(node) ? node.children : [node]
     };
     context.replaceNode(forNode);
     scopes.vFor++;
@@ -24562,9 +24535,9 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
     return args.slice(0, i + 1).map((arg, i2) => arg || createSimpleExpression(`_`.repeat(i2 + 1), false));
   }
   const defaultFallback = createSimpleExpression(`undefined`, false);
-  const trackSlotScopes = (node2, context) => {
-    if (node2.type === 1 && (node2.tagType === 1 || node2.tagType === 3)) {
-      const vSlot = findDir(node2, "slot");
+  const trackSlotScopes = (node, context) => {
+    if (node.type === 1 && (node.tagType === 1 || node.tagType === 3)) {
+      const vSlot = findDir(node, "slot");
       if (vSlot) {
         const slotProps = vSlot.exp;
         if (context.prefixIdentifiers) {
@@ -24580,9 +24553,9 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
       }
     }
   };
-  const trackVForSlotScopes = (node2, context) => {
+  const trackVForSlotScopes = (node, context) => {
     let vFor;
-    if (isTemplateNode(node2) && node2.props.some(isVSlot) && (vFor = findDir(node2, "for"))) {
+    if (isTemplateNode(node) && node.props.some(isVSlot) && (vFor = findDir(node, "for"))) {
       const result = vFor.forParseResult;
       if (result) {
         finalizeForParseResult(result, context);
@@ -24606,16 +24579,16 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
     true,
     children.length ? children[0].loc : loc
   );
-  function buildSlots(node2, context, buildSlotFn = buildClientSlotFn) {
+  function buildSlots(node, context, buildSlotFn = buildClientSlotFn) {
     context.helper(WITH_CTX);
-    const { children, loc } = node2;
+    const { children, loc } = node;
     const slotsProperties = [];
     const dynamicSlots = [];
     let hasDynamicSlots = context.scopes.vSlot > 0 || context.scopes.vFor > 0;
     if (!context.ssr && context.prefixIdentifiers) {
-      hasDynamicSlots = hasScopeRef(node2, context.identifiers);
+      hasDynamicSlots = hasScopeRef(node, context.identifiers);
     }
-    const onComponentSlot = findDir(node2, "slot", true);
+    const onComponentSlot = findDir(node, "slot", true);
     if (onComponentSlot) {
       const { arg, exp } = onComponentSlot;
       if (arg && !isStaticExp(arg)) {
@@ -24762,7 +24735,7 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
       } else if (implicitDefaultChildren.length && // #3766
       // with whitespace: 'preserve', whitespaces between slots will end up in
       // implicitDefaultChildren. Ignore if all implicit children are whitespaces.
-      implicitDefaultChildren.some((node22) => isNonWhitespaceContent(node22))) {
+      implicitDefaultChildren.some((node2) => isNonWhitespaceContent(node2))) {
         if (hasNamedDefaultSlot) {
           context.onError(
             createCompilerError(
@@ -24777,7 +24750,7 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
         }
       }
     }
-    const slotFlag = hasDynamicSlots ? 2 : hasForwardedSlots(node2.children) ? 3 : 1;
+    const slotFlag = hasDynamicSlots ? 2 : hasForwardedSlots(node.children) ? 3 : 1;
     let slots = createObjectExpression(
       slotsProperties.concat(
         createObjectProperty(
@@ -24835,21 +24808,21 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
     }
     return false;
   }
-  function isNonWhitespaceContent(node2) {
-    if (node2.type !== 2 && node2.type !== 12)
+  function isNonWhitespaceContent(node) {
+    if (node.type !== 2 && node.type !== 12)
       return true;
-    return node2.type === 2 ? !!node2.content.trim() : isNonWhitespaceContent(node2.content);
+    return node.type === 2 ? !!node.content.trim() : isNonWhitespaceContent(node.content);
   }
   const directiveImportMap = /* @__PURE__ */ new WeakMap();
-  const transformElement = (node2, context) => {
+  const transformElement = (node, context) => {
     return function postTransformElement() {
-      node2 = context.currentNode;
-      if (!(node2.type === 1 && (node2.tagType === 0 || node2.tagType === 1))) {
+      node = context.currentNode;
+      if (!(node.type === 1 && (node.tagType === 0 || node.tagType === 1))) {
         return;
       }
-      const { tag, props } = node2;
-      const isComponent2 = node2.tagType === 1;
-      let vnodeTag = isComponent2 ? resolveComponentType(node2, context) : `"${tag}"`;
+      const { tag, props } = node;
+      const isComponent2 = node.tagType === 1;
+      let vnodeTag = isComponent2 ? resolveComponentType(node, context) : `"${tag}"`;
       const isDynamicComponent = shared.isObject(vnodeTag) && vnodeTag.callee === RESOLVE_DYNAMIC_COMPONENT;
       let vnodeProps;
       let vnodeChildren;
@@ -24867,7 +24840,7 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
       );
       if (props.length > 0) {
         const propsBuildResult = buildProps(
-          node2,
+          node,
           context,
           void 0,
           isComponent2,
@@ -24884,15 +24857,15 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
           shouldUseBlock = true;
         }
       }
-      if (node2.children.length > 0) {
+      if (node.children.length > 0) {
         if (vnodeTag === KEEP_ALIVE) {
           shouldUseBlock = true;
           patchFlag |= 1024;
-          if (node2.children.length > 1) {
+          if (node.children.length > 1) {
             context.onError(
               createCompilerError(46, {
-                start: node2.children[0].loc.start,
-                end: node2.children[node2.children.length - 1].loc.end,
+                start: node.children[0].loc.start,
+                end: node.children[node.children.length - 1].loc.end,
                 source: ""
               })
             );
@@ -24902,13 +24875,13 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
         vnodeTag !== TELEPORT && // explained above.
         vnodeTag !== KEEP_ALIVE;
         if (shouldBuildAsSlots) {
-          const { slots, hasDynamicSlots } = buildSlots(node2, context);
+          const { slots, hasDynamicSlots } = buildSlots(node, context);
           vnodeChildren = slots;
           if (hasDynamicSlots) {
             patchFlag |= 1024;
           }
-        } else if (node2.children.length === 1 && vnodeTag !== TELEPORT) {
-          const child = node2.children[0];
+        } else if (node.children.length === 1 && vnodeTag !== TELEPORT) {
+          const child = node.children[0];
           const type = child.type;
           const hasDynamicTextChild = type === 5 || type === 8;
           if (hasDynamicTextChild && getConstantType(child, context) === 0) {
@@ -24917,16 +24890,16 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
           if (hasDynamicTextChild || type === 2) {
             vnodeChildren = child;
           } else {
-            vnodeChildren = node2.children;
+            vnodeChildren = node.children;
           }
         } else {
-          vnodeChildren = node2.children;
+          vnodeChildren = node.children;
         }
       }
       if (dynamicPropNames && dynamicPropNames.length) {
         vnodeDynamicProps = stringifyDynamicPropNames(dynamicPropNames);
       }
-      node2.codegenNode = createVNodeCall(
+      node.codegenNode = createVNodeCall(
         context,
         vnodeTag,
         vnodeProps,
@@ -24937,15 +24910,15 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
         !!shouldUseBlock,
         false,
         isComponent2,
-        node2.loc
+        node.loc
       );
     };
   };
-  function resolveComponentType(node2, context, ssr = false) {
-    let { tag } = node2;
+  function resolveComponentType(node, context, ssr = false) {
+    let { tag } = node;
     const isExplicitDynamic = isComponentTag(tag);
     const isProp = findProp(
-      node2,
+      node,
       "is",
       false,
       true
@@ -25041,8 +25014,8 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
       return `${context.helperString(UNREF)}(${context.inline ? "__props" : "$props"}[${JSON.stringify(fromProps)}])`;
     }
   }
-  function buildProps(node2, context, props = node2.props, isComponent2, isDynamicComponent, ssr = false) {
-    const { tag, loc: elementLoc, children } = node2;
+  function buildProps(node, context, props = node.props, isComponent2, isDynamicComponent, ssr = false) {
+    const { tag, loc: elementLoc, children } = node;
     let properties = [];
     const mergeArgs = [];
     const runtimeDirectives = [];
@@ -25243,7 +25216,7 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
         }
         const directiveTransform = context.directiveTransforms[name];
         if (directiveTransform) {
-          const { props: props2, needRuntime } = directiveTransform(prop, node2, context);
+          const { props: props2, needRuntime } = directiveTransform(prop, node, context);
           !ssr && props2.forEach(analyzePatchFlag);
           if (isVOn && arg && !isStaticExp(arg)) {
             pushMergeArg(createObjectExpression(props2, elementLoc));
@@ -25452,10 +25425,10 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
   function isComponentTag(tag) {
     return tag === "component" || tag === "Component";
   }
-  const transformSlotOutlet = (node2, context) => {
-    if (isSlotOutlet(node2)) {
-      const { children, loc } = node2;
-      const { slotName, slotProps } = processSlotOutlet(node2, context);
+  const transformSlotOutlet = (node, context) => {
+    if (isSlotOutlet(node)) {
+      const { children, loc } = node;
+      const { slotName, slotProps } = processSlotOutlet(node, context);
       const slotArgs = [
         context.prefixIdentifiers ? `_ctx.$slots` : `$slots`,
         slotName,
@@ -25476,19 +25449,19 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
         expectedLen = 5;
       }
       slotArgs.splice(expectedLen);
-      node2.codegenNode = createCallExpression(
+      node.codegenNode = createCallExpression(
         context.helper(RENDER_SLOT),
         slotArgs,
         loc
       );
     }
   };
-  function processSlotOutlet(node2, context) {
+  function processSlotOutlet(node, context) {
     let slotName = `"default"`;
     let slotProps = void 0;
     const nonNameProps = [];
-    for (let i = 0; i < node2.props.length; i++) {
-      const p = node2.props[i];
+    for (let i = 0; i < node.props.length; i++) {
+      const p = node.props[i];
       if (p.type === 6) {
         if (p.value) {
           if (p.name === "name") {
@@ -25519,7 +25492,7 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
     }
     if (nonNameProps.length > 0) {
       const { props, directives } = buildProps(
-        node2,
+        node,
         context,
         nonNameProps,
         false,
@@ -25540,7 +25513,7 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
       slotProps
     };
   }
-  const transformOn = (dir, node2, context, augmentor) => {
+  const transformOn = (dir, node, context, augmentor) => {
     const { loc, modifiers, arg } = dir;
     if (!dir.exp && !modifiers.length) {
       context.onError(createCompilerError(35, loc));
@@ -25555,7 +25528,7 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
         if (rawName.startsWith("vue:")) {
           rawName = `vnode-${rawName.slice(4)}`;
         }
-        const eventString = node2.tagType !== 0 || rawName.startsWith("vnode") || !/[A-Z]/.test(rawName) ? (
+        const eventString = node.tagType !== 0 || rawName.startsWith("vnode") || !/[A-Z]/.test(rawName) ? (
           // for non-element and vnode lifecycle event listeners, auto convert
           // it to camelCase. See issue #2249
           shared.toHandlerKey(shared.camelize(rawName))
@@ -25603,7 +25576,7 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
         // e.g. <transition> relies on checking cb.length to determine
         // transition end handling. Inline function is ok since its arity
         // is preserved even when cached.
-        !(isMemberExp && node2.tagType === 1) && // bail if the function references closure variables (v-for, v-slot)
+        !(isMemberExp && node.tagType === 1) && // bail if the function references closure variables (v-for, v-slot)
         // it must be passed fresh to avoid stale values.
         !hasScopeRef(exp, context.identifiers);
         if (shouldCache && isMemberExp) {
@@ -25641,10 +25614,10 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
     ret.props.forEach((p) => p.key.isHandlerKey = true);
     return ret;
   };
-  const transformText = (node2, context) => {
-    if (node2.type === 0 || node2.type === 1 || node2.type === 11 || node2.type === 10) {
+  const transformText = (node, context) => {
+    if (node.type === 0 || node.type === 1 || node.type === 11 || node.type === 10) {
       return () => {
-        const children = node2.children;
+        const children = node.children;
         let currentContainer = void 0;
         let hasText = false;
         for (let i = 0; i < children.length; i++) {
@@ -25674,17 +25647,17 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
         // as-is since the runtime has dedicated fast path for this by directly
         // setting textContent of the element.
         // for component root it's always normalized anyway.
-        children.length === 1 && (node2.type === 0 || node2.type === 1 && node2.tagType === 0 && // #3756
+        children.length === 1 && (node.type === 0 || node.type === 1 && node.tagType === 0 && // #3756
         // custom directives can potentially add DOM elements arbitrarily,
         // we need to avoid setting textContent of the element at runtime
         // to avoid accidentally overwriting the DOM elements added
         // by the user through custom directives.
-        !node2.props.find(
+        !node.props.find(
           (p) => p.type === 7 && !context.directiveTransforms[p.name]
         ) && // in compat mode, <template> tags with no special directives
         // will be rendered as a fragment so its children must be
         // converted into vnodes.
-        !(node2.tag === "template"))) {
+        !(node.tag === "template"))) {
           return;
         }
         for (let i = 0; i < children.length; i++) {
@@ -25714,12 +25687,12 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
     }
   };
   const seen$1 = /* @__PURE__ */ new WeakSet();
-  const transformOnce = (node2, context) => {
-    if (node2.type === 1 && findDir(node2, "once", true)) {
-      if (seen$1.has(node2) || context.inVOnce || context.inSSR) {
+  const transformOnce = (node, context) => {
+    if (node.type === 1 && findDir(node, "once", true)) {
+      if (seen$1.has(node) || context.inVOnce || context.inSSR) {
         return;
       }
-      seen$1.add(node2);
+      seen$1.add(node);
       context.inVOnce = true;
       context.helper(SET_BLOCK_TRACKING);
       return () => {
@@ -25735,7 +25708,7 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
       };
     }
   };
-  const transformModel = (dir, node2, context) => {
+  const transformModel = (dir, node, context) => {
     const { exp, arg } = dir;
     if (!exp) {
       context.onError(
@@ -25798,7 +25771,7 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
     if (context.prefixIdentifiers && !context.inVOnce && context.cacheHandlers && !hasScopeRef(exp, context.identifiers)) {
       props[1].value = context.cache(props[1].value);
     }
-    if (dir.modifiers.length && node2.tagType === 1) {
+    if (dir.modifiers.length && node.tagType === 1) {
       const modifiers = dir.modifiers.map((m) => m.content).map((m) => (isSimpleIdentifier(m) ? m : JSON.stringify(m)) + `: true`).join(`, `);
       const modifiersKey = arg ? isStaticExp(arg) ? `${arg.content}Modifiers` : createCompoundExpression([arg, ' + "Modifiers"']) : `modelModifiers`;
       props.push(
@@ -25819,39 +25792,39 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
     return { props };
   }
   const validDivisionCharRE = /[\w).+\-_$\]]/;
-  const transformFilter = (node2, context) => {
+  const transformFilter = (node, context) => {
     if (!isCompatEnabled("COMPILER_FILTERS", context)) {
       return;
     }
-    if (node2.type === 5) {
-      rewriteFilter(node2.content, context);
-    } else if (node2.type === 1) {
-      node2.props.forEach((prop) => {
+    if (node.type === 5) {
+      rewriteFilter(node.content, context);
+    } else if (node.type === 1) {
+      node.props.forEach((prop) => {
         if (prop.type === 7 && prop.name !== "for" && prop.exp) {
           rewriteFilter(prop.exp, context);
         }
       });
     }
   };
-  function rewriteFilter(node2, context) {
-    if (node2.type === 4) {
-      parseFilter(node2, context);
+  function rewriteFilter(node, context) {
+    if (node.type === 4) {
+      parseFilter(node, context);
     } else {
-      for (let i = 0; i < node2.children.length; i++) {
-        const child = node2.children[i];
+      for (let i = 0; i < node.children.length; i++) {
+        const child = node.children[i];
         if (typeof child !== "object") continue;
         if (child.type === 4) {
           parseFilter(child, context);
         } else if (child.type === 8) {
-          rewriteFilter(node2, context);
+          rewriteFilter(node, context);
         } else if (child.type === 5) {
           rewriteFilter(child.content, context);
         }
       }
     }
   }
-  function parseFilter(node2, context) {
-    const exp = node2.content;
+  function parseFilter(node, context) {
+    const exp = node.content;
     let inSingle = false;
     let inDouble = false;
     let inTemplateString = false;
@@ -25936,13 +25909,13 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
       warnDeprecation(
         "COMPILER_FILTERS",
         context,
-        node2.loc
+        node.loc
       );
       for (i = 0; i < filters.length; i++) {
         expression = wrapFilter(expression, filters[i], context);
       }
-      node2.content = expression;
-      node2.ast = void 0;
+      node.content = expression;
+      node.ast = void 0;
     }
   }
   function wrapFilter(exp, filter, context) {
@@ -25959,20 +25932,20 @@ const ${helpers.map((s) => `_${helperNameMap[s]} = ${helperNameMap[s]}`).join(",
     }
   }
   const seen = /* @__PURE__ */ new WeakSet();
-  const transformMemo = (node2, context) => {
-    if (node2.type === 1) {
-      const dir = findDir(node2, "memo");
-      if (!dir || seen.has(node2)) {
+  const transformMemo = (node, context) => {
+    if (node.type === 1) {
+      const dir = findDir(node, "memo");
+      if (!dir || seen.has(node)) {
         return;
       }
-      seen.add(node2);
+      seen.add(node);
       return () => {
-        const codegenNode = node2.codegenNode || context.currentNode.codegenNode;
+        const codegenNode = node.codegenNode || context.currentNode.codegenNode;
         if (codegenNode && codegenNode.type === 13) {
-          if (node2.tagType !== 1) {
+          if (node.tagType !== 1) {
             convertToBlock(codegenNode, context);
           }
-          node2.codegenNode = createCallExpression(context.helper(WITH_MEMO), [
+          node.codegenNode = createCallExpression(context.helper(WITH_MEMO), [
             dir.exp,
             createFunctionExpression(void 0, codegenNode),
             `_cache`,
@@ -26294,11 +26267,11 @@ function requireCompilerDom_cjs() {
         return ns;
       }
     };
-    const transformStyle = (node2) => {
-      if (node2.type === 1) {
-        node2.props.forEach((p, i) => {
+    const transformStyle = (node) => {
+      if (node.type === 1) {
+        node.props.forEach((p, i) => {
           if (p.type === 6 && p.name === "style" && p.value) {
-            node2.props[i] = {
+            node.props[i] = {
               type: 7,
               name: `bind`,
               arg: compilerCore.createSimpleExpression(`style`, true, p.loc),
@@ -26365,18 +26338,18 @@ function requireCompilerDom_cjs() {
       [62]: `<Transition> expects exactly one child element or component.`,
       [63]: `Tags with side effect (<script> and <style>) are ignored in client component templates.`
     };
-    const transformVHtml = (dir, node2, context) => {
+    const transformVHtml = (dir, node, context) => {
       const { exp, loc } = dir;
       if (!exp) {
         context.onError(
           createDOMCompilerError(53, loc)
         );
       }
-      if (node2.children.length) {
+      if (node.children.length) {
         context.onError(
           createDOMCompilerError(54, loc)
         );
-        node2.children.length = 0;
+        node.children.length = 0;
       }
       return {
         props: [
@@ -26387,18 +26360,18 @@ function requireCompilerDom_cjs() {
         ]
       };
     };
-    const transformVText = (dir, node2, context) => {
+    const transformVText = (dir, node, context) => {
       const { exp, loc } = dir;
       if (!exp) {
         context.onError(
           createDOMCompilerError(55, loc)
         );
       }
-      if (node2.children.length) {
+      if (node.children.length) {
         context.onError(
           createDOMCompilerError(56, loc)
         );
-        node2.children.length = 0;
+        node.children.length = 0;
       }
       return {
         props: [
@@ -26413,9 +26386,9 @@ function requireCompilerDom_cjs() {
         ]
       };
     };
-    const transformModel = (dir, node2, context) => {
-      const baseResult = compilerCore.transformModel(dir, node2, context);
-      if (!baseResult.props.length || node2.tagType === 1) {
+    const transformModel = (dir, node, context) => {
+      const baseResult = compilerCore.transformModel(dir, node, context);
+      if (!baseResult.props.length || node.tagType === 1) {
         return baseResult;
       }
       if (dir.arg) {
@@ -26427,7 +26400,7 @@ function requireCompilerDom_cjs() {
         );
       }
       function checkDuplicatedValue() {
-        const value = compilerCore.findDir(node2, "bind");
+        const value = compilerCore.findDir(node, "bind");
         if (value && compilerCore.isStaticArgOf(value.arg, "value")) {
           context.onError(
             createDOMCompilerError(
@@ -26437,13 +26410,13 @@ function requireCompilerDom_cjs() {
           );
         }
       }
-      const { tag } = node2;
+      const { tag } = node;
       const isCustomElement = context.isCustomElement(tag);
       if (tag === "input" || tag === "textarea" || tag === "select" || isCustomElement) {
         let directiveToUse = V_MODEL_TEXT;
         let isInvalidType = false;
         if (tag === "input" || isCustomElement) {
-          const type = compilerCore.findProp(node2, `type`);
+          const type = compilerCore.findProp(node, `type`);
           if (type) {
             if (type.type === 7) {
               directiveToUse = V_MODEL_DYNAMIC;
@@ -26469,7 +26442,7 @@ function requireCompilerDom_cjs() {
                   break;
               }
             }
-          } else if (compilerCore.hasDynamicKeyVBind(node2)) {
+          } else if (compilerCore.hasDynamicKeyVBind(node)) {
             directiveToUse = V_MODEL_DYNAMIC;
           } else {
             checkDuplicatedValue();
@@ -26553,8 +26526,8 @@ function requireCompilerDom_cjs() {
         `)`
       ]) : key;
     };
-    const transformOn = (dir, node2, context) => {
-      return compilerCore.transformOn(dir, node2, context, (baseResult) => {
+    const transformOn = (dir, node, context) => {
+      return compilerCore.transformOn(dir, node, context, (baseResult) => {
         const { modifiers } = dir;
         if (!modifiers.length) return baseResult;
         let { key, value: handlerExp } = baseResult.props[0];
@@ -26587,7 +26560,7 @@ function requireCompilerDom_cjs() {
         };
       });
     };
-    const transformShow = (dir, node2, context) => {
+    const transformShow = (dir, node, context) => {
       const { exp, loc } = dir;
       if (!exp) {
         context.onError(
@@ -26599,36 +26572,36 @@ function requireCompilerDom_cjs() {
         needRuntime: context.helper(V_SHOW)
       };
     };
-    const transformTransition = (node2, context) => {
-      if (node2.type === 1 && node2.tagType === 1) {
-        const component = context.isBuiltInComponent(node2.tag);
+    const transformTransition = (node, context) => {
+      if (node.type === 1 && node.tagType === 1) {
+        const component = context.isBuiltInComponent(node.tag);
         if (component === TRANSITION) {
           return () => {
-            if (!node2.children.length) {
+            if (!node.children.length) {
               return;
             }
-            if (hasMultipleChildren(node2)) {
+            if (hasMultipleChildren(node)) {
               context.onError(
                 createDOMCompilerError(
                   62,
                   {
-                    start: node2.children[0].loc.start,
-                    end: node2.children[node2.children.length - 1].loc.end,
+                    start: node.children[0].loc.start,
+                    end: node.children[node.children.length - 1].loc.end,
                     source: ""
                   }
                 )
               );
             }
-            const child = node2.children[0];
+            const child = node.children[0];
             if (child.type === 1) {
               for (const p of child.props) {
                 if (p.type === 7 && p.name === "show") {
-                  node2.props.push({
+                  node.props.push({
                     type: 6,
                     name: "persisted",
-                    nameLoc: node2.loc,
+                    nameLoc: node.loc,
                     value: void 0,
-                    loc: node2.loc
+                    loc: node.loc
                   });
                 }
               }
@@ -26637,8 +26610,8 @@ function requireCompilerDom_cjs() {
         }
       }
     };
-    function hasMultipleChildren(node2) {
-      const children = node2.children = node2.children.filter(
+    function hasMultipleChildren(node) {
+      const children = node.children = node.children.filter(
         (c) => c.type !== 3 && !(c.type === 2 && !c.content.trim())
       );
       const child = children[0];
@@ -26657,7 +26630,7 @@ function requireCompilerDom_cjs() {
         if (nc >= 20 || ec >= 5) {
           const staticCall = compilerCore.createCallExpression(context.helper(compilerCore.CREATE_STATIC), [
             JSON.stringify(
-              currentChunk.map((node2) => stringifyNode(node2, context)).join("")
+              currentChunk.map((node) => stringifyNode(node, context)).join("")
             ).replace(expReplaceRE, `" + $1 + "`),
             // the 2nd argument indicates the number of DOM nodes this static vnode
             // will insert / hydrate
@@ -26711,9 +26684,9 @@ function requireCompilerDom_cjs() {
       }
       stringifyCurrentChunk(i);
     };
-    const getCachedNode = (node2) => {
-      if ((node2.type === 1 && node2.tagType === 0 || node2.type === 12) && node2.codegenNode && node2.codegenNode.type === 20) {
-        return node2.codegenNode;
+    const getCachedNode = (node) => {
+      if ((node.type === 1 && node.tagType === 0 || node.type === 12) && node.codegenNode && node.codegenNode.type === 20) {
+        return node.codegenNode;
       }
     };
     const dataAriaRE = /^(data|aria)-/;
@@ -26723,29 +26696,29 @@ function requireCompilerDom_cjs() {
     const isNonStringifiable = /* @__PURE__ */ shared.makeMap(
       `caption,thead,tr,th,tbody,td,tfoot,colgroup,col`
     );
-    function analyzeNode(node2) {
-      if (node2.type === 1 && isNonStringifiable(node2.tag)) {
+    function analyzeNode(node) {
+      if (node.type === 1 && isNonStringifiable(node.tag)) {
         return false;
       }
-      if (node2.type === 12) {
+      if (node.type === 12) {
         return [1, 0];
       }
       let nc = 1;
-      let ec = node2.props.length > 0 ? 1 : 0;
+      let ec = node.props.length > 0 ? 1 : 0;
       let bailed = false;
       const bail = () => {
         bailed = true;
         return false;
       };
-      function walk(node22) {
-        const isOptionTag = node22.tag === "option" && node22.ns === 0;
-        for (let i = 0; i < node22.props.length; i++) {
-          const p = node22.props[i];
-          if (p.type === 6 && !isStringifiableAttr(p.name, node22.ns)) {
+      function walk(node2) {
+        const isOptionTag = node2.tag === "option" && node2.ns === 0;
+        for (let i = 0; i < node2.props.length; i++) {
+          const p = node2.props[i];
+          if (p.type === 6 && !isStringifiableAttr(p.name, node2.ns)) {
             return bail();
           }
           if (p.type === 7 && p.name === "bind") {
-            if (p.arg && (p.arg.type === 8 || p.arg.isStatic && !isStringifiableAttr(p.arg.content, node22.ns))) {
+            if (p.arg && (p.arg.type === 8 || p.arg.isStatic && !isStringifiableAttr(p.arg.content, node2.ns))) {
               return bail();
             }
             if (p.exp && (p.exp.type === 8 || p.exp.constType < 3)) {
@@ -26756,9 +26729,9 @@ function requireCompilerDom_cjs() {
             }
           }
         }
-        for (let i = 0; i < node22.children.length; i++) {
+        for (let i = 0; i < node2.children.length; i++) {
           nc++;
-          const child = node22.children[i];
+          const child = node2.children[i];
           if (child.type === 1) {
             if (child.props.length > 0) {
               ec++;
@@ -26771,37 +26744,37 @@ function requireCompilerDom_cjs() {
         }
         return true;
       }
-      return walk(node2) ? [nc, ec] : false;
+      return walk(node) ? [nc, ec] : false;
     }
-    function stringifyNode(node2, context) {
-      if (shared.isString(node2)) {
-        return node2;
+    function stringifyNode(node, context) {
+      if (shared.isString(node)) {
+        return node;
       }
-      if (shared.isSymbol(node2)) {
+      if (shared.isSymbol(node)) {
         return ``;
       }
-      switch (node2.type) {
+      switch (node.type) {
         case 1:
-          return stringifyElement(node2, context);
+          return stringifyElement(node, context);
         case 2:
-          return shared.escapeHtml(node2.content);
+          return shared.escapeHtml(node.content);
         case 3:
-          return `<!--${shared.escapeHtml(node2.content)}-->`;
+          return `<!--${shared.escapeHtml(node.content)}-->`;
         case 5:
-          return shared.escapeHtml(shared.toDisplayString(evaluateConstant(node2.content)));
+          return shared.escapeHtml(shared.toDisplayString(evaluateConstant(node.content)));
         case 8:
-          return shared.escapeHtml(evaluateConstant(node2));
+          return shared.escapeHtml(evaluateConstant(node));
         case 12:
-          return stringifyNode(node2.content, context);
+          return stringifyNode(node.content, context);
         default:
           return "";
       }
     }
-    function stringifyElement(node2, context) {
-      let res = `<${node2.tag}`;
+    function stringifyElement(node, context) {
+      let res = `<${node.tag}`;
       let innerHTML = "";
-      for (let i = 0; i < node2.props.length; i++) {
-        const p = node2.props[i];
+      for (let i = 0; i < node.props.length; i++) {
+        const p = node.props[i];
         if (p.type === 6) {
           res += ` ${p.name}`;
           if (p.value) {
@@ -26845,12 +26818,12 @@ function requireCompilerDom_cjs() {
       if (innerHTML) {
         res += innerHTML;
       } else {
-        for (let i = 0; i < node2.children.length; i++) {
-          res += stringifyNode(node2.children[i], context);
+        for (let i = 0; i < node.children.length; i++) {
+          res += stringifyNode(node.children[i], context);
         }
       }
-      if (!shared.isVoidTag(node2.tag)) {
-        res += `</${node2.tag}>`;
+      if (!shared.isVoidTag(node.tag)) {
+        res += `</${node.tag}>`;
       }
       return res;
     }
@@ -26874,12 +26847,12 @@ function requireCompilerDom_cjs() {
         return res;
       }
     }
-    const ignoreSideEffectTags = (node2, context) => {
-      if (node2.type === 1 && node2.tagType === 0 && (node2.tag === "script" || node2.tag === "style")) {
+    const ignoreSideEffectTags = (node, context) => {
+      if (node.type === 1 && node.tagType === 0 && (node.tag === "script" || node.tag === "style")) {
         context.onError(
           createDOMCompilerError(
             63,
-            node2.loc
+            node.loc
           )
         );
         context.removeNode();
@@ -27046,12 +27019,12 @@ function requireCompilerDom_cjs() {
       h5: headings,
       h6: headings
     };
-    const validateHtmlNesting = (node2, context) => {
-      if (node2.type === 1 && node2.tagType === 0 && context.parent && context.parent.type === 1 && context.parent.tagType === 0 && !isValidHTMLNesting(context.parent.tag, node2.tag)) {
+    const validateHtmlNesting = (node, context) => {
+      if (node.type === 1 && node.tagType === 0 && context.parent && context.parent.type === 1 && context.parent.tagType === 0 && !isValidHTMLNesting(context.parent.tag, node.tag)) {
         const error = new SyntaxError(
-          `<${node2.tag}> cannot be child of <${context.parent.tag}>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.`
+          `<${node.tag}> cannot be child of <${context.parent.tag}>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.`
         );
-        error.loc = node2.loc;
+        error.loc = node.loc;
         context.onWarn(error);
       }
     };
@@ -27069,9 +27042,9 @@ function requireCompilerDom_cjs() {
       // override compiler-core
       show: transformShow
     };
-    function compile(src2, options = {}) {
+    function compile(src, options = {}) {
       return compilerCore.baseCompile(
-        src2,
+        src,
         shared.extend({}, parserOptions, options, {
           nodeTransforms: [
             // ignore <script> and <tag>
@@ -29022,8 +28995,8 @@ function requireRuntimeCore_cjs() {
         [
           // eslint-disable-next-line no-restricted-syntax
           msg + args.map((a) => {
-            var _a, _b;
-            return (_b = (_a = a.toString) == null ? void 0 : _a.call(a)) != null ? _b : JSON.stringify(a);
+            var _a2, _b;
+            return (_b = (_a2 = a.toString) == null ? void 0 : _a2.call(a)) != null ? _b : JSON.stringify(a);
           }).join(""),
           instance && instance.proxy,
           trace.map(
@@ -29561,7 +29534,7 @@ function requireRuntimeCore_cjs() {
     }
   }
   function setDevtoolsHook$1(hook, target) {
-    var _a, _b;
+    var _a2, _b;
     devtools$1 = hook;
     if (devtools$1) {
       devtools$1.enabled = true;
@@ -29574,7 +29547,7 @@ function requireRuntimeCore_cjs() {
       typeof window !== "undefined" && // some envs mock window but not fully
       window.HTMLElement && // also exclude jsdom
       // eslint-disable-next-line no-restricted-syntax
-      !((_b = (_a = window.navigator) == null ? void 0 : _a.userAgent) == null ? void 0 : _b.includes("jsdom"))
+      !((_b = (_a2 = window.navigator) == null ? void 0 : _a2.userAgent) == null ? void 0 : _b.includes("jsdom"))
     ) {
       const replay = target.__VUE_DEVTOOLS_HOOK_REPLAY__ = target.__VUE_DEVTOOLS_HOOK_REPLAY__ || [];
       replay.push((newHook) => {
@@ -30019,7 +29992,7 @@ function requireRuntimeCore_cjs() {
       insert(anchor, container, parentAnchor);
     }
   }
-  function hydrateTeleport(node2, vnode, parentComponent, parentSuspense, slotScopeIds, optimized, {
+  function hydrateTeleport(node, vnode, parentComponent, parentSuspense, slotScopeIds, optimized, {
     o: { nextSibling, parentNode, querySelector, insert, createText }
   }, hydrateChildren) {
     const target = vnode.target = resolveTarget(
@@ -30032,9 +30005,9 @@ function requireRuntimeCore_cjs() {
       if (vnode.shapeFlag & 16) {
         if (disabled) {
           vnode.anchor = hydrateChildren(
-            nextSibling(node2),
+            nextSibling(node),
             vnode,
-            parentNode(node2),
+            parentNode(node),
             parentComponent,
             parentSuspense,
             slotScopeIds,
@@ -30043,7 +30016,7 @@ function requireRuntimeCore_cjs() {
           vnode.targetStart = targetNode;
           vnode.targetAnchor = targetNode && nextSibling(targetNode);
         } else {
-          vnode.anchor = nextSibling(node2);
+          vnode.anchor = nextSibling(node);
           let targetAnchor = targetNode;
           while (targetAnchor) {
             if (targetAnchor && targetAnchor.nodeType === 8) {
@@ -30079,17 +30052,17 @@ function requireRuntimeCore_cjs() {
   function updateCssVars(vnode, isDisabled) {
     const ctx = vnode.ctx;
     if (ctx && ctx.ut) {
-      let node2, anchor;
+      let node, anchor;
       if (isDisabled) {
-        node2 = vnode.el;
+        node = vnode.el;
         anchor = vnode.anchor;
       } else {
-        node2 = vnode.targetStart;
+        node = vnode.targetStart;
         anchor = vnode.targetAnchor;
       }
-      while (node2 && node2 !== anchor) {
-        if (node2.nodeType === 1) node2.setAttribute("data-v-owner", ctx.uid);
-        node2 = node2.nextSibling;
+      while (node && node !== anchor) {
+        if (node.nodeType === 1) node.setAttribute("data-v-owner", ctx.uid);
+        node = node.nextSibling;
       }
       ctx.ut();
     }
@@ -30631,7 +30604,7 @@ function requireRuntimeCore_cjs() {
     if (isMathMLContainer(container)) return "mathml";
     return void 0;
   };
-  const isComment = (node2) => node2.nodeType === 8;
+  const isComment = (node) => node.nodeType === 8;
   function createHydrationFunctions(rendererInternals) {
     const {
       mt: mountComponent,
@@ -30660,11 +30633,11 @@ function requireRuntimeCore_cjs() {
       flushPostFlushCbs();
       container._vnode = vnode;
     };
-    const hydrateNode = (node2, vnode, parentComponent, parentSuspense, slotScopeIds, optimized = false) => {
+    const hydrateNode = (node, vnode, parentComponent, parentSuspense, slotScopeIds, optimized = false) => {
       optimized = optimized || !!vnode.dynamicChildren;
-      const isFragmentStart = isComment(node2) && node2.data === "[";
+      const isFragmentStart = isComment(node) && node.data === "[";
       const onMismatch = () => handleMismatch(
-        node2,
+        node,
         vnode,
         parentComponent,
         parentSuspense,
@@ -30672,11 +30645,11 @@ function requireRuntimeCore_cjs() {
         isFragmentStart
       );
       const { type, ref, shapeFlag, patchFlag } = vnode;
-      let domType = node2.nodeType;
-      vnode.el = node2;
+      let domType = node.nodeType;
+      vnode.el = node;
       {
-        shared.def(node2, "__vnode", vnode, true);
-        shared.def(node2, "__vueParentComponent", parentComponent, true);
+        shared.def(node, "__vnode", vnode, true);
+        shared.def(node, "__vueParentComponent", parentComponent, true);
       }
       if (patchFlag === -2) {
         optimized = false;
@@ -30687,49 +30660,49 @@ function requireRuntimeCore_cjs() {
         case Text:
           if (domType !== 3) {
             if (vnode.children === "") {
-              insert(vnode.el = createText(""), parentNode(node2), node2);
-              nextNode = node2;
+              insert(vnode.el = createText(""), parentNode(node), node);
+              nextNode = node;
             } else {
               nextNode = onMismatch();
             }
           } else {
-            if (node2.data !== vnode.children) {
+            if (node.data !== vnode.children) {
               warn$1(
                 `Hydration text mismatch in`,
-                node2.parentNode,
+                node.parentNode,
                 `
   - rendered on server: ${JSON.stringify(
-                  node2.data
+                  node.data
                 )}
   - expected on client: ${JSON.stringify(vnode.children)}`
               );
               logMismatchError();
-              node2.data = vnode.children;
+              node.data = vnode.children;
             }
-            nextNode = nextSibling(node2);
+            nextNode = nextSibling(node);
           }
           break;
         case Comment:
-          if (isTemplateNode(node2)) {
-            nextNode = nextSibling(node2);
+          if (isTemplateNode(node)) {
+            nextNode = nextSibling(node);
             replaceNode(
-              vnode.el = node2.content.firstChild,
-              node2,
+              vnode.el = node.content.firstChild,
+              node,
               parentComponent
             );
           } else if (domType !== 8 || isFragmentStart) {
             nextNode = onMismatch();
           } else {
-            nextNode = nextSibling(node2);
+            nextNode = nextSibling(node);
           }
           break;
         case Static:
           if (isFragmentStart) {
-            node2 = nextSibling(node2);
-            domType = node2.nodeType;
+            node = nextSibling(node);
+            domType = node.nodeType;
           }
           if (domType === 1 || domType === 3) {
-            nextNode = node2;
+            nextNode = node;
             const needToAdoptContent = !vnode.children.length;
             for (let i = 0; i < vnode.staticCount; i++) {
               if (needToAdoptContent)
@@ -30749,7 +30722,7 @@ function requireRuntimeCore_cjs() {
             nextNode = onMismatch();
           } else {
             nextNode = hydrateFragment(
-              node2,
+              node,
               vnode,
               parentComponent,
               parentSuspense,
@@ -30760,11 +30733,11 @@ function requireRuntimeCore_cjs() {
           break;
         default:
           if (shapeFlag & 1) {
-            if ((domType !== 1 || vnode.type.toLowerCase() !== node2.tagName.toLowerCase()) && !isTemplateNode(node2)) {
+            if ((domType !== 1 || vnode.type.toLowerCase() !== node.tagName.toLowerCase()) && !isTemplateNode(node)) {
               nextNode = onMismatch();
             } else {
               nextNode = hydrateElement(
-                node2,
+                node,
                 vnode,
                 parentComponent,
                 parentSuspense,
@@ -30774,13 +30747,13 @@ function requireRuntimeCore_cjs() {
             }
           } else if (shapeFlag & 6) {
             vnode.slotScopeIds = slotScopeIds;
-            const container = parentNode(node2);
+            const container = parentNode(node);
             if (isFragmentStart) {
-              nextNode = locateClosingAnchor(node2);
-            } else if (isComment(node2) && node2.data === "teleport start") {
-              nextNode = locateClosingAnchor(node2, node2.data, "teleport end");
+              nextNode = locateClosingAnchor(node);
+            } else if (isComment(node) && node.data === "teleport start") {
+              nextNode = locateClosingAnchor(node, node.data, "teleport end");
             } else {
-              nextNode = nextSibling(node2);
+              nextNode = nextSibling(node);
             }
             mountComponent(
               vnode,
@@ -30797,9 +30770,9 @@ function requireRuntimeCore_cjs() {
                 subTree = createVNode(Fragment);
                 subTree.anchor = nextNode ? nextNode.previousSibling : container.lastChild;
               } else {
-                subTree = node2.nodeType === 3 ? createTextVNode("") : createVNode("div");
+                subTree = node.nodeType === 3 ? createTextVNode("") : createVNode("div");
               }
-              subTree.el = node2;
+              subTree.el = node;
               vnode.component.subTree = subTree;
             }
           } else if (shapeFlag & 64) {
@@ -30807,7 +30780,7 @@ function requireRuntimeCore_cjs() {
               nextNode = onMismatch();
             } else {
               nextNode = vnode.type.hydrate(
-                node2,
+                node,
                 vnode,
                 parentComponent,
                 parentSuspense,
@@ -30819,11 +30792,11 @@ function requireRuntimeCore_cjs() {
             }
           } else if (shapeFlag & 128) {
             nextNode = vnode.type.hydrate(
-              node2,
+              node,
               vnode,
               parentComponent,
               parentSuspense,
-              getContainerType(parentNode(node2)),
+              getContainerType(parentNode(node)),
               slotScopeIds,
               optimized,
               rendererInternals,
@@ -30951,7 +30924,7 @@ Server rendered element contains more child nodes than client vdom.`
       }
       return el.nextSibling;
     };
-    const hydrateChildren = (node2, parentVNode, container, parentComponent, parentSuspense, slotScopeIds, optimized) => {
+    const hydrateChildren = (node, parentVNode, container, parentComponent, parentSuspense, slotScopeIds, optimized) => {
       optimized = optimized || !!parentVNode.dynamicChildren;
       const children = parentVNode.children;
       const l = children.length;
@@ -30959,21 +30932,21 @@ Server rendered element contains more child nodes than client vdom.`
       for (let i = 0; i < l; i++) {
         const vnode = optimized ? children[i] : children[i] = normalizeVNode(children[i]);
         const isText = vnode.type === Text;
-        if (node2) {
+        if (node) {
           if (isText && !optimized) {
             if (i + 1 < l && normalizeVNode(children[i + 1]).type === Text) {
               insert(
                 createText(
-                  node2.data.slice(vnode.children.length)
+                  node.data.slice(vnode.children.length)
                 ),
                 container,
-                nextSibling(node2)
+                nextSibling(node)
               );
-              node2.data = vnode.children;
+              node.data = vnode.children;
             }
           }
-          node2 = hydrateNode(
-            node2,
+          node = hydrateNode(
+            node,
             vnode,
             parentComponent,
             parentSuspense,
@@ -31011,16 +30984,16 @@ Server rendered element contains fewer child nodes than client vdom.`
           );
         }
       }
-      return node2;
+      return node;
     };
-    const hydrateFragment = (node2, vnode, parentComponent, parentSuspense, slotScopeIds, optimized) => {
+    const hydrateFragment = (node, vnode, parentComponent, parentSuspense, slotScopeIds, optimized) => {
       const { slotScopeIds: fragmentSlotScopeIds } = vnode;
       if (fragmentSlotScopeIds) {
         slotScopeIds = slotScopeIds ? slotScopeIds.concat(fragmentSlotScopeIds) : fragmentSlotScopeIds;
       }
-      const container = parentNode(node2);
+      const container = parentNode(node);
       const next = hydrateChildren(
-        nextSibling(node2),
+        nextSibling(node),
         vnode,
         container,
         parentComponent,
@@ -31036,17 +31009,17 @@ Server rendered element contains fewer child nodes than client vdom.`
         return next;
       }
     };
-    const handleMismatch = (node2, vnode, parentComponent, parentSuspense, slotScopeIds, isFragment) => {
+    const handleMismatch = (node, vnode, parentComponent, parentSuspense, slotScopeIds, isFragment) => {
       if (!isMismatchAllowed(
-        node2.parentElement,
+        node.parentElement,
         1
         /* CHILDREN */
       )) {
         warn$1(
           `Hydration node mismatch:
 - rendered on server:`,
-          node2,
-          node2.nodeType === 3 ? `(text)` : isComment(node2) && node2.data === "[" ? `(start of fragment)` : ``,
+          node,
+          node.nodeType === 3 ? `(text)` : isComment(node) && node.data === "[" ? `(start of fragment)` : ``,
           `
 - expected on client:`,
           vnode.type
@@ -31055,9 +31028,9 @@ Server rendered element contains fewer child nodes than client vdom.`
       }
       vnode.el = null;
       if (isFragment) {
-        const end = locateClosingAnchor(node2);
+        const end = locateClosingAnchor(node);
         while (true) {
-          const next2 = nextSibling(node2);
+          const next2 = nextSibling(node);
           if (next2 && next2 !== end) {
             remove(next2);
           } else {
@@ -31065,9 +31038,9 @@ Server rendered element contains fewer child nodes than client vdom.`
           }
         }
       }
-      const next = nextSibling(node2);
-      const container = parentNode(node2);
-      remove(node2);
+      const next = nextSibling(node);
+      const container = parentNode(node);
+      remove(node);
       patch(
         null,
         vnode,
@@ -31084,22 +31057,22 @@ Server rendered element contains fewer child nodes than client vdom.`
       }
       return next;
     };
-    const locateClosingAnchor = (node2, open = "[", close = "]") => {
+    const locateClosingAnchor = (node, open = "[", close = "]") => {
       let match = 0;
-      while (node2) {
-        node2 = nextSibling(node2);
-        if (node2 && isComment(node2)) {
-          if (node2.data === open) match++;
-          if (node2.data === close) {
+      while (node) {
+        node = nextSibling(node);
+        if (node && isComment(node)) {
+          if (node.data === open) match++;
+          if (node.data === close) {
             if (match === 0) {
-              return nextSibling(node2);
+              return nextSibling(node);
             } else {
               match--;
             }
           }
         }
       }
-      return node2;
+      return node;
     };
     const replaceNode = (newNode, oldNode, parentComponent) => {
       const parentNode2 = oldNode.parentNode;
@@ -31114,8 +31087,8 @@ Server rendered element contains fewer child nodes than client vdom.`
         parent = parent.parent;
       }
     };
-    const isTemplateNode = (node2) => {
-      return node2.nodeType === 1 && node2.tagName === "TEMPLATE";
+    const isTemplateNode = (node) => {
+      return node.nodeType === 1 && node.tagName === "TEMPLATE";
     };
     return [hydrate, hydrateNode];
   }
@@ -31348,10 +31321,10 @@ Server rendered element contains fewer child nodes than client vdom.`
     });
     return teardown;
   };
-  function forEachElement(node2, cb) {
-    if (isComment(node2) && node2.data === "[") {
+  function forEachElement(node, cb) {
+    if (isComment(node) && node.data === "[") {
       let depth = 1;
-      let next = node2.nextSibling;
+      let next = node.nextSibling;
       while (next) {
         if (next.nodeType === 1) {
           const result = cb(next);
@@ -31368,7 +31341,7 @@ Server rendered element contains fewer child nodes than client vdom.`
         next = next.nextSibling;
       }
     } else {
-      cb(node2);
+      cb(node);
     }
   }
   const isAsyncWrapper = (i) => !!i.type.__asyncLoader;
@@ -36198,12 +36171,12 @@ If you want to remount the same app, move your app creation logic into a factory
     };
     return suspense;
   }
-  function hydrateSuspense(node2, vnode, parentComponent, parentSuspense, namespace, slotScopeIds, optimized, rendererInternals, hydrateNode) {
+  function hydrateSuspense(node, vnode, parentComponent, parentSuspense, namespace, slotScopeIds, optimized, rendererInternals, hydrateNode) {
     const suspense = vnode.suspense = createSuspenseBoundary(
       vnode,
       parentSuspense,
       parentComponent,
-      node2.parentNode,
+      node.parentNode,
       // eslint-disable-next-line no-restricted-globals
       document.createElement("div"),
       null,
@@ -36214,7 +36187,7 @@ If you want to remount the same app, move your app creation logic into a factory
       true
     );
     const result = hydrateNode(
-      node2,
+      node,
       suspense.pendingBranch = vnode.ssContent,
       parentComponent,
       suspense,
@@ -36818,7 +36791,7 @@ Component that was made reactive: `,
     return setupResult;
   }
   function setupStatefulComponent(instance, isSSR) {
-    var _a;
+    var _a2;
     const Component = instance.type;
     {
       if (Component.name) {
@@ -36878,7 +36851,7 @@ Component that was made reactive: `,
         } else {
           instance.asyncDep = setupResult;
           if (!instance.suspense) {
-            const name = (_a = Component.name) != null ? _a : "Anonymous";
+            const name = (_a2 = Component.name) != null ? _a2 : "Anonymous";
             warn$1(
               `Component <${name}>: setup function returned a promise, but no <Suspense> boundary was found in the parent component tree. A component with async setup() must be nested in a <Suspense> in order to be rendered.`
             );
@@ -37542,14 +37515,14 @@ function requireRuntimeDom_cjs() {
       },
       createText: (text) => doc.createTextNode(text),
       createComment: (text) => doc.createComment(text),
-      setText: (node2, text) => {
-        node2.nodeValue = text;
+      setText: (node, text) => {
+        node.nodeValue = text;
       },
       setElementText: (el, text) => {
         el.textContent = text;
       },
-      parentNode: (node2) => node2.parentNode,
-      nextSibling: (node2) => node2.nextSibling,
+      parentNode: (node) => node.parentNode,
+      nextSibling: (node) => node.nextSibling,
       querySelector: (selector) => doc.querySelector(selector),
       setScopeId(el, id) {
         el.setAttribute(id, "");
@@ -39140,15 +39113,15 @@ Expected function or array of functions, received type ${typeof value}.`
       });
     };
     const rendererOptions = /* @__PURE__ */ shared.extend({ patchProp }, nodeOps);
-    let renderer2;
+    let renderer;
     let enabledHydration = false;
     function ensureRenderer() {
-      return renderer2 || (renderer2 = runtimeCore.createRenderer(rendererOptions));
+      return renderer || (renderer = runtimeCore.createRenderer(rendererOptions));
     }
     function ensureHydrationRenderer() {
-      renderer2 = enabledHydration ? renderer2 : runtimeCore.createHydrationRenderer(rendererOptions);
+      renderer = enabledHydration ? renderer : runtimeCore.createHydrationRenderer(rendererOptions);
       enabledHydration = true;
-      return renderer2;
+      return renderer;
     }
     const render = (...args) => {
       ensureRenderer().render(...args);
@@ -39492,9 +39465,9 @@ function getConfigPath(fileName) {
   } else {
     configDir = path$6.join(__dirname$3, "./config");
   }
-  log$1.info("[配置文件] 配置文件夹目录:", configDir);
+  log.info("[配置文件] 配置文件夹目录:", configDir);
   const configPath = path$6.join(configDir, fileName);
-  log$1.info("[配置文件] " + fileName + " 文件路径:", configPath);
+  log.info("[配置文件] " + fileName + " 文件路径:", configPath);
   return configPath;
 }
 let __dirname$2 = path$6.dirname(node_url.fileURLToPath(typeof document === "undefined" ? require("url").pathToFileURL(__filename).href : _documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === "SCRIPT" && _documentCurrentScript.src || new URL("main.js", document.baseURI).href));
@@ -39511,17 +39484,17 @@ const _ClipboardDB = class _ClipboardDB {
   constructor() {
     // 单例实例
     __publicField(this, "db");
-    log$1.info("[数据库进程] 数据库初始化");
+    log.info("[数据库进程] 数据库初始化");
     const dbFolder = path$6.join(__dirname$2, "../data");
-    log$1.info("[数据库进程] 数据文件存储文件夹位置：", dbFolder);
+    log.info("[数据库进程] 数据文件存储文件夹位置：", dbFolder);
     if (!fs$5.existsSync(dbFolder)) {
       fs$5.mkdirSync(dbFolder);
     }
     const dbPath = path$6.join(dbFolder, "clipboard.db");
-    log$1.info("[数据库进程] 数据文件存储位置：", dbPath);
+    log.info("[数据库进程] 数据文件存储位置：", dbPath);
     this.db = new Database(dbPath);
     this.initTables();
-    log$1.info("[数据库进程] 数据库初始化完成");
+    log.info("[数据库进程] 数据库初始化完成");
   }
   /**
    * 获取数据库实例的静态方法
@@ -39583,41 +39556,41 @@ const _ClipboardDB = class _ClipboardDB {
    * @param {string|null} filePath 图片类型的文件路径，默认为null
    */
   addItem(content, type = "text", filePath) {
-    log$1.info("[数据库进程] 剪贴板内容添加开始", [content, type, filePath]);
+    log.info("[数据库进程] 剪贴板内容添加开始", [content, type, filePath]);
     try {
       let copyTime = Date.now();
       try {
         this.db.transaction(() => {
           if (type === "text") {
-            log$1.info("[数据库进程] 查询相同文本内容的旧记录");
+            log.info("[数据库进程] 查询相同文本内容的旧记录");
             const row = this.db.prepare("SELECT id FROM clipboard_items WHERE content = ? AND type = ?").get(content, type);
             if (row) {
               this.updateItemTime(row.id, copyTime);
-              log$1.info("[数据库进程] 有查询到相同文本内容的记录，覆盖复制时间");
+              log.info("[数据库进程] 有查询到相同文本内容的记录，覆盖复制时间");
               return;
             }
           } else if (filePath) {
-            log$1.info("[数据库进程] 查询相同文件路径的旧记录");
+            log.info("[数据库进程] 查询相同文件路径的旧记录");
             const row = this.db.prepare("SELECT id FROM clipboard_items WHERE type = ? AND file_path = ?").get(type, filePath);
             if (row) {
               this.updateItemTime(row.id, copyTime);
-              log$1.info("[数据库进程] 有查询到相同文件内容的记录，覆盖复制时间");
+              log.info("[数据库进程] 有查询到相同文件内容的记录，覆盖复制时间");
               return;
             }
           }
-          log$1.info("[数据库进程] 准备插入新的剪贴板记录");
+          log.info("[数据库进程] 准备插入新的剪贴板记录");
           this.db.prepare("INSERT INTO clipboard_items (content, copy_time, type, file_path) VALUES (?, ?, ?, ?)").run(content, copyTime, type, filePath);
         })();
       } catch (txError) {
-        log$1.error("[数据库进程] 事务执行失败", txError);
+        log.error("[数据库进程] 事务执行失败", txError);
         throw txError;
       }
-      log$1.info("[数据库进程] 剪贴板内容添加成功");
+      log.info("[数据库进程] 剪贴板内容添加成功");
     } catch (err) {
-      log$1.error("[数据库进程] 剪贴板内容添加失败", err);
+      log.error("[数据库进程] 剪贴板内容添加失败", err);
       throw err;
     } finally {
-      log$1.info("[数据库进程] 剪贴板内容添加完成");
+      log.info("[数据库进程] 剪贴板内容添加完成");
     }
   }
   getItemById(id) {
@@ -39647,7 +39620,7 @@ const _ClipboardDB = class _ClipboardDB {
   deleteItem(id) {
     try {
       const row = this.db.prepare("SELECT type, file_path FROM clipboard_items WHERE id = ?").get(id);
-      log$1.info("[数据库进程] 要删除的内容信息:", row);
+      log.info("[数据库进程] 要删除的内容信息:", row);
       if (row && row.file_path) {
         try {
           fs$5.unlinkSync(row.file_path);
@@ -39656,7 +39629,7 @@ const _ClipboardDB = class _ClipboardDB {
         }
       }
       this.db.prepare("DELETE FROM clipboard_items WHERE id = ?").run(id);
-      log$1.info("[数据库进程] 剪贴板内容删除成功");
+      log.info("[数据库进程] 剪贴板内容删除成功");
     } catch (err) {
       throw err;
     }
@@ -39671,27 +39644,27 @@ const _ClipboardDB = class _ClipboardDB {
       try {
         const config2 = getSettings();
         const tempDir = config2.tempPath;
-        log$1.info("[数据库进程] 正在获取所有图片记录...");
+        log.info("[数据库进程] 正在获取所有图片记录...");
         const rows = this.db.prepare("SELECT type, file_path FROM clipboard_items WHERE file_path IS NOT NULL").all();
-        log$1.info("[数据库进程] 开始删除文件...");
+        log.info("[数据库进程] 开始删除文件...");
         for (const row of rows) {
           if (row.file_path) {
             try {
               fs$5.unlinkSync(row.file_path);
-              log$1.info(`[数据库进程] 成功删除文件: ${row.file_path}`);
+              log.info(`[数据库进程] 成功删除文件: ${row.file_path}`);
             } catch (unlinkError) {
               console.error(`[数据库进程] 删除文件失败: ${row.file_path}`, unlinkError);
             }
           }
         }
-        log$1.info("[数据库进程] 正在清空数据库记录...");
+        log.info("[数据库进程] 正在清空数据库记录...");
         this.db.prepare("DELETE FROM clipboard_items").run();
         if (!fs$5.existsSync(tempDir)) {
-          log$1.info("[数据库进程] 正在创建临时目录...");
+          log.info("[数据库进程] 正在创建临时目录...");
           fs$5.mkdirSync(tempDir, { recursive: true, mode: 511 });
-          log$1.info("[数据库进程] 临时目录创建成功");
+          log.info("[数据库进程] 临时目录创建成功");
         }
-        log$1.info("[数据库进程] 剪贴板内容和临时文件清理完成");
+        log.info("[数据库进程] 剪贴板内容和临时文件清理完成");
         resolve();
       } catch (err) {
         console.error("[数据库进程] 清空剪贴板时发生错误:", err);
@@ -39732,7 +39705,7 @@ const _ClipboardDB = class _ClipboardDB {
         item.tags = item.tags_json ? JSON.parse(item.tags_json) : [];
         delete item.tags_json;
       } catch (e) {
-        log$1.error("[数据库进程] 解析标签JSON失败:", e);
+        log.error("[数据库进程] 解析标签JSON失败:", e);
         item.tags = [];
       }
     }
@@ -39807,7 +39780,7 @@ const _ClipboardDB = class _ClipboardDB {
     }
     const bindInfo = this.db.prepare("SELECT * FROM item_tags WHERE item_id = ? AND tag_id = ?").get(itemId, tag.id);
     if (bindInfo) {
-      log$1.info("[数据库进程] 标签已绑定");
+      log.info("[数据库进程] 标签已绑定");
       return;
     }
     this.db.prepare("INSERT OR IGNORE INTO item_tags (item_id, tag_id) VALUES (?, ?)").run(itemId, tag.id);
@@ -39827,12 +39800,12 @@ class ShortcutManager {
     try {
       this.registerShowHotkey();
     } catch (error) {
-      log$1.error("加载快捷键配置失败:", error);
+      log.error("加载快捷键配置失败:", error);
     }
   }
   // 注册显示应用的快捷键
   registerShowHotkey() {
-    log$1.info("注册快捷键:", this.showHotkey);
+    log.info("注册快捷键:", this.showHotkey);
     this.unregisterShowHotkey();
     if (this.showHotkey) {
       try {
@@ -39845,9 +39818,9 @@ class ShortcutManager {
             this.mainWindow.focus();
           }
         });
-        log$1.info(`已注册唤起应用快捷键: ${this.showHotkey}`);
+        log.info(`已注册唤起应用快捷键: ${this.showHotkey}`);
       } catch (error) {
-        log$1.error("注册唤起应用快捷键失败:", error);
+        log.error("注册唤起应用快捷键失败:", error);
       }
     }
   }
@@ -39857,7 +39830,7 @@ class ShortcutManager {
       try {
         require$$0$5.globalShortcut.unregister(this.showHotkey);
       } catch (error) {
-        log$1.error("注销唤起应用快捷键失败:", error);
+        log.error("注销唤起应用快捷键失败:", error);
       }
     }
   }
@@ -39867,402 +39840,16 @@ class ShortcutManager {
     require$$0$5.globalShortcut.unregisterAll();
   }
 }
-var src = { exports: {} };
-var renderer = { exports: {} };
-var RendererErrorHandler_1;
-var hasRequiredRendererErrorHandler;
-function requireRendererErrorHandler() {
-  if (hasRequiredRendererErrorHandler) return RendererErrorHandler_1;
-  hasRequiredRendererErrorHandler = 1;
-  const consoleError = console.error;
-  class RendererErrorHandler {
-    constructor({ logFn = null } = {}) {
-      __publicField(this, "logFn", null);
-      __publicField(this, "onError", null);
-      __publicField(this, "showDialog", false);
-      __publicField(this, "preventDefault", true);
-      this.handleError = this.handleError.bind(this);
-      this.handleRejection = this.handleRejection.bind(this);
-      this.startCatching = this.startCatching.bind(this);
-      this.logFn = logFn;
-    }
-    handle(error, {
-      logFn = this.logFn,
-      errorName = "",
-      onError = this.onError,
-      showDialog = this.showDialog
-    } = {}) {
-      try {
-        if ((onError == null ? void 0 : onError({ error, errorName, processType: "renderer" })) !== false) {
-          logFn({ error, errorName, showDialog });
-        }
-      } catch {
-        consoleError(error);
-      }
-    }
-    setOptions({ logFn, onError, preventDefault, showDialog }) {
-      if (typeof logFn === "function") {
-        this.logFn = logFn;
-      }
-      if (typeof onError === "function") {
-        this.onError = onError;
-      }
-      if (typeof preventDefault === "boolean") {
-        this.preventDefault = preventDefault;
-      }
-      if (typeof showDialog === "boolean") {
-        this.showDialog = showDialog;
-      }
-    }
-    startCatching({ onError, showDialog } = {}) {
-      if (this.isActive) {
-        return;
-      }
-      this.isActive = true;
-      this.setOptions({ onError, showDialog });
-      window.addEventListener("error", (event) => {
-        var _a;
-        this.preventDefault && ((_a = event.preventDefault) == null ? void 0 : _a.call(event));
-        this.handleError(event.error || event);
-      });
-      window.addEventListener("unhandledrejection", (event) => {
-        var _a;
-        this.preventDefault && ((_a = event.preventDefault) == null ? void 0 : _a.call(event));
-        this.handleRejection(event.reason || event);
-      });
-    }
-    handleError(error) {
-      this.handle(error, { errorName: "Unhandled" });
-    }
-    handleRejection(reason) {
-      const error = reason instanceof Error ? reason : new Error(JSON.stringify(reason));
-      this.handle(error, { errorName: "Unhandled rejection" });
-    }
-  }
-  RendererErrorHandler_1 = RendererErrorHandler;
-  return RendererErrorHandler_1;
-}
-var console_1;
-var hasRequiredConsole;
-function requireConsole() {
-  if (hasRequiredConsole) return console_1;
-  hasRequiredConsole = 1;
-  const { transform: transform2 } = transform_1;
-  console_1 = consoleTransportRendererFactory;
-  const consoleMethods2 = {
-    error: console.error,
-    warn: console.warn,
-    info: console.info,
-    verbose: console.info,
-    debug: console.debug,
-    silly: console.debug,
-    log: console.log
-  };
-  function consoleTransportRendererFactory(logger) {
-    return Object.assign(transport, {
-      format: "{h}:{i}:{s}.{ms}{scope} › {text}",
-      transforms: [formatDataFn],
-      writeFn({ message: { level, data } }) {
-        const consoleLogFn = consoleMethods2[level] || consoleMethods2.info;
-        setTimeout(() => consoleLogFn(...data));
-      }
-    });
-    function transport(message) {
-      transport.writeFn({
-        message: { ...message, data: transform2({ logger, message, transport }) }
-      });
-    }
-  }
-  function formatDataFn({
-    data = [],
-    logger = {},
-    message = {},
-    transport = {}
-  }) {
-    if (typeof transport.format === "function") {
-      return transport.format({
-        data,
-        level: (message == null ? void 0 : message.level) || "info",
-        logger,
-        message,
-        transport
-      });
-    }
-    if (typeof transport.format !== "string") {
-      return data;
-    }
-    data.unshift(transport.format);
-    if (typeof data[1] === "string" && data[1].match(/%[1cdfiOos]/)) {
-      data = [`${data[0]} ${data[1]}`, ...data.slice(2)];
-    }
-    const date = message.date || /* @__PURE__ */ new Date();
-    data[0] = data[0].replace(/\{(\w+)}/g, (substring, name) => {
-      var _a, _b;
-      switch (name) {
-        case "level":
-          return message.level;
-        case "logId":
-          return message.logId;
-        case "scope": {
-          const scope2 = message.scope || ((_a = logger.scope) == null ? void 0 : _a.defaultLabel);
-          return scope2 ? ` (${scope2})` : "";
-        }
-        case "text":
-          return "";
-        case "y":
-          return date.getFullYear().toString(10);
-        case "m":
-          return (date.getMonth() + 1).toString(10).padStart(2, "0");
-        case "d":
-          return date.getDate().toString(10).padStart(2, "0");
-        case "h":
-          return date.getHours().toString(10).padStart(2, "0");
-        case "i":
-          return date.getMinutes().toString(10).padStart(2, "0");
-        case "s":
-          return date.getSeconds().toString(10).padStart(2, "0");
-        case "ms":
-          return date.getMilliseconds().toString(10).padStart(3, "0");
-        case "iso":
-          return date.toISOString();
-        default:
-          return ((_b = message.variables) == null ? void 0 : _b[name]) || substring;
-      }
-    }).trim();
-    return data;
-  }
-  return console_1;
-}
-var ipc;
-var hasRequiredIpc;
-function requireIpc() {
-  if (hasRequiredIpc) return ipc;
-  hasRequiredIpc = 1;
-  const { transform: transform2 } = transform_1;
-  ipc = ipcTransportRendererFactory;
-  const RESTRICTED_TYPES = /* @__PURE__ */ new Set([Promise, WeakMap, WeakSet]);
-  function ipcTransportRendererFactory(logger) {
-    return Object.assign(transport, {
-      depth: 5,
-      transforms: [serializeFn]
-    });
-    function transport(message) {
-      if (!window.__electronLog) {
-        logger.processMessage(
-          {
-            data: ["electron-log: logger isn't initialized in the main process"],
-            level: "error"
-          },
-          { transports: ["console"] }
-        );
-        return;
-      }
-      try {
-        const serialized = transform2({
-          initialData: message,
-          logger,
-          message,
-          transport
-        });
-        __electronLog.sendToMain(serialized);
-      } catch (e) {
-        logger.transports.console({
-          data: ["electronLog.transports.ipc", e, "data:", message.data],
-          level: "error"
-        });
-      }
-    }
-  }
-  function isPrimitive(value) {
-    return Object(value) !== value;
-  }
-  function serializeFn({
-    data,
-    depth,
-    seen = /* @__PURE__ */ new WeakSet(),
-    transport = {}
-  } = {}) {
-    const actualDepth = depth || transport.depth || 5;
-    if (seen.has(data)) {
-      return "[Circular]";
-    }
-    if (actualDepth < 1) {
-      if (isPrimitive(data)) {
-        return data;
-      }
-      if (Array.isArray(data)) {
-        return "[Array]";
-      }
-      return `[${typeof data}]`;
-    }
-    if (["function", "symbol"].includes(typeof data)) {
-      return data.toString();
-    }
-    if (isPrimitive(data)) {
-      return data;
-    }
-    if (RESTRICTED_TYPES.has(data.constructor)) {
-      return `[${data.constructor.name}]`;
-    }
-    if (Array.isArray(data)) {
-      return data.map((item) => serializeFn({
-        data: item,
-        depth: actualDepth - 1,
-        seen
-      }));
-    }
-    if (data instanceof Date) {
-      return data.toISOString();
-    }
-    if (data instanceof Error) {
-      return data.stack;
-    }
-    if (data instanceof Map) {
-      return new Map(
-        Array.from(data).map(([key, value]) => [
-          serializeFn({ data: key, depth: actualDepth - 1, seen }),
-          serializeFn({ data: value, depth: actualDepth - 1, seen })
-        ])
-      );
-    }
-    if (data instanceof Set) {
-      return new Set(
-        Array.from(data).map(
-          (val) => serializeFn({ data: val, depth: actualDepth - 1, seen })
-        )
-      );
-    }
-    seen.add(data);
-    return Object.fromEntries(
-      Object.entries(data).map(
-        ([key, value]) => [
-          key,
-          serializeFn({ data: value, depth: actualDepth - 1, seen })
-        ]
-      )
-    );
-  }
-  return ipc;
-}
-var hasRequiredRenderer;
-function requireRenderer() {
-  if (hasRequiredRenderer) return renderer.exports;
-  hasRequiredRenderer = 1;
-  (function(module2) {
-    const Logger2 = requireLogger();
-    const RendererErrorHandler = requireRendererErrorHandler();
-    const transportConsole2 = requireConsole();
-    const transportIpc2 = requireIpc();
-    module2.exports = createLogger();
-    module2.exports.Logger = Logger2;
-    module2.exports.default = module2.exports;
-    function createLogger() {
-      const logger = new Logger2({
-        allowUnknownLevel: true,
-        errorHandler: new RendererErrorHandler(),
-        initializeFn: () => {
-        },
-        logId: "default",
-        transportFactories: {
-          console: transportConsole2,
-          ipc: transportIpc2
-        },
-        variables: {
-          processType: "renderer"
-        }
-      });
-      logger.errorHandler.setOptions({
-        logFn({ error, errorName, showDialog }) {
-          logger.transports.console({
-            data: [errorName, error].filter(Boolean),
-            level: "error"
-          });
-          logger.transports.ipc({
-            cmd: "errorHandler",
-            error: {
-              cause: error == null ? void 0 : error.cause,
-              code: error == null ? void 0 : error.code,
-              name: error == null ? void 0 : error.name,
-              message: error == null ? void 0 : error.message,
-              stack: error == null ? void 0 : error.stack
-            },
-            errorName,
-            logId: logger.logId,
-            showDialog
-          });
-        }
-      });
-      if (typeof window === "object") {
-        window.addEventListener("message", (event) => {
-          const { cmd, logId, ...message } = event.data || {};
-          const instance = Logger2.getInstance({ logId });
-          if (cmd === "message") {
-            instance.processMessage(message, { transports: ["console"] });
-          }
-        });
-      }
-      return new Proxy(logger, {
-        get(target, prop) {
-          if (typeof target[prop] !== "undefined") {
-            return target[prop];
-          }
-          return (...data) => logger.logData(data, { level: prop });
-        }
-      });
-    }
-  })(renderer);
-  return renderer.exports;
-}
-var node;
-var hasRequiredNode;
-function requireNode() {
-  if (hasRequiredNode) return node;
-  hasRequiredNode = 1;
-  const NodeExternalApi3 = NodeExternalApi_1;
-  const createDefaultLogger2 = createDefaultLogger_1;
-  const externalApi2 = new NodeExternalApi3();
-  const defaultLogger2 = createDefaultLogger2({
-    dependencies: { externalApi: externalApi2 }
-  });
-  node = defaultLogger2;
-  return node;
-}
-const isRenderer = typeof process === "undefined" || (process.type === "renderer" || process.type === "worker");
-const isMain = typeof process === "object" && process.type === "browser";
-if (isRenderer) {
-  requireElectronLogPreload();
-  src.exports = requireRenderer();
-} else if (isMain) {
-  src.exports = main$1;
-} else {
-  src.exports = requireNode();
-}
-var srcExports = src.exports;
-const log = /* @__PURE__ */ getDefaultExportFromCjs(srcExports);
-function removeWinVKeyDetection() {
-  return new Promise((resolve, _reject) => {
-    const taskName = "ClipboardWinVDetection";
-    require$$0$1.exec(`schtasks /end /tn "${taskName}" 2>nul`, () => {
-      require$$0$1.exec(`schtasks /delete /tn "${taskName}" /f 2>nul`, (error) => {
-        if (error) {
-          log.warn("[主进程] 删除任务计划失败:", error);
-        }
-        log.info("[主进程] 已移除Win+V检测任务");
-        resolve(true);
-      });
-    });
-  });
-}
 process.env["ELECTRON_DISABLE_SECURITY_WARNINGS"] = "true";
 let __dirname$1 = path$6.dirname(node_url.fileURLToPath(typeof document === "undefined" ? require("url").pathToFileURL(__filename).href : _documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === "SCRIPT" && _documentCurrentScript.src || new URL("main.js", document.baseURI).href));
-log$1.info("[主进程] 程序文件夹位置", __dirname$1);
+log.info("[主进程] 程序文件夹位置", __dirname$1);
 process.env.APP_ROOT = path$6.join(__dirname$1, "..");
 const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
 const MAIN_DIST = path$6.join(process.env.APP_ROOT, "dist-electron");
 const RENDERER_DIST = path$6.join(process.env.APP_ROOT, "dist");
 process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path$6.join(process.env.APP_ROOT, "public") : RENDERER_DIST;
 const env = process.env.NODE_ENV;
-log$1.info("[主进程] 运行环境：", process.env.NODE_ENV);
+log.info("[主进程] 运行环境：", process.env.NODE_ENV);
 if (env !== "development") {
   __dirname$1 = __dirname$1.replace("\\app.asar\\dist-electron", "");
 }
@@ -40275,7 +39862,7 @@ let wakeUpRoutineShortcut;
 const config = vueExports.computed(() => getSettings());
 const shortcutKeys = vueExports.computed(() => getShortcutKeys());
 function createMainWindow() {
-  log$1.info("是否打开了主窗口：" + isOpenWindow);
+  log.info("是否打开了主窗口：" + isOpenWindow);
   if (isOpenWindow) {
     return;
   }
@@ -40319,36 +39906,42 @@ function createMainWindow() {
   });
   win.setAlwaysOnTop(true, "screen-saver");
   win.setVisibleOnAllWorkspaces(true);
+  console.log(config.value.colsingHideToTaskbar);
+  if (Boolean(config.value.colsingHideToTaskbar)) {
+    win.on("blur", () => {
+      closeOrHide();
+    });
+  }
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL);
-    log$1.info("[主进程] 加载url页面", VITE_DEV_SERVER_URL);
+    log.info("[主进程] 加载url页面", VITE_DEV_SERVER_URL);
   } else {
     win.loadFile(path$6.join(RENDERER_DIST, "index.html"));
-    log$1.info("[主进程] 加载index.html页面", path$6.join(RENDERER_DIST, "index.html"));
+    log.info("[主进程] 加载index.html页面", path$6.join(RENDERER_DIST, "index.html"));
   }
   if (shortcutKeys.value.wakeUpRoutine) {
-    log$1.info("[主进程] 注册唤醒程序快捷键:", shortcutKeys.value.wakeUpRoutine.key.join("+"));
+    log.info("[主进程] 注册唤醒程序快捷键:", shortcutKeys.value.wakeUpRoutine.key.join("+"));
     wakeUpRoutineShortcut = new ShortcutManager(win, shortcutKeys.value.wakeUpRoutine.key.join("+"));
     wakeUpRoutineShortcut.loadShortcuts();
   }
   const savedTheme = config.value.theme || "light";
-  log$1.info("[主进程] 读取到的主题配置:", savedTheme);
+  log.info("[主进程] 读取到的主题配置:", savedTheme);
   const savedLanguage = config.value.languages || "chinese";
-  log$1.info("[主进程] 读取到的语言配置:", savedLanguage);
+  log.info("[主进程] 读取到的语言配置:", savedLanguage);
   win.webContents.on("did-finish-load", () => {
-    log$1.info("[主进程] 发送窗口类型到渲染进程：list");
+    log.info("[主进程] 发送窗口类型到渲染进程：list");
     win == null ? void 0 : win.webContents.send("window-type", "list");
-    log$1.info("[主进程] 发送主题设置到渲染进程");
+    log.info("[主进程] 发送主题设置到渲染进程");
     win == null ? void 0 : win.webContents.send("init-themes", savedTheme);
-    log$1.info("[主进程] 发送程序语言到渲染进程");
+    log.info("[主进程] 发送程序语言到渲染进程");
     win == null ? void 0 : win.webContents.send("init-language", savedLanguage);
-    log$1.info("[主进程] 发送标签列表到渲染进程");
+    log.info("[主进程] 发送标签列表到渲染进程");
     const db = ClipboardDB.getInstance();
     const tags = db.getAllTags();
     win == null ? void 0 : win.webContents.send("load-tag-items", tags);
-    log$1.info("[主进程] 发送快捷键配置到渲染进程");
+    log.info("[主进程] 发送快捷键配置到渲染进程");
     win == null ? void 0 : win.webContents.send("load-shortcut-keys", shortcutKeys.value);
-    log$1.info("[主进程] 窗口加载完成，开始监听剪贴板");
+    log.info("[主进程] 窗口加载完成，开始监听剪贴板");
     watchClipboard();
   });
   win.on("closed", () => {
@@ -40463,7 +40056,7 @@ function createTagsWindow() {
   });
 }
 function createTray(win2) {
-  log$1.info("是否隐藏了主窗口：" + isHideWindow);
+  log.info("是否隐藏了主窗口：" + isHideWindow);
   if (isHideWindow) {
     return;
   }
@@ -40513,59 +40106,59 @@ require$$0$5.ipcMain.handle("clear-items", async () => {
   return true;
 });
 require$$0$5.ipcMain.handle("search-items", async (_event, content, tagId) => {
-  log$1.info("[主进程] 获取剪贴板数据，查询条件", content, tagId);
+  log.info("[主进程] 获取剪贴板数据，查询条件", content, tagId);
   const db = ClipboardDB.getInstance();
   const items = db.searchItems(content, tagId);
   return items;
 });
 require$$0$5.ipcMain.handle("update-themes", async (_event, theme) => {
-  log$1.info("[主进程] 更新主题", theme);
+  log.info("[主进程] 更新主题", theme);
   config.value.theme = theme;
   updateSettings(config.value);
   return true;
 });
 require$$0$5.ipcMain.handle("top-item", async (_event, id) => {
-  log$1.info("[主进程] 剪贴板内容置顶", id);
+  log.info("[主进程] 剪贴板内容置顶", id);
   const db = ClipboardDB.getInstance();
   db.toggleTop(id, true);
 });
 require$$0$5.ipcMain.handle("untop-item", async (_event, id) => {
-  log$1.info("[主进程] 剪贴板内容取消置顶", id);
+  log.info("[主进程] 剪贴板内容取消置顶", id);
   const db = ClipboardDB.getInstance();
   db.toggleTop(id, false);
 });
 require$$0$5.ipcMain.handle("remove-item", async (_event, id) => {
-  log$1.info("[主进程] 剪贴板内容删除", id);
+  log.info("[主进程] 剪贴板内容删除", id);
   const db = ClipboardDB.getInstance();
   db.deleteItem(id);
 });
 require$$0$5.ipcMain.handle("add-tag", async (_event, name, color) => {
-  log$1.info("[主进程] 标签添加", name, color);
+  log.info("[主进程] 标签添加", name, color);
   const db = ClipboardDB.getInstance();
   db.addTag(name, color);
   const tags = db.getAllTags();
   win == null ? void 0 : win.webContents.send("load-tag-items", tags);
 });
 require$$0$5.ipcMain.handle("item-bind-tag", async (_event, itemId, tagId) => {
-  log$1.info("[主进程] 内容和标签绑定", itemId, tagId);
+  log.info("[主进程] 内容和标签绑定", itemId, tagId);
   const db = ClipboardDB.getInstance();
   db.bindItemToTag(itemId, tagId);
 });
 require$$0$5.ipcMain.handle("get-image-base64", async (_event, imagePath) => {
   try {
     if (!fs$5.existsSync(imagePath)) {
-      log$1.error("[主进程] 图片文件不存在:", imagePath);
+      log.error("[主进程] 图片文件不存在:", imagePath);
       return null;
     }
     const image = require$$0$5.nativeImage.createFromPath(imagePath);
     return `data:image/png;base64,${image.toPNG().toString("base64")}`;
   } catch (error) {
-    log$1.error("[主进程] 获取图片base64编码失败:", error);
+    log.error("[主进程] 获取图片base64编码失败:", error);
     return null;
   }
 });
 require$$0$5.ipcMain.handle("item-copy", async (_event, id) => {
-  log$1.info("[主进程] 将内容复制到系统剪贴板，id:", id);
+  log.info("[主进程] 将内容复制到系统剪贴板，id:", id);
   try {
     const db = ClipboardDB.getInstance();
     const item = db.getItemById(id);
@@ -40579,62 +40172,49 @@ require$$0$5.ipcMain.handle("item-copy", async (_event, id) => {
       }
       return true;
     } else {
-      log$1.error("[主进程] 将内容复制到系统剪贴板，根据id没有找到内容", id);
+      log.error("[主进程] 将内容复制到系统剪贴板，根据id没有找到内容", id);
       return false;
     }
   } catch (error) {
-    log$1.error("[主进程] 将内容复制到系统剪贴板失败:", error);
+    log.error("[主进程] 将内容复制到系统剪贴板失败:", error);
     return false;
   }
 });
 require$$0$5.ipcMain.handle("update-config", async (_event, conf) => {
-  log$1.info("[主进程] 更新配置", config);
+  log.info("[主进程] 更新配置", conf);
   updateSettings(conf);
   return true;
 });
 require$$0$5.ipcMain.handle("update-shortcut-keys", async (_event, config2) => {
-  log$1.info("[主进程] 更新快捷键配置", config2);
+  log.info("[主进程] 更新快捷键配置", config2);
   updateShortcutKeys(config2);
   win == null ? void 0 : win.webContents.send("load-shortcut-keys", config2);
   return true;
 });
 require$$0$5.ipcMain.on("toggle-dev-tools", () => {
-  log$1.info("[主进程] 打开开发者工具");
+  log.info("[主进程] 打开开发者工具");
   if (win) {
     win.webContents.openDevTools({ mode: "detach" });
   }
 });
 require$$0$5.ipcMain.on("reload-app", () => {
-  log$1.info("[主进程] 重新加载应用程序");
+  log.info("[主进程] 重新加载应用程序");
   if (win) {
     win.reload();
   }
 });
 require$$0$5.ipcMain.on("quit-app", () => {
-  log$1.info("[主进程] 退出应用程序");
+  log.info("[主进程] 退出应用程序");
   require$$0$5.app.quit();
 });
 require$$0$5.ipcMain.on("close-app", () => {
-  isOpenWindow = false;
-  if (Boolean(config.value.colsingHideToTaskbar)) {
-    const location = win == null ? void 0 : win.getPosition();
-    if (location) {
-      x = location[0];
-      y = location[1];
-    }
-    win == null ? void 0 : win.hide();
-    isHideWindow = true;
-  } else {
-    win == null ? void 0 : win.close();
-    require$$0$5.app.quit();
-  }
+  closeOrHide();
 });
 require$$0$5.ipcMain.on("open-settings", createSettingsWindow);
 require$$0$5.ipcMain.on("restart-app", () => {
   isOpenWindow = false;
   isOpenSettingsWindow = false;
   require$$0$5.BrowserWindow.getAllWindows().forEach((window2) => {
-    log$1.info("[主进程] 关闭窗口", window2);
     if (!window2.isDestroyed()) {
       window2.close();
     }
@@ -40649,18 +40229,8 @@ require$$0$5.app.on("window-all-closed", () => {
     win = void 0;
   }
   if (process.platform === "darwin") {
-    log$1.info("[主进程] 关闭程序");
+    log.info("[主进程] 关闭程序");
     require$$0$5.app.quit();
-  }
-});
-require$$0$5.app.on("will-quit", async () => {
-  if (config.value.replaceGlobalHotkey) {
-    try {
-      await removeWinVKeyDetection();
-      log$1.info("[主进程] 已移除Win+V按键检测");
-    } catch (error) {
-      log$1.error("[主进程] 移除Win+V按键检测失败:", error);
-    }
   }
 });
 const gotTheLock = require$$0$5.app.requestSingleInstanceLock();
@@ -40674,37 +40244,29 @@ if (!gotTheLock) {
         createMainWindow();
       }
     });
-    if (config.value.replaceGlobalHotkey) {
-      try {
-        const { globalShortcut } = require("electron");
-        const ret = globalShortcut.register("CommandOrControl+V", () => {
-          log$1.info("[主进程] 检测到 Win+V 快捷键");
-          if (!win || win.isDestroyed()) {
-            createMainWindow();
-          } else if (!win.isVisible()) {
-            win.show();
-          } else {
-            win.focus();
-          }
-        });
-        if (!ret) {
-          log$1.error("[主进程] 注册全局快捷键失败");
-        } else {
-          log$1.info("[主进程] 成功注册全局快捷键");
-        }
-        log$1.info("[主进程] 全局快捷键是否注册成功:", globalShortcut.isRegistered("CommandOrControl+V"));
-      } catch (error) {
-        log$1.error("[主进程] 设置全局快捷键失败:", error);
-      }
-    }
   });
 }
 let lastText = require$$0$5.clipboard.readText();
 let lastImage = require$$0$5.clipboard.readImage().isEmpty() ? null : require$$0$5.clipboard.readImage().toPNG();
 let clipboardTimer = null;
+function closeOrHide() {
+  isOpenWindow = false;
+  if (Boolean(config.value.colsingHideToTaskbar)) {
+    const location = win == null ? void 0 : win.getPosition();
+    if (location) {
+      x = location[0];
+      y = location[1];
+    }
+    win == null ? void 0 : win.hide();
+    isHideWindow = true;
+  } else {
+    win == null ? void 0 : win.close();
+    require$$0$5.app.quit();
+  }
+}
 function watchClipboard() {
   if (!win || win.isDestroyed() || !win.webContents || win.webContents.isDestroyed()) {
-    log$1.info("[主进程] 窗口或渲染进程不可用，跳过剪贴板检查");
+    log.info("[主进程] 窗口或渲染进程不可用，跳过剪贴板检查");
     return;
   }
   try {
@@ -40714,8 +40276,8 @@ function watchClipboard() {
       const currentImageBuffer = currentImage.toPNG();
       const isImageChanged = lastImage === null || Buffer.compare(currentImageBuffer, lastImage) !== 0;
       if (isImageChanged) {
-        log$1.info("[主进程] 检测到剪贴板中有图片");
-        log$1.info("[主进程] 检测到新的图片内容", {
+        log.info("[主进程] 检测到剪贴板中有图片");
+        log.info("[主进程] 检测到新的图片内容", {
           size: currentImageBuffer.length,
           isFirstImage: lastImage === null
         });
@@ -40741,11 +40303,11 @@ function watchClipboard() {
         let imagePath;
         if (existingImagePath) {
           imagePath = existingImagePath;
-          log$1.info("[主进程] 找到相同内容的图片文件:", imagePath);
+          log.info("[主进程] 找到相同内容的图片文件:", imagePath);
         } else {
           imagePath = path$6.join(tempDir, `clipboard_${timestamp}.png`);
           fs$5.writeFileSync(imagePath, currentImageBuffer);
-          log$1.info("[主进程] 图片已保存到临时目录:", imagePath);
+          log.info("[主进程] 图片已保存到临时目录:", imagePath);
         }
         if (win && !win.isDestroyed()) {
           const webContents = win.webContents;
@@ -40759,12 +40321,12 @@ function watchClipboard() {
                   webContents2.send("clipboard-updated");
                 }
               } catch (error) {
-                log$1.error("[主进程] 发送图片信息到渲染进程时出错:", error);
+                log.error("[主进程] 发送图片信息到渲染进程时出错:", error);
                 if (!existingImagePath) {
                   try {
                     fs$5.unlinkSync(imagePath);
                   } catch (unlinkError) {
-                    log$1.error("[主进程] 清理临时文件时出错:", unlinkError);
+                    log.error("[主进程] 清理临时文件时出错:", unlinkError);
                   }
                 }
               }
@@ -40773,7 +40335,7 @@ function watchClipboard() {
             try {
               fs$5.unlinkSync(imagePath);
             } catch (unlinkError) {
-              log$1.error("[主进程] 清理临时文件时出错:", unlinkError);
+              log.error("[主进程] 清理临时文件时出错:", unlinkError);
             }
           }
         }
@@ -40790,12 +40352,12 @@ function watchClipboard() {
             webContents.send("clipboard-updated");
           }
         } catch (error) {
-          log$1.error("[主进程] 发送文本消息时出错:", error);
+          log.error("[主进程] 发送文本消息时出错:", error);
         }
       }
     }
   } catch (error) {
-    log$1.error("[主进程] 检查剪贴板时出错:", error);
+    log.error("[主进程] 检查剪贴板时出错:", error);
   }
   clipboardTimer = setTimeout(watchClipboard, 100);
 }

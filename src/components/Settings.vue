@@ -148,6 +148,8 @@ const saveConfig = async () => {
     const isUpdateWindowWidth = currentConfig.windowWidth !== originalConfig.windowWidth;
     // 是否修改了【页面高度】
     const isUpdateWindowHeight = currentConfig.windowHeight !== originalConfig.windowHeight;
+    // 是否修改了【关闭窗口时隐藏到任务栏托盘】
+    const isUpdateColsingHideToTaskbar = currentConfig.colsingHideToTaskbar !== originalConfig.colsingHideToTaskbar;
 
     // 创建一个可序列化的配置对象副本
     const configJson = JSON.parse(JSON.stringify(currentConfig));
@@ -161,6 +163,7 @@ const saveConfig = async () => {
         || isUpdateLanguages
         || isUpdateWindowWidth
         || isUpdateWindowHeight
+        || isUpdateColsingHideToTaskbar
       ) {
         // 显示重启确认弹窗
         restartModalVisible.value = true;
@@ -398,7 +401,7 @@ onMounted(() => {
 
   /* 快捷键相关样式 */
   .shortcut-item {
-    margin-bottom: 15px;
+    margin-bottom: -5px;
   }
 
   .shortcut-display {
@@ -535,7 +538,7 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
   padding: 8px 0;
 }
 

@@ -105,6 +105,15 @@ function createMainWindow() {
     // 这个设置允许在切换到其他工作区时显示。
     win.setVisibleOnAllWorkspaces(true)
 
+    console.log(config.value.colsingHideToTaskbar);
+    // 添加窗口失去焦点事件监听
+    if (Boolean(config.value.colsingHideToTaskbar)) {
+        win.on('blur', () => {
+            // 当窗口失去焦点时，触发close-app事件
+            closeOrHide();
+        });
+    }
+
     if (VITE_DEV_SERVER_URL) {
         win.loadURL(VITE_DEV_SERVER_URL)
         log.info("[主进程] 加载url页面", VITE_DEV_SERVER_URL)
@@ -460,7 +469,7 @@ ipcMain.handle('item-copy', async (_event, id: number) => {
 
 // 监听配置文件更新
 ipcMain.handle('update-config', async (_event, conf) => {
-    log.info('[主进程] 更新配置', config);
+    log.info('[主进程] 更新配置', conf);
     updateSettings(conf);
     return true;
 });
@@ -498,19 +507,7 @@ ipcMain.on('quit-app', () => {
 
 // 监听关闭窗口的请求
 ipcMain.on('close-app', () => {
-    isOpenWindow = false;
-    if (Boolean(config.value.colsingHideToTaskbar)) {
-        const location: number[] | undefined = win?.getPosition();
-        if (location) {
-            x = location[0];
-            y = location[1];
-        }
-        win?.hide();
-        isHideWindow = true;
-    } else {
-        win?.close();
-        app.quit();
-    }
+    closeOrHide()
 });
 
 // 打开设置窗口
@@ -524,7 +521,6 @@ ipcMain.on('restart-app', () => {
     isOpenSettingsWindow = false;
     // 关闭所有窗口
     BrowserWindow.getAllWindows().forEach(window => {
-        log.info('[主进程] 关闭窗口', window);
         if (!window.isDestroyed()) {
             window.close();
         }
@@ -576,6 +572,25 @@ let lastText = clipboard.readText();
 let lastImage = clipboard.readImage().isEmpty() ? null : clipboard.readImage().toPNG();
 // let lastFiles: string[] = [];
 let clipboardTimer: string | number | NodeJS.Timeout | null | undefined = null;
+
+/**
+ * 关闭或隐藏主窗口
+ */
+function closeOrHide() {
+    isOpenWindow = false
+    if (Boolean(config.value.colsingHideToTaskbar)) {
+        const location: number[] | undefined = win?.getPosition()
+        if (location) {
+            x = location[0]
+            y = location[1]
+        }
+        win?.hide()
+        isHideWindow = true
+    } else {
+        win?.close()
+        app.quit()
+    }
+}
 
 // 监听剪贴板变化
 function watchClipboard() {

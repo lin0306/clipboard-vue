@@ -38,7 +38,10 @@ if (env !== 'development') {
 
 let win: BrowserWindow | undefined
 let isOpenWindow = false;
+let isOpenSettingsWindow = false;
 let isHideWindow = false;
+let isOpenMianDevTools = false;
+let isOpenSettingsDevTools = false;
 let x: number | undefined = undefined;
 let y: number | undefined = undefined;
 let wakeUpRoutineShortcut: ShortcutManager; // 唤醒程序快捷键
@@ -105,12 +108,14 @@ function createMainWindow() {
     // 这个设置允许在切换到其他工作区时显示。
     win.setVisibleOnAllWorkspaces(true)
 
-    console.log(config.value.colsingHideToTaskbar);
     // 添加窗口失去焦点事件监听
     if (Boolean(config.value.colsingHideToTaskbar)) {
         win.on('blur', () => {
-            // 当窗口失去焦点时，触发close-app事件
-            closeOrHide();
+            // 当窗口失去焦点时，检查是否是因为打开了设置窗口或调试工具
+            // 只有在没有打开设置窗口和调试工具的情况下才关闭或隐藏主窗口
+            if (!isOpenSettingsWindow && !isOpenMianDevTools && !isOpenSettingsDevTools) {
+                closeOrHide();
+            }
         });
     }
 
@@ -184,8 +189,6 @@ function createMainWindow() {
     }
 }
 
-// 是否已经打开设置窗口
-let isOpenSettingsWindow = false;
 // 创建设置窗口
 function createSettingsWindow() {
     if (isOpenSettingsWindow) {
@@ -227,6 +230,7 @@ function createSettingsWindow() {
     });
 
     ipcMain.on('close-settings', () => {
+        isOpenSettingsWindow = false;
         if (!settingsWindow.isDestroyed()) {
             settingsWindow.close();
         }
@@ -240,7 +244,14 @@ function createSettingsWindow() {
     // 监听打开开发者工具的请求
     ipcMain.on('open-settings-devtools', () => {
         if (settingsWindow && !settingsWindow.isDestroyed()) {
+            isOpenSettingsDevTools = true;
             settingsWindow.webContents.openDevTools({ mode: 'detach' });
+            
+            // 监听DevTools关闭事件
+            settingsWindow.webContents.once('devtools-closed', () => {
+                log.info('[主进程] 设置窗口开发者工具已关闭');
+                isOpenSettingsDevTools = false;
+            });
         }
     });
 }
@@ -497,6 +508,13 @@ ipcMain.on('toggle-dev-tools', () => {
     if (win) {
         // 打开调试工具，设置为单独窗口
         win.webContents.openDevTools({ mode: 'detach' });
+        isOpenMianDevTools = true;
+        
+        // 监听DevTools关闭事件
+        win.webContents.once('devtools-closed', () => {
+            log.info('[主进程] 开发者工具已关闭');
+            isOpenMianDevTools = false;
+        });
     }
 });
 

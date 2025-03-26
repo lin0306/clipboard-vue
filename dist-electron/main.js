@@ -39880,7 +39880,10 @@ if (env !== "development") {
 }
 let win;
 let isOpenWindow = false;
+let isOpenSettingsWindow = false;
 let isHideWindow = false;
+let isOpenMianDevTools = false;
+let isOpenSettingsDevTools = false;
 let x = void 0;
 let y = void 0;
 let wakeUpRoutineShortcut;
@@ -39931,10 +39934,11 @@ function createMainWindow() {
   });
   win.setAlwaysOnTop(true, "screen-saver");
   win.setVisibleOnAllWorkspaces(true);
-  console.log(config.value.colsingHideToTaskbar);
   if (Boolean(config.value.colsingHideToTaskbar)) {
     win.on("blur", () => {
-      closeOrHide();
+      if (!isOpenSettingsWindow && !isOpenMianDevTools && !isOpenSettingsDevTools) {
+        closeOrHide();
+      }
     });
   }
   if (VITE_DEV_SERVER_URL) {
@@ -39989,7 +39993,6 @@ function createMainWindow() {
     updateSettings(config.value);
   }
 }
-let isOpenSettingsWindow = false;
 function createSettingsWindow() {
   if (isOpenSettingsWindow) {
     return;
@@ -40022,6 +40025,7 @@ function createSettingsWindow() {
     settingsWindow.webContents.send("load-shortcut-keys", shortcutKeys.value);
   });
   require$$0$5.ipcMain.on("close-settings", () => {
+    isOpenSettingsWindow = false;
     if (!settingsWindow.isDestroyed()) {
       settingsWindow.close();
     }
@@ -40031,7 +40035,12 @@ function createSettingsWindow() {
   });
   require$$0$5.ipcMain.on("open-settings-devtools", () => {
     if (settingsWindow && !settingsWindow.isDestroyed()) {
+      isOpenSettingsDevTools = true;
       settingsWindow.webContents.openDevTools({ mode: "detach" });
+      settingsWindow.webContents.once("devtools-closed", () => {
+        log.info("[主进程] 设置窗口开发者工具已关闭");
+        isOpenSettingsDevTools = false;
+      });
     }
   });
 }
@@ -40226,6 +40235,11 @@ require$$0$5.ipcMain.on("toggle-dev-tools", () => {
   log.info("[主进程] 打开开发者工具");
   if (win) {
     win.webContents.openDevTools({ mode: "detach" });
+    isOpenMianDevTools = true;
+    win.webContents.once("devtools-closed", () => {
+      log.info("[主进程] 开发者工具已关闭");
+      isOpenMianDevTools = false;
+    });
   }
 });
 require$$0$5.ipcMain.on("reload-app", () => {

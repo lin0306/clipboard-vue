@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed, reactive } from 'vue'
+import { ref, onMounted, onUnmounted, computed, reactive, nextTick } from 'vue'
 import TitleBar from './TitleBar.vue';
 import CustomNavBar from './CustomNavBar.vue';
 import { useTheme, themes } from '../configs/ThemeConfig';
@@ -167,6 +167,15 @@ const itemList = ref<any[]>([])
 let listLoading = ref(false)
 let searchText = ref('')
 
+// 无限滚动相关状态
+const scrollState = reactive({
+  page: 1,
+  pageSize: 10,
+  total: 1000,
+  hasMore: true,
+  isLoading: false
+})
+
 // 标签选中状态
 const selectedTagState = reactive({
   selectedTagId: undefined as number | undefined,
@@ -227,23 +236,54 @@ async function bindTag(itemId: number, tagId: number) {
 /**
  * 根据搜索文本和选中标签过滤剪贴板列表
  * @param {string} searchText - 搜索关键词
+ * @param {boolean} reset - 是否重置列表，默认为true
  */
-async function filterClipboardItems() {
-  listLoading.value = true;
+async function filterClipboardItems(reset: boolean = true) {
+  if (reset) {
+    // 重置列表和分页状态
+    itemList.value = [];
+    scrollState.page = 1;
+    scrollState.hasMore = true;
+  }
+  
+  // 如果没有更多数据或正在加载中，则不执行
+  if (!scrollState.hasMore || scrollState.isLoading) return;
+  
+  scrollState.isLoading = true;
+  listLoading.value = reset; // 只在重置列表时显示全屏加载状态
+  
   try {
     // 使用选中的标签ID进行过滤
     const tagId = selectedTagState.selectedTagId;
-    console.log('查询条件', searchText.value, tagId);
-    const items = await window.ipcRenderer.invoke('search-items', searchText.value, tagId);
-    itemList.value = items;
+    
+    console.log('查询条件', searchText.value, tagId, scrollState.page, scrollState.pageSize);
+    const result = await window.ipcRenderer.invoke('search-items-paged', searchText.value, tagId, scrollState.page, scrollState.pageSize);
+    
+    // 更新数据列表和分页信息
+    if (reset) {
+      itemList.value = result.items;
+    } else {
+      // 追加数据而不是替换
+      itemList.value = [...itemList.value, ...result.items];
+    }
+    
+    scrollState.total = result.total;
+    // 修改判断逻辑：只有当获取的数据条数小于pageSize或已加载的总数据等于总条数时，才认为没有更多数据
+    scrollState.hasMore = result.items.length >= scrollState.pageSize && itemList.value.length < result.total;
+    
+    // 如果有更多数据，增加页码
+    if (scrollState.hasMore) {
+      scrollState.page++;
+    }
 
     // 预加载图片的base64数据
-    for (const item of items) {
+    for (const item of result.items) {
       if (item.type === 'image' && item.file_path && !imageCache.has(item.file_path)) {
         loadImageBase64(item.file_path);
       }
     }
   } finally {
+    scrollState.isLoading = false;
     listLoading.value = false;
   }
 }
@@ -275,7 +315,7 @@ function toggleSearchBox() {
     // 当搜索框隐藏时，清空搜索内容并重新加载列表
     if (searchText.value) {
       searchText.value = '';
-      filterClipboardItems();
+      filterClipboardItems(true);
     }
   }
 }
@@ -451,7 +491,7 @@ async function removeItem(id: number) {
 // 监听剪贴板更新
 window.ipcRenderer.on('clipboard-updated', () => {
   console.log('[渲染进程] 接收到系统复制事件');
-  filterClipboardItems()
+  filterClipboardItems(true) // 重置列表并重新加载
 })
 
 // 监听标签加载
@@ -549,15 +589,60 @@ function handleTagClick(tagId: number) {
     selectedTagState.isTopmost = true;
   }
 
-  // 根据选中的标签过滤剪贴板列表
-  filterClipboardItems();
+  // 根据选中的标签过滤剪贴板列表（重置列表）
+  filterClipboardItems(true);
+}
+
+// 无限滚动模式下不需要分页处理函数
+
+/**
+ * 处理滚动事件，当滚动到底部时加载更多数据
+ */
+function handleScroll() {
+  const clipboardList = document.querySelector('.clipboard-list');
+  if (!clipboardList) return;
+  console.log('滚动事件触发');
+  
+  // 计算是否滚动到底部（考虑一定的提前加载距离）
+  const scrollPosition = clipboardList.scrollTop + clipboardList.clientHeight;
+  const scrollHeight = clipboardList.scrollHeight;
+  const threshold = 200; // 提前200px开始加载
+  
+  if (scrollPosition + threshold >= scrollHeight && !scrollState.isLoading && scrollState.hasMore) {
+    // 滚动到底部，加载更多数据
+    filterClipboardItems(false);
+  }
 }
 
 // 组件挂载时获取历史记录并添加事件监听
 onMounted(() => {
-  filterClipboardItems();
+  filterClipboardItems(true);
   document.addEventListener('click', handleClickOutside);
   document.addEventListener('keydown', handleKeyDown);
+  
+  // 使用nextTick确保DOM已经渲染完成后再添加滚动事件监听
+  nextTick(() => {
+    // 添加滚动事件监听
+    const clipboardList = document.querySelector('.clipboard-list');
+    console.log("clipboardList",clipboardList);
+    if (clipboardList) {
+      console.log('添加滚动事件监听');
+      clipboardList.addEventListener('scroll', handleScroll);
+    } else {
+      console.warn('未找到.clipboard-list元素，将在1秒后重试');
+      // 如果还是没找到，设置一个延迟再次尝试
+      setTimeout(() => {
+        const retryClipboardList = document.querySelector('.clipboard-list');
+        if (retryClipboardList) {
+          console.log('重试成功：添加滚动事件监听');
+          retryClipboardList.addEventListener('scroll', handleScroll);
+        } else {
+          console.error('重试失败：未找到.clipboard-list元素');
+        }
+      }, 1000);
+    }
+  });
+  
   // 初始化图片懒加载
   setTimeout(() => {
     initImageLazyLoad();
@@ -568,6 +653,13 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside);
   document.removeEventListener('keydown', handleKeyDown);
+  
+  // 移除滚动事件监听
+  const clipboardList = document.querySelector('.clipboard-list');
+  if (clipboardList) {
+    clipboardList.removeEventListener('scroll', handleScroll);
+  }
+  
   // 清除图片观察器
   if (imageObserver) {
     imageObserver.disconnect();
@@ -584,7 +676,7 @@ onUnmounted(() => {
   <!-- 搜索框 -->
   <div class="search-container" v-show="searchBoxState.visible">
     <a-input-search id="search-input" v-model:value="searchText" :placeholder="languageTexts.list.searchHint"
-      @pressEnter="filterClipboardItems" @keydown.esc="toggleSearchBox" @search="filterClipboardItems">
+      @pressEnter="filterClipboardItems(true)" @keydown.esc="toggleSearchBox" @search="filterClipboardItems(true)">
       <template #prefix>
         <i class="fas fa-search"></i>
       </template>
@@ -665,6 +757,14 @@ onUnmounted(() => {
           </div>
         </div>
       </div>
+    </div>
+    <!-- 底部加载状态指示器 -->
+    <div class="loading-more-container" v-if="scrollState.isLoading && !listLoading">
+      <a-spin size="small" />
+      <span class="loading-text">加载更多...</span>
+    </div>
+    <div class="no-more-data" v-if="!scrollState.hasMore && itemList.length > 0 && !scrollState.isLoading">
+      <span>已全部加载完成~</span>
     </div>
   </div>
 
@@ -1056,6 +1156,36 @@ onUnmounted(() => {
 .search-container .ant-input {
   background-color: var(--theme-cardBackground);
   color: var(--theme-text);
+}
+
+/* 底部加载状态指示器样式 */
+.loading-more-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px 0;
+  margin-top: 10px;
+  background-color: var(--theme-cardBackground);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.loading-text {
+  margin-left: 10px;
+  color: var(--theme-text);
+  font-size: 14px;
+}
+
+.no-more-data {
+  display: flex;
+  justify-content: center;
+  padding: 16px 0;
+  font-size: 14px;
+}
+
+.clipboard-list {
+  display: flex;
+  flex-direction: column;
 }
 
 @keyframes fadeIn {

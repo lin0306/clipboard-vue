@@ -277,6 +277,22 @@ class ClipboardDB {
      * @returns {Array} 符合条件的剪贴板条目数组
      */
     searchItems(content: string, tagId: number): any[] {
+        return this.searchItemsPaged(content, tagId, 1, 1000).items;
+    }
+
+    /**
+     * 分页搜索剪贴板内容
+     * 支持按内容和标签ID进行搜索，并支持分页
+     * @param {string} content 搜索内容关键词
+     * @param {number} tagId 标签ID
+     * @param {number} page 页码，从1开始
+     * @param {number} pageSize 每页条数
+     * @returns {Object} 包含总条数和当前页数据的对象
+     */
+    searchItemsPaged(content: string, tagId: number, page: number = 1, pageSize: number = 10): { total: number, items: any[] } {
+        // 构建基础SQL查询，用于计算总条数
+        let countSql = 'SELECT COUNT(DISTINCT ci.id) as total FROM clipboard_items ci';
+        const countParams = [];
 
         // 构建基础SQL查询，获取符合条件的剪贴板条目
         let itemsSql = 'SELECT DISTINCT ci.*, ('
@@ -291,19 +307,35 @@ class ClipboardDB {
         // 根据标签ID构建查询条件
         if (tagId && tagId !== null) {
             // 通过关联表连接标签和剪贴板条目
-            itemsSql += ' INNER JOIN item_tags it ON ci.id = it.item_id'
+            const joinClause = ' INNER JOIN item_tags it ON ci.id = it.item_id'
                 + ' INNER JOIN tags t ON it.tag_id = t.id'
                 + ' WHERE t.id = ?';
+            countSql += joinClause;
+            itemsSql += joinClause;
+            countParams.push(tagId);
             itemsParams.push(tagId);
         }
+        
         // 根据内容关键词构建查询条件
         if (content && content !== null && content !== '') {
-            itemsSql += (tagId && tagId !== null) ? ' AND ci.content LIKE ?' : ' WHERE ci.content LIKE ?';
+            const whereClause = (tagId && tagId !== null) ? ' AND ci.content LIKE ?' : ' WHERE ci.content LIKE ?';
+            countSql += whereClause;
+            itemsSql += whereClause;
+            countParams.push(`%${content}%`);
             itemsParams.push(`%${content}%`);
         }
 
         // 添加排序条件：先按置顶状态，再按时间排序
         itemsSql += ' ORDER BY ci.is_topped DESC, CASE WHEN ci.is_topped = 1 THEN ci.top_time ELSE ci.copy_time END DESC';
+
+        // 添加分页限制
+        const offset = (page - 1) * pageSize;
+        itemsSql += ' LIMIT ? OFFSET ?';
+        itemsParams.push(pageSize, offset);
+
+        // 获取总条数
+        const countResult = this.db.prepare(countSql).get(countParams) as { total: number };
+        const total = countResult.total;
 
         // 获取符合条件的剪贴板条目
         const items = this.db.prepare(itemsSql).all(itemsParams) as any[];
@@ -319,7 +351,7 @@ class ClipboardDB {
             }
         }
 
-        return items;
+        return { total, items };
     }
 
     /**

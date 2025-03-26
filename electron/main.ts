@@ -373,6 +373,15 @@ ipcMain.handle('search-items', async (_event, content, tagId) => {
     // 标签信息已在SQL查询中获取，无需再次查询
     return items;
 });
+
+// 监听剪贴板列表分页搜索
+ipcMain.handle('search-items-paged', async (_event, content, tagId, page, pageSize) => {
+  log.info('[主进程] 获取剪贴板数据(分页)，查询条件', content, tagId, page, pageSize);
+  const db = ClipboardDB.getInstance()
+  const result = db.searchItemsPaged(content, tagId, page, pageSize);
+  // 标签信息已在SQL查询中获取，无需再次查询
+  return result;
+});
 // 更新主题配置
 ipcMain.handle('update-themes', async (_event, theme) => {
     log.info('[主进程] 更新主题', theme);

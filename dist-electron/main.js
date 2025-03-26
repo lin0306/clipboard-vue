@@ -39688,17 +39688,42 @@ const _ClipboardDB = class _ClipboardDB {
    * @returns {Array} 符合条件的剪贴板条目数组
    */
   searchItems(content, tagId) {
+    return this.searchItemsPaged(content, tagId, 1, 1e3).items;
+  }
+  /**
+   * 分页搜索剪贴板内容
+   * 支持按内容和标签ID进行搜索，并支持分页
+   * @param {string} content 搜索内容关键词
+   * @param {number} tagId 标签ID
+   * @param {number} page 页码，从1开始
+   * @param {number} pageSize 每页条数
+   * @returns {Object} 包含总条数和当前页数据的对象
+   */
+  searchItemsPaged(content, tagId, page = 1, pageSize = 10) {
+    let countSql = "SELECT COUNT(DISTINCT ci.id) as total FROM clipboard_items ci";
+    const countParams = [];
     let itemsSql = "SELECT DISTINCT ci.*, (SELECT json_group_array(json_object('id', t.id, 'name', t.name, 'color', t.color, 'created_at', t.created_at)) FROM tags t INNER JOIN item_tags it ON t.id = it.tag_id WHERE it.item_id = ci.id) as tags_json FROM clipboard_items ci";
     const itemsParams = [];
     if (tagId && tagId !== null) {
-      itemsSql += " INNER JOIN item_tags it ON ci.id = it.item_id INNER JOIN tags t ON it.tag_id = t.id WHERE t.id = ?";
+      const joinClause = " INNER JOIN item_tags it ON ci.id = it.item_id INNER JOIN tags t ON it.tag_id = t.id WHERE t.id = ?";
+      countSql += joinClause;
+      itemsSql += joinClause;
+      countParams.push(tagId);
       itemsParams.push(tagId);
     }
     if (content && content !== null && content !== "") {
-      itemsSql += tagId && tagId !== null ? " AND ci.content LIKE ?" : " WHERE ci.content LIKE ?";
+      const whereClause = tagId && tagId !== null ? " AND ci.content LIKE ?" : " WHERE ci.content LIKE ?";
+      countSql += whereClause;
+      itemsSql += whereClause;
+      countParams.push(`%${content}%`);
       itemsParams.push(`%${content}%`);
     }
     itemsSql += " ORDER BY ci.is_topped DESC, CASE WHEN ci.is_topped = 1 THEN ci.top_time ELSE ci.copy_time END DESC";
+    const offset = (page - 1) * pageSize;
+    itemsSql += " LIMIT ? OFFSET ?";
+    itemsParams.push(pageSize, offset);
+    const countResult = this.db.prepare(countSql).get(countParams);
+    const total = countResult.total;
     const items = this.db.prepare(itemsSql).all(itemsParams);
     for (const item of items) {
       try {
@@ -39709,7 +39734,7 @@ const _ClipboardDB = class _ClipboardDB {
         item.tags = [];
       }
     }
-    return items;
+    return { total, items };
   }
   /**
    * 更新剪贴板条目的复制时间
@@ -40110,6 +40135,12 @@ require$$0$5.ipcMain.handle("search-items", async (_event, content, tagId) => {
   const db = ClipboardDB.getInstance();
   const items = db.searchItems(content, tagId);
   return items;
+});
+require$$0$5.ipcMain.handle("search-items-paged", async (_event, content, tagId, page, pageSize) => {
+  log.info("[主进程] 获取剪贴板数据(分页)，查询条件", content, tagId, page, pageSize);
+  const db = ClipboardDB.getInstance();
+  const result = db.searchItemsPaged(content, tagId, page, pageSize);
+  return result;
 });
 require$$0$5.ipcMain.handle("update-themes", async (_event, theme) => {
   log.info("[主进程] 更新主题", theme);

@@ -39,9 +39,11 @@ if (env !== 'development') {
 let win: BrowserWindow | undefined
 let isOpenWindow = false;
 let isOpenSettingsWindow = false;
+let isOpenTagsWindow = false;
 let isHideWindow = false;
 let isOpenMianDevTools = false;
 let isOpenSettingsDevTools = false;
+let isOpenTagsDevTools = false;
 let x: number | undefined = undefined;
 let y: number | undefined = undefined;
 let wakeUpRoutineShortcut: ShortcutManager; // 唤醒程序快捷键
@@ -111,9 +113,13 @@ function createMainWindow() {
     // 添加窗口失去焦点事件监听
     if (Boolean(config.value.colsingHideToTaskbar)) {
         win.on('blur', () => {
-            // 当窗口失去焦点时，检查是否是因为打开了设置窗口或调试工具
-            // 只有在没有打开设置窗口和调试工具的情况下才关闭或隐藏主窗口
-            if (!isOpenSettingsWindow && !isOpenMianDevTools && !isOpenSettingsDevTools) {
+            // 没有打开其他窗口，才能触发失焦事件
+            if (!isOpenSettingsWindow
+                && !isOpenTagsWindow
+                && !isOpenMianDevTools
+                && !isOpenSettingsDevTools
+                && !isOpenTagsDevTools
+            ) {
                 closeOrHide();
             }
         });
@@ -246,7 +252,7 @@ function createSettingsWindow() {
         if (settingsWindow && !settingsWindow.isDestroyed()) {
             isOpenSettingsDevTools = true;
             settingsWindow.webContents.openDevTools({ mode: 'detach' });
-            
+
             // 监听DevTools关闭事件
             settingsWindow.webContents.once('devtools-closed', () => {
                 log.info('[主进程] 设置窗口开发者工具已关闭');
@@ -256,8 +262,6 @@ function createSettingsWindow() {
     });
 }
 
-// 是否已经打开标签管理窗口
-let isOpenTagsWindow = false;
 // 创建设置窗口
 function createTagsWindow() {
     if (isOpenTagsWindow) {
@@ -289,7 +293,7 @@ function createTagsWindow() {
     }
 
     // 打开调试工具，设置为单独窗口
-    tagsWindow.webContents.openDevTools({ mode: 'detach' });
+    // tagsWindow.webContents.openDevTools({ mode: 'detach' });
 
     // 在页面加载完成后发送主题设置
     tagsWindow.webContents.on('did-finish-load', () => {
@@ -297,6 +301,7 @@ function createTagsWindow() {
     });
 
     ipcMain.on('close-tags', () => {
+        isOpenTagsWindow = false;
         if (!tagsWindow.isDestroyed()) {
             tagsWindow.close();
         }
@@ -310,7 +315,14 @@ function createTagsWindow() {
     // 监听打开开发者工具的请求
     ipcMain.on('open-tags-devtools', () => {
         if (tagsWindow && !tagsWindow.isDestroyed()) {
+            isOpenTagsDevTools = true;
             tagsWindow.webContents.openDevTools({ mode: 'detach' });
+
+            // 监听DevTools关闭事件
+            tagsWindow.webContents.once('devtools-closed', () => {
+                log.info('[主进程] 标签窗口开发者工具已关闭');
+                isOpenTagsDevTools = false;
+            });
         }
     });
 }
@@ -387,11 +399,11 @@ ipcMain.handle('search-items', async (_event, content, tagId) => {
 
 // 监听剪贴板列表分页搜索
 ipcMain.handle('search-items-paged', async (_event, content, tagId, page, pageSize) => {
-  log.info('[主进程] 获取剪贴板数据(分页)，查询条件', content, tagId, page, pageSize);
-  const db = ClipboardDB.getInstance()
-  const result = db.searchItemsPaged(content, tagId, page, pageSize);
-  // 标签信息已在SQL查询中获取，无需再次查询
-  return result;
+    log.info('[主进程] 获取剪贴板数据(分页)，查询条件', content, tagId, page, pageSize);
+    const db = ClipboardDB.getInstance()
+    const result = db.searchItemsPaged(content, tagId, page, pageSize);
+    // 标签信息已在SQL查询中获取，无需再次查询
+    return result;
 });
 // 更新主题配置
 ipcMain.handle('update-themes', async (_event, theme) => {
@@ -509,7 +521,7 @@ ipcMain.on('toggle-dev-tools', () => {
         // 打开调试工具，设置为单独窗口
         win.webContents.openDevTools({ mode: 'detach' });
         isOpenMianDevTools = true;
-        
+
         // 监听DevTools关闭事件
         win.webContents.once('devtools-closed', () => {
             log.info('[主进程] 开发者工具已关闭');

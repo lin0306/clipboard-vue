@@ -476,7 +476,7 @@ ipcMain.handle('get-image-base64', async (_event, imagePath) => {
             return null;
         }
         const image = nativeImage.createFromPath(imagePath);
-        return `data:image/png;base64,${image.toPNG().toString('base64')}`;
+        return `data:image/png;base64,${image.resize({quality: 'good'}).toPNG().toString('base64')}`;
     } catch (error) {
         log.error('[主进程] 获取图片base64编码失败:', error);
         return null;

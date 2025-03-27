@@ -515,7 +515,7 @@ ipcMain.handle('update-shortcut-keys', async (_event, config) => {
 });
 
 // 监听打开开发者工具的请求
-ipcMain.on('toggle-dev-tools', () => {
+ipcMain.on('open-main-tools', () => {
     log.info('[主进程] 打开开发者工具');
     if (win) {
         // 打开调试工具，设置为单独窗口

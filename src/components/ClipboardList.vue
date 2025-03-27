@@ -36,14 +36,6 @@ const MenuItems = computed((): NavBarItem[] => [
         }
       },
       {
-        key: '调试工具',
-        label: languageTexts.list.menu.devTools,
-        onClick: () => {
-          // 打开开发者工具
-          window.ipcRenderer.send('toggle-dev-tools');
-        }
-      },
-      {
         key: '重新加载',
         label: languageTexts.list.menu.reload,
         onClick: () => {
@@ -669,10 +661,8 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <TitleBar :title="languageTexts.list.title" :showFixedBtn="true" :closeWindow="`close-app`" />
+  <TitleBar :title="languageTexts.list.title" :showFixedBtn="true" :closeWindow="`close-app`" :dev-tool="`open-main-tools`" />
   <CustomNavBar :menuItems="MenuItems" />
-  <div style="width: 100%;height: 60px;"></div>
-
   <!-- 搜索框 -->
   <div class="search-container" v-show="searchBoxState.visible">
     <a-input-search id="search-input" v-model:value="searchText" :placeholder="languageTexts.list.searchHint"

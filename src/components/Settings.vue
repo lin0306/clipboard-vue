@@ -215,9 +215,6 @@ const resetConfig = () => {
   }
 };
 
-function openDevTools() {
-  window.ipcRenderer.send('open-settings-devtools');
-}
 // 处理重启应用
 const handleRestart = () => {
   restartModalVisible.value = false;
@@ -251,7 +248,8 @@ onMounted(() => {
 
 <template>
   <div class="settings-container">
-    <titleBar :title="languageTexts.settings.title" :closeWindow="`close-settings`" />
+    <titleBar :title="languageTexts.settings.title" :closeWindow="`close-settings`"
+      :dev-tool="`open-settings-devtools`" />
 
     <div class="settings-content">
       <!-- 左侧菜单 -->
@@ -310,11 +308,6 @@ onMounted(() => {
                 {{ option.label }}
               </Select.Option>
             </Select>
-          </div>
-
-          <div class="setting-item">
-            <span class="setting-label">{{ languageTexts.settings.devTools }}</span>
-            <RightArrowIcon class="right-arrow-btn" @click="openDevTools" />
           </div>
         </div>
 

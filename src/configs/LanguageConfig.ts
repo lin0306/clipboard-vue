@@ -29,7 +29,6 @@ export interface PageConfig {
         windowHeight: string;
         windowWidth: string;
         languages: string;
-        devTools: string;
         // 存储设置页面文字
         tempPath: string;
         // 快捷键设置页面文字
@@ -66,7 +65,6 @@ export interface PageConfig {
         menu: {
             program: string;
             settings: string;
-            devTools: string;
             reload: string;
             exit: string;
             data: string;
@@ -112,7 +110,6 @@ export const zhCN: LanguageConfig = {
             windowHeight: '高：',
             windowWidth: '宽：',
             languages: '语言',
-            devTools: '调试工具',
             tempPath: '临时文件路径',
             search: '搜索',
             wakeUpRoutine: '唤醒程序',
@@ -142,7 +139,6 @@ export const zhCN: LanguageConfig = {
             menu: {
                 program: '程序',
                 settings: '偏好设置',
-                devTools: '调试工具',
                 reload: '重新加载',
                 exit: '关闭',
                 data: '数据',
@@ -189,7 +185,6 @@ export const enUS: LanguageConfig = {
             windowHeight: 'Height:',
             windowWidth: 'Width:',
             languages: 'Languages',
-            devTools: 'Developer Tools',
             tempPath: 'Temporary File Path',
             search: 'Search',
             wakeUpRoutine: 'Wake Up Routine',
@@ -219,7 +214,6 @@ export const enUS: LanguageConfig = {
             menu: {
                 program: 'Program',
                 settings: 'Settings',
-                devTools: 'Developer Tools',
                 reload: 'Reload',
                 exit: 'Exit',
                 data: 'Data',

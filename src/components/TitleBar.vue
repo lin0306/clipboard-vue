@@ -2,22 +2,27 @@
     <div id="title-bar" :class="{ 'fixed': isFixed }">
         <div class="window-title">{{ title }}</div>
         <div class="window-controls">
+            <div v-if="isDev && devTool" class="control-button" @click="openDevTool(devTool)">
+                <DevToolIcon class="program-btn" id="devtool-button-img" />
+            </div>
             <div v-if="showFixedBtn && !isFixed" class="control-button fixation-button" @click="onFixWindow">
                 <FixedIcon class="program-btn" id="fixation-button-img" />
             </div>
             <div v-if="showFixedBtn && isFixed" class="control-button unfixation-button" @click="onUnfixWindow">
                 <UnFixedIcon class="program-btn" id="unfixation-button-img" />
             </div>
-            <div class="control-button close-button">
-                <CloseIcon class="program-btn" id="close-button-img" @click="onClose(closeWindow)" />
+            <div class="control-button close-button" @click="onClose(closeWindow)">
+                <CloseIcon class="program-btn" id="close-button-img" />
             </div>
         </div>
     </div>
+    <div style="width: 100%;height: 25px;"></div>
 </template>
 <script lang="ts" setup>
 import FixedIcon from '../assets/icons/FixedIcon.vue'
 import UnFixedIcon from '../assets/icons/UnFixedIcon.vue'
 import CloseIcon from '../assets/icons/CloseIcon.vue'
+import DevToolIcon from '../assets/icons/DevToolIcon.vue'
 
 import { ref } from 'vue'
 
@@ -25,9 +30,13 @@ withDefaults(defineProps<{
     title: string;
     closeWindow: string;
     showFixedBtn?: boolean;
+    devTool?: string;
 }>(), {
     showFixedBtn: false
 });
+
+const env = process.env.NODE_ENV;
+const isDev = env === 'development';
 
 const isFixed = ref(false);
 
@@ -43,6 +52,12 @@ function onUnfixWindow() {
 
 function onClose(win: string) {
     window.ipcRenderer.send(win);
+}
+
+function openDevTool(devTool: string | undefined) {
+    if (devTool) {
+        window.ipcRenderer.send(devTool);
+    }
 }
 </script>
 <style>
@@ -102,7 +117,8 @@ function onClose(win: string) {
     opacity: 0.3;
 }
 
-.fixation-button, .unfixation-button {
+.fixation-button,
+.unfixation-button {
     position: relative;
     overflow: hidden;
     display: flex;
@@ -118,6 +134,10 @@ function onClose(win: string) {
 }
 
 #unfixation-button-img {
+    opacity: 1;
+}
+
+#devtool-button-img:hover {
     opacity: 1;
 }
 </style>

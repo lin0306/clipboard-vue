@@ -1,7 +1,7 @@
 <template>
   <nav class="custom-navbar">
     <ul class="navbar-menu">
-      <li v-for="item in menuItems" :key="item.key" class="navbar-item" :class="{ 'has-submenu': item.children }">
+      <li v-for="item in menus" :key="item.key" class="navbar-item" :class="{ 'has-submenu': item.children }">
         <a @click="handleMenuClick(item)" class="navbar-link">
           {{ item.label }}
         </a>
@@ -31,14 +31,28 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted, ref, computed } from 'vue';
 import HookIcon from '../assets/icons/HookIcon.vue';
 import { useTheme } from '../configs/ThemeConfig';
-import {NavBarItem} from "../types/menus/NavBarItem.ts";
+import { NavBarItem } from "../types/menus/NavBarItem.ts";
 
-defineProps<{
+const props = defineProps<{
   menuItems: NavBarItem[];
 }>();
+
+const menus = computed(() => {
+  // 过滤掉isHide为true的菜单项
+  return props.menuItems.filter(item => !item.isHide).map(item => {
+    // 如果有子菜单，也需要过滤子菜单中isHide为true的项
+    if (item.children && item.children.length > 0) {
+      return {
+        ...item,
+        children: item.children.filter(child => !child.isHide)
+      };
+    }
+    return item;
+  });
+});
 
 const openSubmenu: any = ref<string | null>(null);
 

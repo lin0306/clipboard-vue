@@ -1,18 +1,17 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed, reactive, nextTick } from 'vue'
-import TitleBar from './TitleBar.vue';
-import CustomNavBar from './CustomNavBar.vue';
-import { useTheme, themes } from '../configs/ThemeConfig';
-import { NavBarItem } from "../types/menus/NavBarItem.ts";
-import TopIcon from '../assets/icons/TopIcon.vue';
-import UntopIcon from '../assets/icons/UntopIcon.vue';
-import TrashIcon from '../assets/icons/TrashIcon.vue';
-import MoreIcon from '../assets/icons/MoreIcon.vue';
-import DragIcon from '../assets/icons/DragIcon.vue';
-import convertType from '../utils/convert.ts';
-import { getTextColorForBackground } from '../utils/colorUtils.ts';
-import { Chrome } from '@ckpack/vue-color';
 import { message } from 'ant-design-vue';
+import { computed, nextTick, onMounted, onUnmounted, reactive, ref } from 'vue';
+import DragIcon from '../assets/icons/DragIcon.vue';
+import MoreIcon from '../assets/icons/MoreIcon.vue';
+import TopIcon from '../assets/icons/TopIcon.vue';
+import TrashIcon from '../assets/icons/TrashIcon.vue';
+import UntopIcon from '../assets/icons/UntopIcon.vue';
+import { themes, useTheme } from '../configs/ThemeConfig';
+import { NavBarItem } from "../types/menus/NavBarItem.ts";
+import { getTextColorForBackground } from '../utils/colorUtils.ts';
+import convertType from '../utils/convert.ts';
+import CustomNavBar from './CustomNavBar.vue';
+import TitleBar from './TitleBar.vue';
 
 import { useLanguage } from '../configs/LanguageConfig.ts';
 
@@ -140,16 +139,6 @@ const MenuItems = computed((): NavBarItem[] => [
       },
     ],
   },
-  {
-    key: '添加标签',
-    label: '添加标签',
-    onClick: () => {
-      // 打开添加标签弹窗
-      tagModalState.visible = true;
-      tagModalState.tagName = '';
-      tagModalState.tagColor = { r: 128, g: 128, b: 128, a: 1 };
-    },
-  },
 ]);
 
 const TagItems = ref<[{ id: number, name: string, color: string }]>();
@@ -187,7 +176,6 @@ const imageCache = reactive(new Map<string, string>())
 // 图片懒加载观察器
 let imageObserver: IntersectionObserver | null = null;
 
-
 // 下拉菜单状态
 const dropdownState = reactive({
   visible: false,
@@ -199,13 +187,6 @@ const dragState = reactive({
   isDragging: false,
   dragItemId: -1,
   draggedOverTagId: -1
-});
-
-// 添加标签弹窗状态
-const tagModalState = reactive({
-  visible: false,
-  tagName: '',
-  tagColor: { r: 128, g: 128, b: 128, a: 1 } // 默认灰色
 });
 
 // 显示/隐藏下拉菜单
@@ -237,20 +218,20 @@ async function filterClipboardItems(reset: boolean = true) {
     scrollState.page = 1;
     scrollState.hasMore = true;
   }
-  
+
   // 如果没有更多数据或正在加载中，则不执行
   if (!scrollState.hasMore || scrollState.isLoading) return;
-  
+
   scrollState.isLoading = true;
   listLoading.value = reset; // 只在重置列表时显示全屏加载状态
-  
+
   try {
     // 使用选中的标签ID进行过滤
     const tagId = selectedTagState.selectedTagId;
-    
+
     console.log('查询条件', searchText.value, tagId, scrollState.page, scrollState.pageSize);
     const result = await window.ipcRenderer.invoke('search-items-paged', searchText.value, tagId, scrollState.page, scrollState.pageSize);
-    
+
     // 更新数据列表和分页信息
     if (reset) {
       itemList.value = result.items;
@@ -258,11 +239,11 @@ async function filterClipboardItems(reset: boolean = true) {
       // 追加数据而不是替换
       itemList.value = [...itemList.value, ...result.items];
     }
-    
+
     scrollState.total = result.total;
     // 修改判断逻辑：只有当获取的数据条数小于pageSize或已加载的总数据等于总条数时，才认为没有更多数据
     scrollState.hasMore = result.items.length >= scrollState.pageSize && itemList.value.length < result.total;
-    
+
     // 如果有更多数据，增加页码
     if (scrollState.hasMore) {
       scrollState.page++;
@@ -443,35 +424,6 @@ async function onUntop(id: number) {
 }
 
 /**
- * 添加标签
- * @param {string} name - 标签名称
- * @param {string} color - 标签颜色
- */
-async function addTag(name: string, color: string) {
-  try {
-    await window.ipcRenderer.invoke('add-tag', name, color);
-    message.success('添加标签成功');
-  } catch (error) {
-    message.error('添加标签失败');
-    console.error(error);
-  }
-}
-
-/**
- * 处理添加标签确认
- */
-async function handleAddTagConfirm() {
-  console.log(tagModalState.tagColor)
-  if (!tagModalState.tagName.trim()) {
-    message.warning('标签名称不能为空');
-    return;
-  }
-  const rgba: any = tagModalState.tagColor;
-  await addTag(tagModalState.tagName, 'rgba(' + rgba.rgba.r + ',' + rgba.rgba.g + ',' + rgba.rgba.b + ',' + rgba.rgba.a + ')');
-  tagModalState.visible = false;
-}
-
-/**
  * 删除剪贴板内容
  * @param {number} id - 内容id
  */
@@ -594,12 +546,12 @@ function handleScroll() {
   const clipboardList = document.querySelector('.clipboard-list');
   if (!clipboardList) return;
   console.log('滚动事件触发');
-  
+
   // 计算是否滚动到底部（考虑一定的提前加载距离）
   const scrollPosition = clipboardList.scrollTop + clipboardList.clientHeight;
   const scrollHeight = clipboardList.scrollHeight;
   const threshold = 200; // 提前200px开始加载
-  
+
   if (scrollPosition + threshold >= scrollHeight && !scrollState.isLoading && scrollState.hasMore) {
     // 滚动到底部，加载更多数据
     filterClipboardItems(false);
@@ -611,12 +563,12 @@ onMounted(() => {
   filterClipboardItems(true);
   document.addEventListener('click', handleClickOutside);
   document.addEventListener('keydown', handleKeyDown);
-  
+
   // 使用nextTick确保DOM已经渲染完成后再添加滚动事件监听
   nextTick(() => {
     // 添加滚动事件监听
     const clipboardList = document.querySelector('.clipboard-list');
-    console.log("clipboardList",clipboardList);
+    console.log("clipboardList", clipboardList);
     if (clipboardList) {
       console.log('添加滚动事件监听');
       clipboardList.addEventListener('scroll', handleScroll);
@@ -634,7 +586,7 @@ onMounted(() => {
       }, 1000);
     }
   });
-  
+
   // 初始化图片懒加载
   setTimeout(() => {
     initImageLazyLoad();
@@ -645,13 +597,13 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside);
   document.removeEventListener('keydown', handleKeyDown);
-  
+
   // 移除滚动事件监听
   const clipboardList = document.querySelector('.clipboard-list');
   if (clipboardList) {
     clipboardList.removeEventListener('scroll', handleScroll);
   }
-  
+
   // 清除图片观察器
   if (imageObserver) {
     imageObserver.disconnect();
@@ -661,7 +613,8 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <TitleBar :title="languageTexts.list.title" :showFixedBtn="true" :closeWindow="`close-app`" :dev-tool="`open-main-tools`" />
+  <TitleBar :title="languageTexts.list.title" :showFixedBtn="true" :closeWindow="`close-app`"
+    :dev-tool="`open-main-tools`" />
   <CustomNavBar :menuItems="MenuItems" />
   <!-- 搜索框 -->
   <div class="search-container" v-show="searchBoxState.visible">
@@ -757,23 +710,6 @@ onUnmounted(() => {
       <span>已全部加载完成~</span>
     </div>
   </div>
-
-  <!-- 添加标签弹窗 -->
-  <a-modal v-model:open="tagModalState.visible" title="添加标签" @ok="handleAddTagConfirm"
-    @cancel="tagModalState.visible = false">
-    <div class="tag-form">
-      <div class="form-item">
-        <label>标签名称</label>
-        <a-input v-model:value="tagModalState.tagName" placeholder="请输入标签名称" />
-      </div>
-      <div class="form-item">
-        <label>标签颜色</label>
-        <div class="color-picker-container">
-          <Chrome v-model="tagModalState.tagColor" />
-        </div>
-      </div>
-    </div>
-  </a-modal>
 </template>
 
 <style scoped>
@@ -1091,37 +1027,6 @@ onUnmounted(() => {
 
 .tag-disabled:hover .tag-name {
   opacity: 0 !important;
-}
-
-/* 标签表单样式 */
-.tag-form {
-  padding: 10px 0;
-}
-
-.form-item {
-  margin-bottom: 16px;
-}
-
-.form-item label {
-  display: block;
-  margin-bottom: 8px;
-  font-size: 14px;
-  color: var(--theme-text);
-}
-
-.color-picker-container {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 10px;
-}
-
-.color-preview {
-  width: 30px;
-  height: 30px;
-  border-radius: 4px;
-  border: 1px solid var(--theme-border);
-  margin-bottom: 5px;
 }
 
 /* 搜索框样式 */

@@ -439,6 +439,28 @@ ipcMain.handle('add-tag', async (_event, name, color) => {
     const tags = db.getAllTags();
     win?.webContents.send('load-tag-items', tags);
 });
+
+ipcMain.handle('update-tag', async (_event, id, name, color) => {
+    log.info('[主进程] 更新标签', id, name, color);
+    const db = ClipboardDB.getInstance()
+    db.updateTag(id, name, color);
+    const tags = db.getAllTags();
+    win?.webContents.send('load-tag-items', tags);
+});
+
+ipcMain.handle('delete-tag', async (_event, id) => {
+    log.info('[主进程] 删除标签', id);
+    const db = ClipboardDB.getInstance()
+    db.deleteTag(id);
+    const tags = db.getAllTags();
+    win?.webContents.send('load-tag-items', tags);
+});
+
+ipcMain.handle('get-all-tags', async () => {
+    log.info('[主进程] 获取所有标签');
+    const db = ClipboardDB.getInstance()
+    return db.getAllTags();
+});
 // 监听剪贴板列表内容绑定标签
 ipcMain.handle('item-bind-tag', async (_event, itemId, tagId) => {
     log.info('[主进程] 内容和标签绑定', itemId, tagId);

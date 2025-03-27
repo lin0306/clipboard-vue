@@ -39761,6 +39761,15 @@ const _ClipboardDB = class _ClipboardDB {
     this.db.prepare("DELETE FROM tags WHERE id = ?").run(id);
   }
   /**
+   * 更新标签
+   * @param {number} id 标签ID
+   * @param {string} name 标签名称
+   * @param {string} color 标签颜色
+   */
+  updateTag(id, name, color) {
+    this.db.prepare("UPDATE tags SET name = ?, color = ? WHERE id = ?").run(name, color, id);
+  }
+  /**
    * 获取所有标签
    * @returns {Array} 标签数组，按创建时间升序排列
    */
@@ -39881,9 +39890,11 @@ if (env !== "development") {
 let win;
 let isOpenWindow = false;
 let isOpenSettingsWindow = false;
+let isOpenTagsWindow = false;
 let isHideWindow = false;
 let isOpenMianDevTools = false;
 let isOpenSettingsDevTools = false;
+let isOpenTagsDevTools = false;
 let x = void 0;
 let y = void 0;
 let wakeUpRoutineShortcut;
@@ -39936,7 +39947,7 @@ function createMainWindow() {
   win.setVisibleOnAllWorkspaces(true);
   if (Boolean(config.value.colsingHideToTaskbar)) {
     win.on("blur", () => {
-      if (!isOpenSettingsWindow && !isOpenMianDevTools && !isOpenSettingsDevTools) {
+      if (!isOpenSettingsWindow && !isOpenTagsWindow && !isOpenMianDevTools && !isOpenSettingsDevTools && !isOpenTagsDevTools) {
         closeOrHide();
       }
     });
@@ -40044,7 +40055,6 @@ function createSettingsWindow() {
     }
   });
 }
-let isOpenTagsWindow = false;
 function createTagsWindow() {
   if (isOpenTagsWindow) {
     return;
@@ -40071,11 +40081,11 @@ function createTagsWindow() {
   } else {
     tagsWindow.loadFile(path$6.join(RENDERER_DIST, "index.html"));
   }
-  tagsWindow.webContents.openDevTools({ mode: "detach" });
   tagsWindow.webContents.on("did-finish-load", () => {
     tagsWindow.webContents.send("window-type", "tags");
   });
   require$$0$5.ipcMain.on("close-tags", () => {
+    isOpenTagsWindow = false;
     if (!tagsWindow.isDestroyed()) {
       tagsWindow.close();
     }
@@ -40085,7 +40095,12 @@ function createTagsWindow() {
   });
   require$$0$5.ipcMain.on("open-tags-devtools", () => {
     if (tagsWindow && !tagsWindow.isDestroyed()) {
+      isOpenTagsDevTools = true;
       tagsWindow.webContents.openDevTools({ mode: "detach" });
+      tagsWindow.webContents.once("devtools-closed", () => {
+        log.info("[主进程] 标签窗口开发者工具已关闭");
+        isOpenTagsDevTools = false;
+      });
     }
   });
 }
@@ -40179,6 +40194,25 @@ require$$0$5.ipcMain.handle("add-tag", async (_event, name, color) => {
   const tags = db.getAllTags();
   win == null ? void 0 : win.webContents.send("load-tag-items", tags);
 });
+require$$0$5.ipcMain.handle("update-tag", async (_event, id, name, color) => {
+  log.info("[主进程] 更新标签", id, name, color);
+  const db = ClipboardDB.getInstance();
+  db.updateTag(id, name, color);
+  const tags = db.getAllTags();
+  win == null ? void 0 : win.webContents.send("load-tag-items", tags);
+});
+require$$0$5.ipcMain.handle("delete-tag", async (_event, id) => {
+  log.info("[主进程] 删除标签", id);
+  const db = ClipboardDB.getInstance();
+  db.deleteTag(id);
+  const tags = db.getAllTags();
+  win == null ? void 0 : win.webContents.send("load-tag-items", tags);
+});
+require$$0$5.ipcMain.handle("get-all-tags", async () => {
+  log.info("[主进程] 获取所有标签");
+  const db = ClipboardDB.getInstance();
+  return db.getAllTags();
+});
 require$$0$5.ipcMain.handle("item-bind-tag", async (_event, itemId, tagId) => {
   log.info("[主进程] 内容和标签绑定", itemId, tagId);
   const db = ClipboardDB.getInstance();
@@ -40231,7 +40265,7 @@ require$$0$5.ipcMain.handle("update-shortcut-keys", async (_event, config2) => {
   win == null ? void 0 : win.webContents.send("load-shortcut-keys", config2);
   return true;
 });
-require$$0$5.ipcMain.on("toggle-dev-tools", () => {
+require$$0$5.ipcMain.on("open-main-tools", () => {
   log.info("[主进程] 打开开发者工具");
   if (win) {
     win.webContents.openDevTools({ mode: "detach" });

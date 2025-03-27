@@ -382,6 +382,16 @@ class ClipboardDB {
     }
 
     /**
+     * 更新标签
+     * @param {number} id 标签ID
+     * @param {string} name 标签名称
+     * @param {string} color 标签颜色
+     */
+    updateTag(id: number, name: string, color: string) {
+        this.db.prepare('UPDATE tags SET name = ?, color = ? WHERE id = ?').run(name, color, id);
+    }
+
+    /**
      * 获取所有标签
      * @returns {Array} 标签数组，按创建时间升序排列
      */

@@ -255,6 +255,12 @@ async function filterClipboardItems(reset: boolean = true) {
         loadImageBase64(item.file_path);
       }
     }
+    
+    // 在数据更新后，使用nextTick确保DOM已更新，然后重新初始化懒加载
+    nextTick(() => {
+      // 重新初始化图片懒加载
+      initImageLazyLoad();
+    });
   } finally {
     scrollState.isLoading = false;
     listLoading.value = false;

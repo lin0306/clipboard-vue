@@ -40016,10 +40016,12 @@ let win;
 let isOpenWindow = false;
 let isOpenSettingsWindow = false;
 let isOpenTagsWindow = false;
+let isOpenAboutWindow = false;
 let isHideWindow = false;
 let isOpenMianDevTools = false;
 let isOpenSettingsDevTools = false;
 let isOpenTagsDevTools = false;
+let isOpenAboutDevTools = false;
 let x = void 0;
 let y = void 0;
 let wakeUpRoutineShortcut;
@@ -40073,7 +40075,7 @@ function createMainWindow() {
   win.setVisibleOnAllWorkspaces(true);
   if (Boolean(config.value.colsingHideToTaskbar)) {
     win.on("blur", () => {
-      if (!isOpenSettingsWindow && !isOpenTagsWindow && !isOpenMianDevTools && !isOpenSettingsDevTools && !isOpenTagsDevTools && !isFixedMainWindow) {
+      if (!isOpenSettingsWindow && !isOpenTagsWindow && !isOpenAboutWindow && !isOpenMianDevTools && !isOpenSettingsDevTools && !isOpenTagsDevTools && !isOpenAboutDevTools && !isFixedMainWindow) {
         closeOrHide();
       }
     });
@@ -40158,6 +40160,7 @@ function createMainWindow() {
   });
   require$$0$5.ipcMain.on("open-settings", createSettingsWindow);
   require$$0$5.ipcMain.on("open-tags", createTagsWindow);
+  require$$0$5.ipcMain.on("open-about", createAboutWindow);
 }
 function createSettingsWindow() {
   if (isOpenSettingsWindow) {
@@ -40259,6 +40262,61 @@ function createTagsWindow() {
     }
   });
 }
+function createAboutWindow() {
+  if (isOpenAboutWindow) {
+    return;
+  }
+  isOpenAboutWindow = true;
+  const aboutWindow = new require$$0$5.BrowserWindow({
+    width: 350,
+    height: 270,
+    frame: false,
+    resizable: false,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: true,
+      preload: path$6.join(path$6.dirname(node_url.fileURLToPath(typeof document === "undefined" ? require("url").pathToFileURL(__filename).href : _documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === "SCRIPT" && _documentCurrentScript.src || new URL("main.js", document.baseURI).href)), "preload.mjs"),
+      defaultEncoding: "utf8"
+      // 设置默认编码为 UTF-8
+    },
+    icon: path$6.join(process.env.VITE_PUBLIC, "logo.png"),
+    transparent: false,
+    parent: win
+  });
+  if (VITE_DEV_SERVER_URL) {
+    aboutWindow.loadURL(VITE_DEV_SERVER_URL);
+  } else {
+    aboutWindow.loadFile(path$6.join(RENDERER_DIST, "index.html"));
+  }
+  aboutWindow.webContents.on("did-finish-load", () => {
+    aboutWindow.webContents.send("window-type", "about");
+    const image = require$$0$5.nativeImage.createFromPath(path$6.join(process.env.VITE_PUBLIC, "logo.png"));
+    const imageBase64 = `data:image/png;base64,${image.resize({ quality: "good" }).toPNG().toString("base64")}`;
+    aboutWindow.webContents.send("load-logo", imageBase64);
+  });
+  aboutWindow.on("closed", () => {
+    isOpenAboutWindow = false;
+  });
+  require$$0$5.ipcMain.on("close-about", () => {
+    isOpenAboutWindow = false;
+    if (!aboutWindow.isDestroyed()) {
+      aboutWindow.close();
+    }
+  });
+  require$$0$5.ipcMain.on("open-about-devtools", () => {
+    if (aboutWindow && !aboutWindow.isDestroyed()) {
+      isOpenAboutDevTools = true;
+      aboutWindow.webContents.openDevTools({ mode: "detach" });
+      aboutWindow.webContents.once("devtools-closed", () => {
+        log.info("[主进程] 关于窗口开发者工具已关闭");
+        isOpenAboutDevTools = false;
+      });
+    }
+  });
+  require$$0$5.ipcMain.on("open-external-link", (_event, url) => {
+    require$$0$5.shell.openExternal(url);
+  });
+}
 function createTray(win2) {
   log.info("是否隐藏了主窗口：" + isHideWindow);
   if (isHideWindow) {
@@ -40274,6 +40332,7 @@ function createTray(win2) {
     {
       label: "关于",
       click: function() {
+        createAboutWindow();
       }
     },
     {

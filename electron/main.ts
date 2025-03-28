@@ -1,4 +1,4 @@
-import { app, BrowserWindow, clipboard, ipcMain, screen, Tray, Menu, nativeImage } from 'electron'
+import { app, BrowserWindow, clipboard, ipcMain, screen, Tray, Menu, nativeImage, shell } from 'electron'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import fs from 'node:fs'
@@ -40,10 +40,12 @@ let win: BrowserWindow | undefined
 let isOpenWindow = false;
 let isOpenSettingsWindow = false;
 let isOpenTagsWindow = false;
+let isOpenAboutWindow = false;
 let isHideWindow = false;
 let isOpenMianDevTools = false;
 let isOpenSettingsDevTools = false;
 let isOpenTagsDevTools = false;
+let isOpenAboutDevTools = false;
 let x: number | undefined = undefined;
 let y: number | undefined = undefined;
 let wakeUpRoutineShortcut: ShortcutManager; // 唤醒程序快捷键
@@ -115,11 +117,16 @@ function createMainWindow() {
     if (Boolean(config.value.colsingHideToTaskbar)) {
         win.on('blur', () => {
             // 没有打开其他窗口，才能触发失焦事件
-            if (!isOpenSettingsWindow
+            if (
+                !isOpenSettingsWindow
                 && !isOpenTagsWindow
+                && !isOpenAboutWindow
+
                 && !isOpenMianDevTools
                 && !isOpenSettingsDevTools
                 && !isOpenTagsDevTools
+                && !isOpenAboutDevTools
+
                 && !isFixedMainWindow
             ) {
                 closeOrHide();
@@ -243,6 +250,9 @@ function createMainWindow() {
 
     // 打开标签管理窗口
     ipcMain.on('open-tags', createTagsWindow);
+
+    // 打开标签管理窗口
+    ipcMain.on('open-about', createAboutWindow);
 }
 
 // 创建设置窗口
@@ -313,7 +323,7 @@ function createSettingsWindow() {
 
 }
 
-// 创建设置窗口
+// 创建标签管理窗口
 function createTagsWindow() {
     if (isOpenTagsWindow) {
         return;
@@ -379,6 +389,79 @@ function createTagsWindow() {
     });
 }
 
+// 创建标签管理窗口
+function createAboutWindow() {
+    if (isOpenAboutWindow) {
+        return;
+    }
+    isOpenAboutWindow = true;
+
+    const aboutWindow = new BrowserWindow({
+        width: 350,
+        height: 270,
+        frame: false,
+        resizable: false,
+        webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: true,
+            preload: path.join(path.dirname(fileURLToPath(import.meta.url)), 'preload.mjs'),
+            defaultEncoding: 'utf8', // 设置默认编码为 UTF-8
+        },
+        icon: path.join(process.env.VITE_PUBLIC, 'logo.png'),
+        transparent: false,
+        parent: win,
+    });
+
+    if (VITE_DEV_SERVER_URL) {
+        aboutWindow.loadURL(VITE_DEV_SERVER_URL)
+    } else {
+        // win.loadFile('dist/index.html')
+        aboutWindow.loadFile(path.join(RENDERER_DIST, 'index.html'))
+    }
+
+    // 打开调试工具，设置为单独窗口
+    // aboutWindow.webContents.openDevTools({ mode: 'detach' });
+
+    // 在页面加载完成后发送主题设置
+    aboutWindow.webContents.on('did-finish-load', () => {
+        aboutWindow.webContents.send('window-type', 'about');
+        const image = nativeImage.createFromPath(path.join(process.env.VITE_PUBLIC, 'logo.png'));
+        const imageBase64 = `data:image/png;base64,${image.resize({ quality: 'good' }).toPNG().toString('base64')}`;
+        aboutWindow.webContents.send('load-logo', imageBase64);
+    });
+
+    // 当窗口关闭时，移除事件监听器
+    aboutWindow.on('closed', () => {
+        isOpenAboutWindow = false;
+    });
+
+    // 监听关闭窗口的请求
+    ipcMain.on('close-about', () => {
+        isOpenAboutWindow = false;
+        if (!aboutWindow.isDestroyed()) {
+            aboutWindow.close();
+        }
+    });
+
+    // 监听打开开发者工具的请求
+    ipcMain.on('open-about-devtools', () => {
+        if (aboutWindow && !aboutWindow.isDestroyed()) {
+            isOpenAboutDevTools = true;
+            aboutWindow.webContents.openDevTools({ mode: 'detach' });
+
+            // 监听DevTools关闭事件
+            aboutWindow.webContents.once('devtools-closed', () => {
+                log.info('[主进程] 关于窗口开发者工具已关闭');
+                isOpenAboutDevTools = false;
+            });
+        }
+    });
+
+    ipcMain.on('open-external-link', (_event, url) => {
+        shell.openExternal(url);
+    });
+}
+
 // 系统托盘对象
 function createTray(win: BrowserWindow) {
     log.info("是否隐藏了主窗口：" + isHideWindow);
@@ -394,13 +477,15 @@ function createTray(win: BrowserWindow) {
         },
         {
             label: '关于',
-            click: function () { }
+            click: function () {
+                createAboutWindow();
+            }
         },
         {
             label: '重新启动',
             click: function () {
                 restartAPP();
-            } 
+            }
         },
         {
             label: '退出',

@@ -30,7 +30,7 @@ const MenuItems = computed((): NavBarItem[] => [
         key: '偏好设置',
         label: languageTexts.list.menu.settings,
         onClick: () => {
-          // 打开开发者工具
+          // 打开设置窗口
           window.ipcRenderer.send('open-settings');
         }
       },
@@ -65,7 +65,7 @@ const MenuItems = computed((): NavBarItem[] => [
         key: '标签管理',
         label: languageTexts.list.menu.tagManger,
         onClick: () => {
-          // 打开开发者工具
+          // 打开标签管理窗口
           window.ipcRenderer.send('open-tags');
         }
       },
@@ -143,6 +143,10 @@ const MenuItems = computed((): NavBarItem[] => [
       {
         key: '关于',
         label: languageTexts.list.menu.about,
+        onClick: () => {
+          // 打开关于窗口
+          window.ipcRenderer.send('open-about');
+        }
       },
     ],
   },

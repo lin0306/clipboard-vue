@@ -9,6 +9,7 @@ import { createLanguageContext } from './configs/LanguageConfig.ts';
 import ClipboardList from './components/ClipboardList.vue'
 import Settings from './components/Settings.vue'
 import TagManager from './components/TagManager.vue'
+import About from './components/About.vue'
 
 // 创建主题上下文
 const { currentTheme } = createThemeContext();
@@ -35,6 +36,7 @@ const componentMap: any = {
   list: ClipboardList,
   settings: Settings,
   tags: TagManager,
+  about: About,
 };
 
 // 当前打开的窗口组件

@@ -31,7 +31,6 @@ export default defineConfig({
             }
           }
         }
-      
       },
       preload: {
         // Shortcut of `build.rollupOptions.input`.
@@ -51,5 +50,8 @@ export default defineConfig({
     alias: {
       'electron': 'electron',
     },
+  },
+  define: {
+    __APP_VERSION__: JSON.stringify(process.env.npm_package_version)
   }
 })

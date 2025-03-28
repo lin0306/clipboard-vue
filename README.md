@@ -23,7 +23,7 @@
 1. 克隆仓库到本地
 
 ```bash
-git clone https://github.com/lin0306/clipboard-vue
+git clone https://github.com/lin0306/clipboard-vue.git
 cd clipboard
 ```
 

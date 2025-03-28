@@ -171,6 +171,9 @@ function createMainWindow() {
 
     // 监听窗口关闭事件，清理定时器
     win.on('closed', () => {
+        // 关闭数据库连接
+        const db = ClipboardDB.getInstance()
+        db.close();
         if (clipboardTimer) {
             clearTimeout(clipboardTimer);
             clipboardTimer = null;
@@ -476,7 +479,7 @@ ipcMain.handle('get-image-base64', async (_event, imagePath) => {
             return null;
         }
         const image = nativeImage.createFromPath(imagePath);
-        return `data:image/png;base64,${image.resize({quality: 'good'}).toPNG().toString('base64')}`;
+        return `data:image/png;base64,${image.resize({ quality: 'good' }).toPNG().toString('base64')}`;
     } catch (error) {
         log.error('[主进程] 获取图片base64编码失败:', error);
         return null;
@@ -568,7 +571,7 @@ ipcMain.on('quit-app', () => {
 
 // 监听关闭窗口的请求
 ipcMain.on('close-app', () => {
-    closeOrHide()
+    closeOrHide();
 });
 
 // 打开设置窗口
@@ -615,7 +618,16 @@ if (!gotTheLock) {
     app.quit()
 } else {
     // 当 Electron 完成初始化并准备创建浏览器窗口时调用此方法
-    app.whenReady().then(() => {
+    app.whenReady().then(async () => {
+        // 应用启动时执行一次存储检查和清理
+        try {
+            const db = ClipboardDB.getInstance();
+            await db.checkStorageSize();
+            log.info('[主进程] 应用启动时的存储检查和清理完成');
+        } catch (error) {
+            log.error('[主进程] 应用启动时的存储检查和清理失败:', error);
+        }
+
         createMainWindow()
 
         // 仅 macOS 支持
@@ -673,7 +685,13 @@ function watchClipboard() {
             // 当lastImage为null时表示首次检测到图片，或者当图片内容与上次不同时
             const isImageChanged = lastImage === null || Buffer.compare(currentImageBuffer, lastImage) !== 0;
 
-            if (isImageChanged) {
+            // 检查图片大小是否超过配置的最大项目大小限制（MB转换为字节）
+            const maxItemSizeBytes = (config.value.maxItemSize || 50) * 1024 * 1024;
+            const isWithinSizeLimit = currentImageBuffer.length <= maxItemSizeBytes;
+            if (isImageChanged && !isWithinSizeLimit) {
+                log.info('[主进程] 图片大小超过限制，不保存图片，当前图片大小：', currentImageBuffer.length, '字节');
+            }
+            if (isImageChanged && isWithinSizeLimit) {
                 log.info('[主进程] 检测到剪贴板中有图片');
                 log.info('[主进程] 检测到新的图片内容', {
                     size: currentImageBuffer.length,
@@ -723,6 +741,13 @@ function watchClipboard() {
                                 // 复制的数据添加到数据库
                                 const db = ClipboardDB.getInstance()
                                 db.addItem(path.basename(imagePath), 'image', imagePath);
+                                db.asyncClearingExpiredData();
+                                // 定期检查存储大小
+                                if (Math.random() < 0.1) { // 约10%的概率执行检查，避免每次都检查
+                                    db.checkStorageSize().catch(err => {
+                                        log.error('[主进程] 检查存储大小时出错:', err);
+                                    });
+                                }
                                 const webContents = win.webContents;
                                 if (webContents && !webContents.isDestroyed()) {
                                     webContents.send('clipboard-updated');
@@ -751,19 +776,35 @@ function watchClipboard() {
 
         // 检查文本变化
         if (currentText && currentText !== lastText) {
-            lastText = currentText;
-            // 复制的数据添加到数据库
-            const db = ClipboardDB.getInstance()
-            db.addItem(currentText, 'text', null);
-            if (win && !win.isDestroyed()) {
-                try {
-                    const webContents = win.webContents;
-                    if (webContents && !webContents.isDestroyed()) {
-                        webContents.send('clipboard-updated');
-                    }
-                } catch (error) {
-                    log.error('[主进程] 发送文本消息时出错:', error);
+            // 检查文本大小是否超过配置的最大项目大小限制（MB转换为字节）
+            const maxItemSizeBytes = (config.value.maxItemSize || 50) * 1024 * 1024;
+            const textSizeBytes = Buffer.byteLength(currentText, 'utf8');
+            const isWithinSizeLimit = textSizeBytes <= maxItemSizeBytes;
+
+            if (isWithinSizeLimit) {
+                lastText = currentText;
+                // 复制的数据添加到数据库
+                const db = ClipboardDB.getInstance()
+                db.addItem(currentText, 'text', null);
+                db.asyncClearingExpiredData();
+                // 定期检查存储大小
+                if (Math.random() < 0.1) { // 约10%的概率执行检查，避免每次都检查
+                    db.checkStorageSize().catch(err => {
+                        log.error('[主进程] 检查存储大小时出错:', err);
+                    });
                 }
+                if (win && !win.isDestroyed()) {
+                    try {
+                        const webContents = win.webContents;
+                        if (webContents && !webContents.isDestroyed()) {
+                            webContents.send('clipboard-updated');
+                        }
+                    } catch (error) {
+                        log.error('[主进程] 发送文本消息时出错:', error);
+                    }
+                }
+            } else {
+                log.warn('[主进程] 文本内容超过最大大小限制，已忽略。大小:', textSizeBytes, '字节，限制:', maxItemSizeBytes, '字节');
             }
         }
 

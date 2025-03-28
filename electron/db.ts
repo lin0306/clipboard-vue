@@ -3,11 +3,11 @@
  * 负责管理剪贴板内容的存储、检索和操作
  */
 import Database from 'better-sqlite3';
-import path from 'node:path';
 import fs from 'node:fs';
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import log from './log.js'
 import { getSettings } from './ConfigFileManager.js';
+import log from './log.js';
 
 // 获取当前文件的目录路径
 let __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -112,42 +112,33 @@ class ClipboardDB {
      * @param {string} type 内容类型，默认为'text'，也可以是'image'
      * @param {string|null} filePath 图片类型的文件路径，默认为null
      */
-    addItem(content: string, type = 'text', filePath: string | null) {
+    addItem(content: string, type: string = 'text', filePath: string | null) {
         log.info("[数据库进程] 剪贴板内容添加开始", [content, type, filePath]);
 
         try {
-            let copyTime = Date.now();
+            this.db.transaction(() => {
+                // 覆盖相同内容的旧记录的复制时间
+                if (type === 'text') {
+                    log.info("[数据库进程] 查询相同文本内容的旧记录");
+                    const row = this.db.prepare('SELECT id FROM clipboard_items WHERE content = ? AND type = ?').get(content, type) as { id: number };
+                    if (row) {
+                        this.updateItemTime(row.id, Date.now());
+                        log.info("[数据库进程] 有查询到相同文本内容的记录，覆盖复制时间");
+                        return;
+                    }
+                } else if (filePath) {
+                    log.info("[数据库进程] 查询相同文件路径的旧记录");
+                    const row = this.db.prepare('SELECT id FROM clipboard_items WHERE type = ? AND file_path = ?').get(type, filePath) as { id: number };
+                    if (row) {
+                        this.updateItemTime(row.id, Date.now());
+                        log.info("[数据库进程] 有查询到相同文件内容的记录，覆盖复制时间");
+                        return;
+                    }
+                }
 
-            // 将事务包装在单独的try-catch中
-            try {
-                this.db.transaction(() => {
-                    // 覆盖相同内容的旧记录的复制时间
-                    if (type === 'text') {
-                        log.info("[数据库进程] 查询相同文本内容的旧记录");
-                        const row = this.db.prepare('SELECT id FROM clipboard_items WHERE content = ? AND type = ?').get(content, type) as { id: number };
-                        if (row) {
-                            this.updateItemTime(row.id, copyTime);
-                            log.info("[数据库进程] 有查询到相同文本内容的记录，覆盖复制时间");
-                            return;
-                        }
-                    } else if (filePath) {
-                        log.info("[数据库进程] 查询相同文件路径的旧记录");
-                        const row = this.db.prepare('SELECT id FROM clipboard_items WHERE type = ? AND file_path = ?').get(type, filePath) as { id: number };
-                        if (row) {
-                            this.updateItemTime(row.id, copyTime);
-                            log.info("[数据库进程] 有查询到相同文件内容的记录，覆盖复制时间");
-                            return;
-                        }
-                    } 
-
-                    log.info("[数据库进程] 准备插入新的剪贴板记录");
-                    this.db.prepare('INSERT INTO clipboard_items (content, copy_time, type, file_path) VALUES (?, ?, ?, ?)').run(content, copyTime, type, filePath);
-                })();
-            } catch (txError) {
-                log.error("[数据库进程] 事务执行失败", txError);
-                throw txError;
-            }
-
+                log.info("[数据库进程] 准备插入新的剪贴板记录");
+                this.db.prepare('INSERT INTO clipboard_items (content, copy_time, type, file_path) VALUES (?, ?, ?, ?)').run(content, Date.now(), type, filePath);
+            })();
             log.info("[数据库进程] 剪贴板内容添加成功");
         } catch (err) {
             log.error("[数据库进程] 剪贴板内容添加失败", err);
@@ -157,7 +148,107 @@ class ClipboardDB {
         }
     }
 
-    getItemById(id: number) {
+    /**
+     * 历史记录数量限制和自动清理过期项目
+     */
+    async asyncClearingExpiredData() {
+        log.info("[数据库进程] 异步清理剪贴板过期内容开始");
+        try {
+            // 获取配置
+            const config = getSettings();
+            const maxHistoryItems = config.maxHistoryItems || 2000;
+            const autoCleanupDays = config.autoCleanupDays || 30;
+
+            this.db.transaction(() => {
+                // 自动清理过期项目
+                if (autoCleanupDays > 0) {
+                    const cutoffTime = Date.now() - (autoCleanupDays * 24 * 60 * 60 * 1000);
+                    log.info(`[数据库进程] 清理${autoCleanupDays}天前的剪贴板记录`);
+
+                    // 获取要删除的文件文件路径
+                    const oldFileItems = this.db.prepare(
+                        'SELECT id, file_path FROM clipboard_items WHERE is_topped = 0 AND copy_time < ? AND file_path IS NOT NULL'
+                    ).all(cutoffTime) as { id: number, file_path: string }[];
+
+                    // 删除过期的非置顶项目
+                    const result = this.db.prepare(
+                        'DELETE FROM clipboard_items WHERE is_topped = 0 AND copy_time < ?'
+                    ).run(cutoffTime);
+
+                    if (result.changes > 0) {
+                        log.info(`[数据库进程] 已清理${result.changes}条过期记录`);
+
+                        // 删除对应的图片文件
+                        let deleteFileCnt = 0;
+                        for (const item of oldFileItems) {
+                            try {
+                                if (fs.existsSync(item.file_path)) {
+                                    fs.unlinkSync(item.file_path);
+                                    log.info(`[数据库进程] 已删除过期文件: ${item.file_path}`);
+                                }
+                                deleteFileCnt++;
+                            } catch (unlinkError) {
+                                log.error(`[数据库进程] 删除过期文件失败: ${item.file_path}`, unlinkError);
+                            }
+                        }
+                        log.info(`[数据库进程] 已清理${deleteFileCnt}条过期文件记录`);
+                    }
+                }
+
+                // 检查历史记录数量是否超过限制
+                const totalCount = this.db.prepare('SELECT COUNT(*) as count FROM clipboard_items').get() as { count: number };
+                if (totalCount.count >= maxHistoryItems) {
+                    log.info(`[数据库进程] 历史记录数量(${totalCount.count})已达到上限(${maxHistoryItems})，删除最早的非置顶记录`);
+
+                    // 获取要删除的最早的非置顶记录数量
+                    const deleteCount = totalCount.count - maxHistoryItems + 1; // +1 为即将添加的新记录腾出空间
+
+                    // 获取要删除的图片文件路径
+                    const oldImageItems = this.db.prepare(
+                        `SELECT id, file_path FROM clipboard_items 
+                             WHERE type = 'image' AND is_topped = 0 AND file_path IS NOT NULL 
+                             ORDER BY copy_time ASC LIMIT ?`
+                    ).all(deleteCount) as { id: number, file_path: string }[];
+
+                    // 删除最早的非置顶记录
+                    const result = this.db.prepare(
+                        `DELETE FROM clipboard_items 
+                             WHERE id IN (SELECT id FROM clipboard_items 
+                                         WHERE is_topped = 0 
+                                         ORDER BY copy_time ASC LIMIT ?)`
+                    ).run(deleteCount);
+
+                    if (result.changes > 0) {
+                        log.info(`[数据库进程] 已删除${result.changes}条最早的记录`);
+
+                        // 删除对应的图片文件
+                        for (const item of oldImageItems) {
+                            try {
+                                if (fs.existsSync(item.file_path)) {
+                                    fs.unlinkSync(item.file_path);
+                                    log.info(`[数据库进程] 已删除图片文件: ${item.file_path}`);
+                                }
+                            } catch (unlinkError) {
+                                log.error(`[数据库进程] 删除图片文件失败: ${item.file_path}`, unlinkError);
+                            }
+                        }
+                    }
+                }
+            })();
+        } catch (err) {
+            log.error("[数据库进程] 异步清理剪贴板过期内容失败", err);
+            throw err;
+        } finally {
+            log.info("[数据库进程] 异步清理剪贴板过期内容完成");
+        }
+    }
+
+    /**
+     * 获取剪贴板条目信息
+     * @param {number} id 条目ID
+     * @returns {any} 条目信息
+     */
+    getItemById(id: number): any {
         return this.db.prepare('SELECT * FROM clipboard_items WHERE id =?').get(id);
     }
 
@@ -166,7 +257,7 @@ class ClipboardDB {
      * 按置顶状态和时间排序
      * @returns {Array} 剪贴板条目数组
      */
-    getAllItems() {
+    getAllItems(): Array<any> {
         return this.db.prepare('SELECT * FROM clipboard_items ORDER BY is_topped DESC, CASE WHEN is_topped = 1 THEN top_time ELSE copy_time END DESC').all();
     }
 
@@ -175,7 +266,7 @@ class ClipboardDB {
      * @param {string} tagName 标签名称
      * @returns {Array} 符合条件的剪贴板条目数组
      */
-    getItemsByTag(tagName: string) {
+    getItemsByTag(tagName: string): Array<any> {
         return this.db.prepare('SELECT ci.* FROM clipboard_items ci ' +
             'INNER JOIN item_tags it ON ci.id = it.item_id ' +
             'INNER JOIN tags t ON it.tag_id = t.id ' +
@@ -216,7 +307,7 @@ class ClipboardDB {
      * 删除所有图片文件并清空数据库记录
      * @returns {Promise<void>} 完成清空操作的Promise
      */
-    clearAll() {
+    clearAll(): Promise<void> {
         return new Promise<void>(async (resolve, reject) => {
             try {
                 // 读取配置文件获取临时文件存储路径
@@ -315,7 +406,7 @@ class ClipboardDB {
             countParams.push(tagId);
             itemsParams.push(tagId);
         }
-        
+
         // 根据内容关键词构建查询条件
         if (content && content !== null && content !== '') {
             const whereClause = (tagId && tagId !== null) ? ' AND ci.content LIKE ?' : ' WHERE ci.content LIKE ?';
@@ -363,6 +454,77 @@ class ClipboardDB {
         this.db.prepare('UPDATE clipboard_items SET copy_time = ? WHERE id = ?').run(newTime, id);
     }
 
+    /**
+     * 检查和管理存储大小
+     * 确保存储大小不超过配置的最大值
+     * @returns {Promise<void>}
+     */
+    async checkStorageSize(): Promise<void> {
+        try {
+            const config = getSettings();
+            const maxStorageSizeMB = config.maxStorageSize || 5000; // 默认5GB
+            const maxStorageSizeBytes = maxStorageSizeMB * 1024 * 1024;
+
+            // 获取临时目录路径
+            const tempDir = config.tempPath;
+            if (!tempDir || !fs.existsSync(tempDir)) {
+                return;
+            }
+
+            // 计算当前存储大小
+            let totalSize = 0;
+            const files = fs.readdirSync(tempDir);
+            for (const file of files) {
+                const filePath = path.join(tempDir, file);
+                const stats = fs.statSync(filePath);
+                totalSize += stats.size;
+            }
+
+            log.info(`[数据库进程] 当前存储大小: ${totalSize / (1024 * 1024)}MB, 最大限制: ${maxStorageSizeMB}MB`);
+
+            // 如果超过限制，删除最早的非置顶图片文件直到低于限制
+            if (totalSize > maxStorageSizeBytes) {
+                log.info(`[数据库进程] 存储大小超过限制，开始清理`);
+
+                // 获取所有图片条目，按时间排序
+                const fileItems = this.db.prepare(
+                    'SELECT id, file_path, copy_time FROM clipboard_items WHERE is_topped = 0 AND file_path IS NOT NULL ORDER BY copy_time ASC'
+                ).all() as { id: number, file_path: string, copy_time: number }[];
+
+                let deletedSize = 0;
+                let deletedCount = 0;
+
+                for (const item of fileItems) {
+                    if (totalSize - deletedSize <= maxStorageSizeBytes) {
+                        break; // 已经低于限制，停止删除
+                    }
+
+                    try {
+                        if (fs.existsSync(item.file_path)) {
+                            const stats = fs.statSync(item.file_path);
+                            const fileSize = stats.size;
+
+                            // 删除文件
+                            fs.unlinkSync(item.file_path);
+                            // 删除数据库记录
+                            this.db.prepare('DELETE FROM clipboard_items WHERE id = ?').run(item.id);
+
+                            deletedSize += fileSize;
+                            deletedCount++;
+                            log.info(`[数据库进程] 已删除文件: ${item.file_path}, 大小: ${fileSize / (1024 * 1024)}MB`);
+                        }
+                    } catch (error) {
+                        log.error(`[数据库进程] 删除文件失败: ${item.file_path}`, error);
+                    }
+                }
+
+                log.info(`[数据库进程] 存储清理完成，已删除${deletedCount}个文件，释放${deletedSize / (1024 * 1024)}MB空间`);
+            }
+        } catch (error) {
+            log.error('[数据库进程] 检查存储大小时出错:', error);
+        }
+    }
+
     // 标签相关的方法
     /**
      * 添加新标签
@@ -395,7 +557,7 @@ class ClipboardDB {
      * 获取所有标签
      * @returns {Array} 标签数组，按创建时间升序排列
      */
-    getAllTags() {
+    getAllTags(): Array<any> {
         return this.db.prepare('SELECT * FROM tags ORDER BY created_at ASC').all();
     }
 
@@ -422,7 +584,7 @@ class ClipboardDB {
      * @param {number} itemId 剪贴板条目ID
      * @returns {Array} 标签数组
      */
-    getItemTags(itemId: number) {
+    getItemTags(itemId: number): Array<any> {
         return this.db.prepare('SELECT t.* FROM tags t INNER JOIN item_tags it ON t.id = it.tag_id WHERE it.item_id = ?').all(itemId);
     }
 

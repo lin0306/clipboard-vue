@@ -39558,33 +39558,27 @@ const _ClipboardDB = class _ClipboardDB {
   addItem(content, type = "text", filePath) {
     log.info("[数据库进程] 剪贴板内容添加开始", [content, type, filePath]);
     try {
-      let copyTime = Date.now();
-      try {
-        this.db.transaction(() => {
-          if (type === "text") {
-            log.info("[数据库进程] 查询相同文本内容的旧记录");
-            const row = this.db.prepare("SELECT id FROM clipboard_items WHERE content = ? AND type = ?").get(content, type);
-            if (row) {
-              this.updateItemTime(row.id, copyTime);
-              log.info("[数据库进程] 有查询到相同文本内容的记录，覆盖复制时间");
-              return;
-            }
-          } else if (filePath) {
-            log.info("[数据库进程] 查询相同文件路径的旧记录");
-            const row = this.db.prepare("SELECT id FROM clipboard_items WHERE type = ? AND file_path = ?").get(type, filePath);
-            if (row) {
-              this.updateItemTime(row.id, copyTime);
-              log.info("[数据库进程] 有查询到相同文件内容的记录，覆盖复制时间");
-              return;
-            }
+      this.db.transaction(() => {
+        if (type === "text") {
+          log.info("[数据库进程] 查询相同文本内容的旧记录");
+          const row = this.db.prepare("SELECT id FROM clipboard_items WHERE content = ? AND type = ?").get(content, type);
+          if (row) {
+            this.updateItemTime(row.id, Date.now());
+            log.info("[数据库进程] 有查询到相同文本内容的记录，覆盖复制时间");
+            return;
           }
-          log.info("[数据库进程] 准备插入新的剪贴板记录");
-          this.db.prepare("INSERT INTO clipboard_items (content, copy_time, type, file_path) VALUES (?, ?, ?, ?)").run(content, copyTime, type, filePath);
-        })();
-      } catch (txError) {
-        log.error("[数据库进程] 事务执行失败", txError);
-        throw txError;
-      }
+        } else if (filePath) {
+          log.info("[数据库进程] 查询相同文件路径的旧记录");
+          const row = this.db.prepare("SELECT id FROM clipboard_items WHERE type = ? AND file_path = ?").get(type, filePath);
+          if (row) {
+            this.updateItemTime(row.id, Date.now());
+            log.info("[数据库进程] 有查询到相同文件内容的记录，覆盖复制时间");
+            return;
+          }
+        }
+        log.info("[数据库进程] 准备插入新的剪贴板记录");
+        this.db.prepare("INSERT INTO clipboard_items (content, copy_time, type, file_path) VALUES (?, ?, ?, ?)").run(content, Date.now(), type, filePath);
+      })();
       log.info("[数据库进程] 剪贴板内容添加成功");
     } catch (err) {
       log.error("[数据库进程] 剪贴板内容添加失败", err);
@@ -39593,6 +39587,84 @@ const _ClipboardDB = class _ClipboardDB {
       log.info("[数据库进程] 剪贴板内容添加完成");
     }
   }
+  /**
+   * 历史记录数量限制和自动清理过期项目
+   */
+  async asyncClearingExpiredData() {
+    log.info("[数据库进程] 异步清理剪贴板过期内容开始");
+    try {
+      const config2 = getSettings();
+      const maxHistoryItems = config2.maxHistoryItems || 2e3;
+      const autoCleanupDays = config2.autoCleanupDays || 30;
+      this.db.transaction(() => {
+        if (autoCleanupDays > 0) {
+          const cutoffTime = Date.now() - autoCleanupDays * 24 * 60 * 60 * 1e3;
+          log.info(`[数据库进程] 清理${autoCleanupDays}天前的剪贴板记录`);
+          const oldFileItems = this.db.prepare(
+            "SELECT id, file_path FROM clipboard_items WHERE is_topped = 0 AND copy_time < ? AND file_path IS NOT NULL"
+          ).all(cutoffTime);
+          const result = this.db.prepare(
+            "DELETE FROM clipboard_items WHERE is_topped = 0 AND copy_time < ?"
+          ).run(cutoffTime);
+          if (result.changes > 0) {
+            log.info(`[数据库进程] 已清理${result.changes}条过期记录`);
+            let deleteFileCnt = 0;
+            for (const item of oldFileItems) {
+              try {
+                if (fs$5.existsSync(item.file_path)) {
+                  fs$5.unlinkSync(item.file_path);
+                  log.info(`[数据库进程] 已删除过期文件: ${item.file_path}`);
+                }
+                deleteFileCnt++;
+              } catch (unlinkError) {
+                log.error(`[数据库进程] 删除过期文件失败: ${item.file_path}`, unlinkError);
+              }
+            }
+            log.info(`[数据库进程] 已清理${deleteFileCnt}条过期文件记录`);
+          }
+        }
+        const totalCount = this.db.prepare("SELECT COUNT(*) as count FROM clipboard_items").get();
+        if (totalCount.count >= maxHistoryItems) {
+          log.info(`[数据库进程] 历史记录数量(${totalCount.count})已达到上限(${maxHistoryItems})，删除最早的非置顶记录`);
+          const deleteCount = totalCount.count - maxHistoryItems + 1;
+          const oldImageItems = this.db.prepare(
+            `SELECT id, file_path FROM clipboard_items 
+                             WHERE type = 'image' AND is_topped = 0 AND file_path IS NOT NULL 
+                             ORDER BY copy_time ASC LIMIT ?`
+          ).all(deleteCount);
+          const result = this.db.prepare(
+            `DELETE FROM clipboard_items 
+                             WHERE id IN (SELECT id FROM clipboard_items 
+                                         WHERE is_topped = 0 
+                                         ORDER BY copy_time ASC LIMIT ?)`
+          ).run(deleteCount);
+          if (result.changes > 0) {
+            log.info(`[数据库进程] 已删除${result.changes}条最早的记录`);
+            for (const item of oldImageItems) {
+              try {
+                if (fs$5.existsSync(item.file_path)) {
+                  fs$5.unlinkSync(item.file_path);
+                  log.info(`[数据库进程] 已删除图片文件: ${item.file_path}`);
+                }
+              } catch (unlinkError) {
+                log.error(`[数据库进程] 删除图片文件失败: ${item.file_path}`, unlinkError);
+              }
+            }
+          }
+        }
+      })();
+    } catch (err) {
+      log.error("[数据库进程] 异步清理剪贴板过期内容失败", err);
+      throw err;
+    } finally {
+      log.info("[数据库进程] 异步清理剪贴板过期内容完成");
+    }
+  }
+  /**
+   * 获取剪贴板条目信息
+   * @param {number} id 条目ID
+   * @returns {any} 条目信息
+   */
   getItemById(id) {
     return this.db.prepare("SELECT * FROM clipboard_items WHERE id =?").get(id);
   }
@@ -39743,6 +39815,59 @@ const _ClipboardDB = class _ClipboardDB {
    */
   updateItemTime(id, newTime) {
     this.db.prepare("UPDATE clipboard_items SET copy_time = ? WHERE id = ?").run(newTime, id);
+  }
+  /**
+   * 检查和管理存储大小
+   * 确保存储大小不超过配置的最大值
+   * @returns {Promise<void>}
+   */
+  async checkStorageSize() {
+    try {
+      const config2 = getSettings();
+      const maxStorageSizeMB = config2.maxStorageSize || 5e3;
+      const maxStorageSizeBytes = maxStorageSizeMB * 1024 * 1024;
+      const tempDir = config2.tempPath;
+      if (!tempDir || !fs$5.existsSync(tempDir)) {
+        return;
+      }
+      let totalSize = 0;
+      const files = fs$5.readdirSync(tempDir);
+      for (const file2 of files) {
+        const filePath = path$6.join(tempDir, file2);
+        const stats = fs$5.statSync(filePath);
+        totalSize += stats.size;
+      }
+      log.info(`[数据库进程] 当前存储大小: ${totalSize / (1024 * 1024)}MB, 最大限制: ${maxStorageSizeMB}MB`);
+      if (totalSize > maxStorageSizeBytes) {
+        log.info(`[数据库进程] 存储大小超过限制，开始清理`);
+        const fileItems = this.db.prepare(
+          "SELECT id, file_path, copy_time FROM clipboard_items WHERE is_topped = 0 AND file_path IS NOT NULL ORDER BY copy_time ASC"
+        ).all();
+        let deletedSize = 0;
+        let deletedCount = 0;
+        for (const item of fileItems) {
+          if (totalSize - deletedSize <= maxStorageSizeBytes) {
+            break;
+          }
+          try {
+            if (fs$5.existsSync(item.file_path)) {
+              const stats = fs$5.statSync(item.file_path);
+              const fileSize = stats.size;
+              fs$5.unlinkSync(item.file_path);
+              this.db.prepare("DELETE FROM clipboard_items WHERE id = ?").run(item.id);
+              deletedSize += fileSize;
+              deletedCount++;
+              log.info(`[数据库进程] 已删除文件: ${item.file_path}, 大小: ${fileSize / (1024 * 1024)}MB`);
+            }
+          } catch (error) {
+            log.error(`[数据库进程] 删除文件失败: ${item.file_path}`, error);
+          }
+        }
+        log.info(`[数据库进程] 存储清理完成，已删除${deletedCount}个文件，释放${deletedSize / (1024 * 1024)}MB空间`);
+      }
+    } catch (error) {
+      log.error("[数据库进程] 检查存储大小时出错:", error);
+    }
   }
   // 标签相关的方法
   /**
@@ -39985,6 +40110,8 @@ function createMainWindow() {
     watchClipboard();
   });
   win.on("closed", () => {
+    const db = ClipboardDB.getInstance();
+    db.close();
     if (clipboardTimer) {
       clearTimeout(clipboardTimer);
       clipboardTimer = null;
@@ -40316,7 +40443,14 @@ const gotTheLock = require$$0$5.app.requestSingleInstanceLock();
 if (!gotTheLock) {
   require$$0$5.app.quit();
 } else {
-  require$$0$5.app.whenReady().then(() => {
+  require$$0$5.app.whenReady().then(async () => {
+    try {
+      const db = ClipboardDB.getInstance();
+      await db.checkStorageSize();
+      log.info("[主进程] 应用启动时的存储检查和清理完成");
+    } catch (error) {
+      log.error("[主进程] 应用启动时的存储检查和清理失败:", error);
+    }
     createMainWindow();
     require$$0$5.app.on("activate", () => {
       if (require$$0$5.BrowserWindow.getAllWindows().length === 0) {
@@ -40354,7 +40488,12 @@ function watchClipboard() {
     if (!currentImage.isEmpty()) {
       const currentImageBuffer = currentImage.toPNG();
       const isImageChanged = lastImage === null || Buffer.compare(currentImageBuffer, lastImage) !== 0;
-      if (isImageChanged) {
+      const maxItemSizeBytes = (config.value.maxItemSize || 50) * 1024 * 1024;
+      const isWithinSizeLimit = currentImageBuffer.length <= maxItemSizeBytes;
+      if (isImageChanged && !isWithinSizeLimit) {
+        log.info("[主进程] 图片大小超过限制，不保存图片，当前图片大小：", currentImageBuffer.length, "字节");
+      }
+      if (isImageChanged && isWithinSizeLimit) {
         log.info("[主进程] 检测到剪贴板中有图片");
         log.info("[主进程] 检测到新的图片内容", {
           size: currentImageBuffer.length,
@@ -40395,6 +40534,12 @@ function watchClipboard() {
               try {
                 const db = ClipboardDB.getInstance();
                 db.addItem(path$6.basename(imagePath), "image", imagePath);
+                db.asyncClearingExpiredData();
+                if (Math.random() < 0.1) {
+                  db.checkStorageSize().catch((err) => {
+                    log.error("[主进程] 检查存储大小时出错:", err);
+                  });
+                }
                 const webContents2 = win.webContents;
                 if (webContents2 && !webContents2.isDestroyed()) {
                   webContents2.send("clipboard-updated");
@@ -40421,18 +40566,31 @@ function watchClipboard() {
       }
     }
     if (currentText && currentText !== lastText) {
-      lastText = currentText;
-      const db = ClipboardDB.getInstance();
-      db.addItem(currentText, "text", null);
-      if (win && !win.isDestroyed()) {
-        try {
-          const webContents = win.webContents;
-          if (webContents && !webContents.isDestroyed()) {
-            webContents.send("clipboard-updated");
-          }
-        } catch (error) {
-          log.error("[主进程] 发送文本消息时出错:", error);
+      const maxItemSizeBytes = (config.value.maxItemSize || 50) * 1024 * 1024;
+      const textSizeBytes = Buffer.byteLength(currentText, "utf8");
+      const isWithinSizeLimit = textSizeBytes <= maxItemSizeBytes;
+      if (isWithinSizeLimit) {
+        lastText = currentText;
+        const db = ClipboardDB.getInstance();
+        db.addItem(currentText, "text", null);
+        db.asyncClearingExpiredData();
+        if (Math.random() < 0.1) {
+          db.checkStorageSize().catch((err) => {
+            log.error("[主进程] 检查存储大小时出错:", err);
+          });
         }
+        if (win && !win.isDestroyed()) {
+          try {
+            const webContents = win.webContents;
+            if (webContents && !webContents.isDestroyed()) {
+              webContents.send("clipboard-updated");
+            }
+          } catch (error) {
+            log.error("[主进程] 发送文本消息时出错:", error);
+          }
+        }
+      } else {
+        log.warn("[主进程] 文本内容超过最大大小限制，已忽略。大小:", textSizeBytes, "字节，限制:", maxItemSizeBytes, "字节");
       }
     }
   } catch (error) {

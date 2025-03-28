@@ -40,7 +40,7 @@ async function loadTags() {
         tagItems.value = tags
     } catch (error) {
         console.error('加载标签失败', error)
-        message.error('加载标签失败')
+        message.error(languageTexts.tags.loadFailedMsg)
     }
 }
 
@@ -84,7 +84,7 @@ function hidePanel() {
 // 添加标签
 async function addTag() {
     if (!editState.tagName.trim()) {
-        message.warning('标签名称不能为空')
+        message.warning(languageTexts.tags.tageNameIsNullWarnMsg)
         return
     }
 
@@ -100,11 +100,11 @@ async function addTag() {
         if (editState.isEdit && editState.currentTagId) {
             // 更新标签
             await window.ipcRenderer.invoke('update-tag', editState.currentTagId, editState.tagName, colorStr)
-            message.success('更新标签成功')
+            message.success(languageTexts.tags.editSuccessMsg)
         } else {
             // 添加新标签
             await window.ipcRenderer.invoke('add-tag', editState.tagName, colorStr)
-            message.success('添加标签成功')
+            message.success(languageTexts.tags.saveSuccessMsg)
         }
 
         // 重置表单并刷新列表
@@ -113,7 +113,7 @@ async function addTag() {
         loadTags()
     } catch (error) {
         console.error('操作标签失败', error)
-        message.error(editState.isEdit ? '更新标签失败' : '添加标签失败')
+        message.error(editState.isEdit ? languageTexts.tags.editFailedMsg : languageTexts.tags.saveFailedMsg)
     }
 }
 
@@ -121,7 +121,7 @@ async function addTag() {
 async function deleteTag(id: number) {
     try {
         await window.ipcRenderer.invoke('delete-tag', id)
-        message.success('删除标签成功')
+        message.success(languageTexts.tags.deleteSuccessMsg)
         if (selectedTagId.value === id) {
             selectedTagId.value = null
             hidePanel()
@@ -129,7 +129,7 @@ async function deleteTag(id: number) {
         loadTags()
     } catch (error) {
         console.error('删除标签失败', error)
-        message.error('删除标签失败')
+        message.error(languageTexts.tags.deleteFailedMsg)
     }
 }
 
@@ -173,7 +173,7 @@ onMounted(() => {
 
 <template>
     <div class="tag-manager-container">
-        <titleBar :title="`标签管理`" :closeWindow="`close-tags`" :dev-tool="`open-tags-devtools`" />
+        <titleBar :title="languageTexts.tags.title" :closeWindow="`close-tags`" :dev-tool="`open-tags-devtools`" />
 
         <div class="tag-manager-content">
             <!-- 左右分栏布局 -->
@@ -217,7 +217,7 @@ onMounted(() => {
                 <!-- 右侧详情/编辑面板 -->
                 <div class="tag-detail-panel" :class="{ 'panel-visible': isPanelVisible }">
                     <div class="panel-header">
-                        <h3>{{ isEditMode ? '编辑标签' : '添加标签' }}</h3>
+                        <h3>{{ isEditMode ? languageTexts.tags.addTitle : languageTexts.tags.editTitle }}</h3>
                         <div>
                             <AddIcon class="add-btn" v-if="isEditMode" @click="openAddForm" />
                         </div>
@@ -226,19 +226,20 @@ onMounted(() => {
                     <div class="panel-content">
                         <div class="tag-form">
                             <div class="form-item">
-                                <label>标签名称</label>
-                                <a-input v-model:value="editState.tagName" placeholder="请输入标签名称" />
+                                <label>{{ languageTexts.tags.tagName }}</label>
+                                <a-input v-model:value="editState.tagName"
+                                    :placeholder="languageTexts.tags.tagNameHint" />
                             </div>
                             <div class="form-item">
-                                <label>标签颜色</label>
+                                <label>{{ languageTexts.tags.tagColor }}</label>
                                 <div class="color-picker-container">
                                     <Chrome v-model="tagColor" />
                                 </div>
                             </div>
 
                             <div class="form-actions">
-                                <a-button @click="hidePanel">取消</a-button>
-                                <a-button type="primary" @click="addTag">确定</a-button>
+                                <a-button @click="hidePanel">{{ languageTexts.tags.cancelBtn }}</a-button>
+                                <a-button type="primary" @click="addTag">{{ languageTexts.tags.saveBtn }}</a-button>
                             </div>
                         </div>
                     </div>

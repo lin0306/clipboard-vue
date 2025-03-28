@@ -1,11 +1,13 @@
 <template>
-    <titleBar :title="`关于剪贴板`" :closeWindow="`close-about`" :dev-tool="`open-about-devtools`" />
+    <titleBar :title="languageTexts.about.title" :closeWindow="`close-about`" :dev-tool="`open-about-devtools`" />
     <div class="about-container">
-        <img :src="loggPath" width="90px">
-        <div class="version-info">版本: {{ appVersion }}</div>
+        <img :src="loggPath" width="70px">
+        <div class="app-name">{{ languageTexts.about.appName }}</div>
+        <div class="version-info">{{ languageTexts.about.version }}: {{ appVersion }}</div>
         <div class="links-container">
             <!-- <a href="#" @click="openLink('https://example.com/service')">服务协议</a> -->
-            <a href="#" @click="openLink('https://github.com/lin0306/clipboard-vue/issues')">问题反馈</a>
+            <a href="#"
+                @click="openLink('https://github.com/lin0306/clipboard-vue/issues')">{{ languageTexts.about.problemFeedback }}</a>
             <a href="#" @click="openLink('https://github.com/lin0306/clipboard-vue')">GitHub</a>
             <!-- <a href="#" @click="openLink('https://gitee.com/your-repo/clipboard')">Gitee</a> -->
         </div>
@@ -13,13 +15,16 @@
 </template>
 <script lang="ts" setup>
 import { ref } from 'vue';
+import { useLanguage } from '../configs/LanguageConfig'
 import titleBar from './TitleBar.vue';
+
+// 获取语言和主题配置
+const { languageTexts } = useLanguage()
 
 const loggPath = ref<any>();
 
 // @ts-ignore
 const appVersion = __APP_VERSION__;
-console.log("当前版本", appVersion);
 
 // 打开外部链接
 function openLink(url: string) {
@@ -50,10 +55,13 @@ window.ipcRenderer.on('load-logo', (_event, logoPath) => {
     user-drag: none;
 }
 
+.app-name {
+    margin: 14px 0px;
+    font-size: 22px;
+}
+
 .version-info {
-    margin-top: 10px;
     font-size: 16px;
-    font-weight: bold;
 }
 
 .links-container {

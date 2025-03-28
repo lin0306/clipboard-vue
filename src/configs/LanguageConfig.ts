@@ -90,7 +90,31 @@ export interface PageConfig {
             checkForUpdate: string;
             about: string;
         },
-    }
+    },
+    tags: {
+        title: string;
+        addTitle: string;
+        editTitle: string;
+        tagName: string;
+        tagNameHint: string;
+        tagColor: string;
+        saveBtn: string;
+        cancelBtn: string;
+        loadFailedMsg: string;
+        tageNameIsNullWarnMsg: string;
+        saveSuccessMsg: string;
+        editSuccessMsg: string;
+        saveFailedMsg: string;
+        editFailedMsg: string;
+        deleteSuccessMsg: string;
+        deleteFailedMsg: string;
+    },
+    about: {
+        title: string;
+        appName: string;
+        version: string;
+        problemFeedback: string;
+    },
 }
 
 // 简体中文配置
@@ -168,7 +192,31 @@ export const zhCN: LanguageConfig = {
                 checkForUpdate: '检查更新',
                 about: '关于',
             }
-        }
+        },
+        tags: {
+            title: '标签管理',
+            addTitle: '添加标签',
+            editTitle: '编辑标签',
+            tagName: '标签名称',
+            tagNameHint: '请输入标签名称',
+            tagColor: '标签颜色',
+            saveBtn: '保存',
+            cancelBtn: '取消',
+            loadFailedMsg: '加载标签列表失败',
+            tageNameIsNullWarnMsg: '标签名称不能为空',
+            saveSuccessMsg: '保存成功',
+            editSuccessMsg: '更新成功',
+            saveFailedMsg: '保存失败',
+            editFailedMsg: '更新失败',
+            deleteSuccessMsg: '删除成功',
+            deleteFailedMsg: '删除失败', 
+        },
+        about: {
+            title: '关于',
+            appName: '剪贴板',
+            version: '版本',
+            problemFeedback: '问题反馈', 
+        },
     },
 }
 
@@ -247,7 +295,31 @@ export const enUS: LanguageConfig = {
                 checkForUpdate: 'Check For Update',
                 about: 'About',
             }
-        }
+        },
+        tags: {
+            title: 'Tag Manager',
+            addTitle: 'Add Tag',
+            editTitle: 'Edit Tag',
+            tagName: 'Tag Name',
+            tagNameHint: 'Please input tag name',
+            tagColor: 'Tag Color',
+            saveBtn: 'Save',
+            cancelBtn: 'Cancel',
+            loadFailedMsg: 'Load Tag List Failed',
+            tageNameIsNullWarnMsg: 'Tag Name Cannot Be Empty',
+            saveSuccessMsg: 'Save Success',
+            editSuccessMsg: 'Update Success',
+            saveFailedMsg: 'Save Failed',
+            editFailedMsg: 'Update Failed',
+            deleteSuccessMsg: 'Delete Success',
+            deleteFailedMsg: 'Delete Failed',
+        },
+        about: {
+            title: 'About',
+            appName: 'Clipboard',
+            version: 'Version',
+            problemFeedback: 'Problem Feedback', 
+        },
     }
 }
 

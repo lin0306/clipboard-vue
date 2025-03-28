@@ -513,7 +513,6 @@ onMounted(() => {
 .settings-content {
   display: flex;
   flex: 1;
-  margin-top: 25px;
   /* 为标题栏留出空间 */
   overflow: hidden;
 }

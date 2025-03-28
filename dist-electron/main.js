@@ -40023,6 +40023,7 @@ let isOpenTagsDevTools = false;
 let x = void 0;
 let y = void 0;
 let wakeUpRoutineShortcut;
+let isFixedMainWindow = false;
 const config = vueExports.computed(() => getSettings());
 const shortcutKeys = vueExports.computed(() => getShortcutKeys());
 function createMainWindow() {
@@ -40072,7 +40073,7 @@ function createMainWindow() {
   win.setVisibleOnAllWorkspaces(true);
   if (Boolean(config.value.colsingHideToTaskbar)) {
     win.on("blur", () => {
-      if (!isOpenSettingsWindow && !isOpenTagsWindow && !isOpenMianDevTools && !isOpenSettingsDevTools && !isOpenTagsDevTools) {
+      if (!isOpenSettingsWindow && !isOpenTagsWindow && !isOpenMianDevTools && !isOpenSettingsDevTools && !isOpenTagsDevTools && !isFixedMainWindow) {
         closeOrHide();
       }
     });
@@ -40110,8 +40111,6 @@ function createMainWindow() {
     watchClipboard();
   });
   win.on("closed", () => {
-    const db = ClipboardDB.getInstance();
-    db.close();
     if (clipboardTimer) {
       clearTimeout(clipboardTimer);
       clipboardTimer = null;
@@ -40130,6 +40129,43 @@ function createMainWindow() {
     config.value.tempPath = tempDir;
     updateSettings(config.value);
   }
+  require$$0$5.ipcMain.on("open-main-tools", () => {
+    log.info("[主进程] 打开开发者工具");
+    if (win) {
+      win.webContents.openDevTools({ mode: "detach" });
+      isOpenMianDevTools = true;
+      win.webContents.once("devtools-closed", () => {
+        log.info("[主进程] 开发者工具已关闭");
+        isOpenMianDevTools = false;
+      });
+    }
+  });
+  require$$0$5.ipcMain.on("reload-app", () => {
+    log.info("[主进程] 重新加载应用程序");
+    if (win) {
+      win.reload();
+    }
+  });
+  require$$0$5.ipcMain.on("quit-app", () => {
+    log.info("[主进程] 退出应用程序");
+    require$$0$5.app.quit();
+  });
+  require$$0$5.ipcMain.on("close-app", () => {
+    closeOrHide();
+  });
+  require$$0$5.ipcMain.on("restart-app", () => {
+    isOpenWindow = false;
+    isOpenSettingsWindow = false;
+    require$$0$5.BrowserWindow.getAllWindows().forEach((window2) => {
+      if (!window2.isDestroyed()) {
+        window2.close();
+      }
+    });
+    require$$0$5.app.relaunch();
+    require$$0$5.app.exit(0);
+  });
+  require$$0$5.ipcMain.on("open-settings", createSettingsWindow);
+  require$$0$5.ipcMain.on("open-tags", createTagsWindow);
 }
 function createSettingsWindow() {
   if (isOpenSettingsWindow) {
@@ -40162,14 +40198,14 @@ function createSettingsWindow() {
     settingsWindow.webContents.send("load-config", getSettings());
     settingsWindow.webContents.send("load-shortcut-keys", shortcutKeys.value);
   });
+  settingsWindow.on("closed", () => {
+    isOpenSettingsWindow = false;
+  });
   require$$0$5.ipcMain.on("close-settings", () => {
     isOpenSettingsWindow = false;
     if (!settingsWindow.isDestroyed()) {
       settingsWindow.close();
     }
-  });
-  settingsWindow.on("closed", () => {
-    isOpenSettingsWindow = false;
   });
   require$$0$5.ipcMain.on("open-settings-devtools", () => {
     if (settingsWindow && !settingsWindow.isDestroyed()) {
@@ -40211,14 +40247,14 @@ function createTagsWindow() {
   tagsWindow.webContents.on("did-finish-load", () => {
     tagsWindow.webContents.send("window-type", "tags");
   });
+  tagsWindow.on("closed", () => {
+    isOpenTagsWindow = false;
+  });
   require$$0$5.ipcMain.on("close-tags", () => {
     isOpenTagsWindow = false;
     if (!tagsWindow.isDestroyed()) {
       tagsWindow.close();
     }
-  });
-  tagsWindow.on("closed", () => {
-    isOpenTagsWindow = false;
   });
   require$$0$5.ipcMain.on("open-tags-devtools", () => {
     if (tagsWindow && !tagsWindow.isDestroyed()) {
@@ -40276,16 +40312,42 @@ function createTray(win2) {
     win2.show();
   });
 }
+require$$0$5.app.on("window-all-closed", () => {
+  log.info("[主进程] 所有窗口已关闭");
+  const db = ClipboardDB.getInstance();
+  db.close();
+  if (process.platform === "darwin") {
+    log.info("[主进程] macOS 平台，应用保持活动状态");
+  } else {
+    log.info("[主进程] 非 macOS 平台，退出应用");
+    require$$0$5.app.quit();
+    win = void 0;
+  }
+});
+const gotTheLock = require$$0$5.app.requestSingleInstanceLock();
+if (!gotTheLock) {
+  require$$0$5.app.quit();
+} else {
+  require$$0$5.app.whenReady().then(async () => {
+    try {
+      const db = ClipboardDB.getInstance();
+      await db.checkStorageSize();
+      log.info("[主进程] 应用启动时的存储检查和清理完成");
+    } catch (error) {
+      log.error("[主进程] 应用启动时的存储检查和清理失败:", error);
+    }
+    createMainWindow();
+    require$$0$5.app.on("activate", () => {
+      if (require$$0$5.BrowserWindow.getAllWindows().length === 0) {
+        createMainWindow();
+      }
+    });
+  });
+}
 require$$0$5.ipcMain.handle("clear-items", async () => {
   const db = ClipboardDB.getInstance();
   db.clearAll();
   return true;
-});
-require$$0$5.ipcMain.handle("search-items", async (_event, content, tagId) => {
-  log.info("[主进程] 获取剪贴板数据，查询条件", content, tagId);
-  const db = ClipboardDB.getInstance();
-  const items = db.searchItems(content, tagId);
-  return items;
 });
 require$$0$5.ipcMain.handle("search-items-paged", async (_event, content, tagId, page, pageSize) => {
   log.info("[主进程] 获取剪贴板数据(分页)，查询条件", content, tagId, page, pageSize);
@@ -40313,32 +40375,6 @@ require$$0$5.ipcMain.handle("remove-item", async (_event, id) => {
   log.info("[主进程] 剪贴板内容删除", id);
   const db = ClipboardDB.getInstance();
   db.deleteItem(id);
-});
-require$$0$5.ipcMain.handle("add-tag", async (_event, name, color) => {
-  log.info("[主进程] 标签添加", name, color);
-  const db = ClipboardDB.getInstance();
-  db.addTag(name, color);
-  const tags = db.getAllTags();
-  win == null ? void 0 : win.webContents.send("load-tag-items", tags);
-});
-require$$0$5.ipcMain.handle("update-tag", async (_event, id, name, color) => {
-  log.info("[主进程] 更新标签", id, name, color);
-  const db = ClipboardDB.getInstance();
-  db.updateTag(id, name, color);
-  const tags = db.getAllTags();
-  win == null ? void 0 : win.webContents.send("load-tag-items", tags);
-});
-require$$0$5.ipcMain.handle("delete-tag", async (_event, id) => {
-  log.info("[主进程] 删除标签", id);
-  const db = ClipboardDB.getInstance();
-  db.deleteTag(id);
-  const tags = db.getAllTags();
-  win == null ? void 0 : win.webContents.send("load-tag-items", tags);
-});
-require$$0$5.ipcMain.handle("get-all-tags", async () => {
-  log.info("[主进程] 获取所有标签");
-  const db = ClipboardDB.getInstance();
-  return db.getAllTags();
 });
 require$$0$5.ipcMain.handle("item-bind-tag", async (_event, itemId, tagId) => {
   log.info("[主进程] 内容和标签绑定", itemId, tagId);
@@ -40381,6 +40417,9 @@ require$$0$5.ipcMain.handle("item-copy", async (_event, id) => {
     return false;
   }
 });
+require$$0$5.ipcMain.handle("main-fixed", async (_event, fixed) => {
+  isFixedMainWindow = fixed;
+});
 require$$0$5.ipcMain.handle("update-config", async (_event, conf) => {
   log.info("[主进程] 更新配置", conf);
   updateSettings(conf);
@@ -40392,73 +40431,32 @@ require$$0$5.ipcMain.handle("update-shortcut-keys", async (_event, config2) => {
   win == null ? void 0 : win.webContents.send("load-shortcut-keys", config2);
   return true;
 });
-require$$0$5.ipcMain.on("open-main-tools", () => {
-  log.info("[主进程] 打开开发者工具");
-  if (win) {
-    win.webContents.openDevTools({ mode: "detach" });
-    isOpenMianDevTools = true;
-    win.webContents.once("devtools-closed", () => {
-      log.info("[主进程] 开发者工具已关闭");
-      isOpenMianDevTools = false;
-    });
-  }
+require$$0$5.ipcMain.handle("add-tag", async (_event, name, color) => {
+  log.info("[主进程] 标签添加", name, color);
+  const db = ClipboardDB.getInstance();
+  db.addTag(name, color);
+  const tags = db.getAllTags();
+  win == null ? void 0 : win.webContents.send("load-tag-items", tags);
 });
-require$$0$5.ipcMain.on("reload-app", () => {
-  log.info("[主进程] 重新加载应用程序");
-  if (win) {
-    win.reload();
-  }
+require$$0$5.ipcMain.handle("update-tag", async (_event, id, name, color) => {
+  log.info("[主进程] 更新标签", id, name, color);
+  const db = ClipboardDB.getInstance();
+  db.updateTag(id, name, color);
+  const tags = db.getAllTags();
+  win == null ? void 0 : win.webContents.send("load-tag-items", tags);
 });
-require$$0$5.ipcMain.on("quit-app", () => {
-  log.info("[主进程] 退出应用程序");
-  require$$0$5.app.quit();
+require$$0$5.ipcMain.handle("delete-tag", async (_event, id) => {
+  log.info("[主进程] 删除标签", id);
+  const db = ClipboardDB.getInstance();
+  db.deleteTag(id);
+  const tags = db.getAllTags();
+  win == null ? void 0 : win.webContents.send("load-tag-items", tags);
 });
-require$$0$5.ipcMain.on("close-app", () => {
-  closeOrHide();
+require$$0$5.ipcMain.handle("get-all-tags", async () => {
+  log.info("[主进程] 获取所有标签");
+  const db = ClipboardDB.getInstance();
+  return db.getAllTags();
 });
-require$$0$5.ipcMain.on("open-settings", createSettingsWindow);
-require$$0$5.ipcMain.on("restart-app", () => {
-  isOpenWindow = false;
-  isOpenSettingsWindow = false;
-  require$$0$5.BrowserWindow.getAllWindows().forEach((window2) => {
-    if (!window2.isDestroyed()) {
-      window2.close();
-    }
-  });
-  require$$0$5.app.relaunch();
-  require$$0$5.app.exit(0);
-});
-require$$0$5.ipcMain.on("open-tags", createTagsWindow);
-require$$0$5.app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") {
-    require$$0$5.app.quit();
-    win = void 0;
-  }
-  if (process.platform === "darwin") {
-    log.info("[主进程] 关闭程序");
-    require$$0$5.app.quit();
-  }
-});
-const gotTheLock = require$$0$5.app.requestSingleInstanceLock();
-if (!gotTheLock) {
-  require$$0$5.app.quit();
-} else {
-  require$$0$5.app.whenReady().then(async () => {
-    try {
-      const db = ClipboardDB.getInstance();
-      await db.checkStorageSize();
-      log.info("[主进程] 应用启动时的存储检查和清理完成");
-    } catch (error) {
-      log.error("[主进程] 应用启动时的存储检查和清理失败:", error);
-    }
-    createMainWindow();
-    require$$0$5.app.on("activate", () => {
-      if (require$$0$5.BrowserWindow.getAllWindows().length === 0) {
-        createMainWindow();
-      }
-    });
-  });
-}
 let lastText = require$$0$5.clipboard.readText();
 let lastImage = require$$0$5.clipboard.readImage().isEmpty() ? null : require$$0$5.clipboard.readImage().toPNG();
 let clipboardTimer = null;

@@ -43,11 +43,13 @@ const isFixed = ref(false);
 // 固定窗口
 function onFixWindow() {
     isFixed.value = true;
+    window.ipcRenderer.invoke('main-fixed', true);
 }
 
 // 取消固定窗口
 function onUnfixWindow() {
     isFixed.value = false;
+    window.ipcRenderer.invoke('main-fixed', false);
 }
 
 function onClose(win: string) {

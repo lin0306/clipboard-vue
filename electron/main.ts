@@ -47,6 +47,7 @@ let isOpenTagsDevTools = false;
 let x: number | undefined = undefined;
 let y: number | undefined = undefined;
 let wakeUpRoutineShortcut: ShortcutManager; // 唤醒程序快捷键
+let isFixedMainWindow = false; // 是否固定窗口大小
 
 const config: any = computed(() => getSettings());
 const shortcutKeys: any = computed(() => getShortcutKeys());
@@ -119,6 +120,7 @@ function createMainWindow() {
                 && !isOpenMianDevTools
                 && !isOpenSettingsDevTools
                 && !isOpenTagsDevTools
+                && !isFixedMainWindow
             ) {
                 closeOrHide();
             }
@@ -171,9 +173,6 @@ function createMainWindow() {
 
     // 监听窗口关闭事件，清理定时器
     win.on('closed', () => {
-        // 关闭数据库连接
-        const db = ClipboardDB.getInstance()
-        db.close();
         if (clipboardTimer) {
             clearTimeout(clipboardTimer);
             clipboardTimer = null;
@@ -196,6 +195,65 @@ function createMainWindow() {
         config.value.tempPath = tempDir;
         updateSettings(config.value);
     }
+
+
+    // 监听打开开发者工具的请求
+    ipcMain.on('open-main-tools', () => {
+        log.info('[主进程] 打开开发者工具');
+        if (win) {
+            // 打开调试工具，设置为单独窗口
+            win.webContents.openDevTools({ mode: 'detach' });
+            isOpenMianDevTools = true;
+
+            // 监听DevTools关闭事件
+            win.webContents.once('devtools-closed', () => {
+                log.info('[主进程] 开发者工具已关闭');
+                isOpenMianDevTools = false;
+            });
+        }
+    });
+
+    // 监听重新加载应用程序的请求
+    ipcMain.on('reload-app', () => {
+        log.info('[主进程] 重新加载应用程序');
+        if (win) {
+            win.reload();
+        }
+    });
+
+    // 监听退出应用程序的请求
+    ipcMain.on('quit-app', () => {
+        log.info('[主进程] 退出应用程序');
+        app.quit();
+    });
+
+    // 监听关闭窗口的请求
+    ipcMain.on('close-app', () => {
+        closeOrHide();
+    });
+
+    // 监听重启应用的请求
+    // todo：测试环境重启有bug，重启后会白屏，原因：测试环境会停止vue端口服务，重新启动时没有重启vue服务，导致地址无法访问
+    ipcMain.on('restart-app', () => {
+        // 重置窗口状态变量，确保重启后能正确创建窗口
+        isOpenWindow = false;
+        isOpenSettingsWindow = false;
+        // 关闭所有窗口
+        BrowserWindow.getAllWindows().forEach(window => {
+            if (!window.isDestroyed()) {
+                window.close();
+            }
+        });
+        // 重启应用
+        app.relaunch();
+        app.exit(0);
+    });
+
+    // 打开设置窗口
+    ipcMain.on('open-settings', createSettingsWindow);
+
+    // 打开标签管理窗口
+    ipcMain.on('open-tags', createTagsWindow);
 }
 
 // 创建设置窗口
@@ -238,16 +296,16 @@ function createSettingsWindow() {
         settingsWindow.webContents.send('load-shortcut-keys', shortcutKeys.value);
     });
 
+    // 当窗口关闭时，移除事件监听器
+    settingsWindow.on('closed', () => {
+        isOpenSettingsWindow = false;
+    });
+
     ipcMain.on('close-settings', () => {
         isOpenSettingsWindow = false;
         if (!settingsWindow.isDestroyed()) {
             settingsWindow.close();
         }
-    });
-
-    // 当窗口关闭时，移除事件监听器
-    settingsWindow.on('closed', () => {
-        isOpenSettingsWindow = false;
     });
 
     // 监听打开开发者工具的请求
@@ -263,6 +321,7 @@ function createSettingsWindow() {
             });
         }
     });
+
 }
 
 // 创建设置窗口
@@ -303,16 +362,17 @@ function createTagsWindow() {
         tagsWindow.webContents.send('window-type', 'tags');
     });
 
+    // 当窗口关闭时，移除事件监听器
+    tagsWindow.on('closed', () => {
+        isOpenTagsWindow = false;
+    });
+
+    // 监听关闭窗口的请求
     ipcMain.on('close-tags', () => {
         isOpenTagsWindow = false;
         if (!tagsWindow.isDestroyed()) {
             tagsWindow.close();
         }
-    });
-
-    // 当窗口关闭时，移除事件监听器
-    tagsWindow.on('closed', () => {
-        isOpenTagsWindow = false;
     });
 
     // 监听打开开发者工具的请求
@@ -385,20 +445,62 @@ function createTray(win: BrowserWindow) {
     });
 }
 
+app.on('window-all-closed', () => {
+    log.info('[主进程] 所有窗口已关闭')
+    // 关闭数据库连接
+    const db = ClipboardDB.getInstance()
+    db.close();
+
+    // 在 macOS 上，应用程序通常在所有窗口关闭后仍保持活动状态
+    // 直到用户使用 Cmd + Q 显式退出
+    if (process.platform === 'darwin') {
+        log.info('[主进程] macOS 平台，应用保持活动状态')
+        // 如果您希望 macOS 上的行为与其他平台一致，可以取消下面的注释
+        // app.quit()
+    } else {
+        log.info('[主进程] 非 macOS 平台，退出应用')
+        app.quit()
+        win = undefined
+    }
+})
+
+// 限制只能同时存在启动一个程序
+const gotTheLock = app.requestSingleInstanceLock()
+if (!gotTheLock) {
+    app.quit()
+} else {
+    // 当 Electron 完成初始化并准备创建浏览器窗口时调用此方法
+    app.whenReady().then(async () => {
+        // 应用启动时执行一次存储检查和清理
+        try {
+            const db = ClipboardDB.getInstance();
+            await db.checkStorageSize();
+            log.info('[主进程] 应用启动时的存储检查和清理完成');
+        } catch (error) {
+            log.error('[主进程] 应用启动时的存储检查和清理失败:', error);
+        }
+
+        createMainWindow()
+
+        // 仅 macOS 支持
+        app.on('activate', () => {
+            // On OS X it's common to re-create a window in the app when the
+            // dock icon is clicked and there are no other windows open.
+            if (BrowserWindow.getAllWindows().length === 0) {
+                createMainWindow()
+            }
+        })
+    })
+}
+
+// 主页面IPC通信配置 start
+
 // 监听清空剪贴板
 ipcMain.handle('clear-items', async () => {
     const db = ClipboardDB.getInstance()
     db.clearAll()
     return true
 })
-// 监听剪贴板列表搜索
-ipcMain.handle('search-items', async (_event, content, tagId) => {
-    log.info('[主进程] 获取剪贴板数据，查询条件', content, tagId);
-    const db = ClipboardDB.getInstance()
-    const items = db.searchItems(content, tagId);
-    // 标签信息已在SQL查询中获取，无需再次查询
-    return items;
-});
 
 // 监听剪贴板列表分页搜索
 ipcMain.handle('search-items-paged', async (_event, content, tagId, page, pageSize) => {
@@ -408,6 +510,7 @@ ipcMain.handle('search-items-paged', async (_event, content, tagId, page, pageSi
     // 标签信息已在SQL查询中获取，无需再次查询
     return result;
 });
+
 // 更新主题配置
 ipcMain.handle('update-themes', async (_event, theme) => {
     log.info('[主进程] 更新主题', theme);
@@ -422,48 +525,21 @@ ipcMain.handle('top-item', async (_event, id) => {
     const db = ClipboardDB.getInstance()
     db.toggleTop(id, true);
 });
+
 // 监听剪贴板列表内容取消置顶
 ipcMain.handle('untop-item', async (_event, id) => {
     log.info('[主进程] 剪贴板内容取消置顶', id);
     const db = ClipboardDB.getInstance()
     db.toggleTop(id, false);
 });
+
 // 监听剪贴板列表内容删除
 ipcMain.handle('remove-item', async (_event, id) => {
     log.info('[主进程] 剪贴板内容删除', id);
     const db = ClipboardDB.getInstance()
     db.deleteItem(id);
 });
-// 监听剪贴板列表内容删除
-ipcMain.handle('add-tag', async (_event, name, color) => {
-    log.info('[主进程] 标签添加', name, color);
-    const db = ClipboardDB.getInstance()
-    db.addTag(name, color);
-    const tags = db.getAllTags();
-    win?.webContents.send('load-tag-items', tags);
-});
 
-ipcMain.handle('update-tag', async (_event, id, name, color) => {
-    log.info('[主进程] 更新标签', id, name, color);
-    const db = ClipboardDB.getInstance()
-    db.updateTag(id, name, color);
-    const tags = db.getAllTags();
-    win?.webContents.send('load-tag-items', tags);
-});
-
-ipcMain.handle('delete-tag', async (_event, id) => {
-    log.info('[主进程] 删除标签', id);
-    const db = ClipboardDB.getInstance()
-    db.deleteTag(id);
-    const tags = db.getAllTags();
-    win?.webContents.send('load-tag-items', tags);
-});
-
-ipcMain.handle('get-all-tags', async () => {
-    log.info('[主进程] 获取所有标签');
-    const db = ClipboardDB.getInstance()
-    return db.getAllTags();
-});
 // 监听剪贴板列表内容绑定标签
 ipcMain.handle('item-bind-tag', async (_event, itemId, tagId) => {
     log.info('[主进程] 内容和标签绑定', itemId, tagId);
@@ -524,6 +600,15 @@ ipcMain.handle('item-copy', async (_event, id: number) => {
     }
 });
 
+// 监听主窗口是否固定
+ipcMain.handle('main-fixed', async (_event, fixed: boolean) => {
+    isFixedMainWindow = fixed;
+});
+
+// 主页面IPC通信配置 end
+
+// 设置页面IPC通信配置 start
+
 // 监听配置文件更新
 ipcMain.handle('update-config', async (_event, conf) => {
     log.info('[主进程] 更新配置', conf);
@@ -539,107 +624,45 @@ ipcMain.handle('update-shortcut-keys', async (_event, config) => {
     return true;
 });
 
-// 监听打开开发者工具的请求
-ipcMain.on('open-main-tools', () => {
-    log.info('[主进程] 打开开发者工具');
-    if (win) {
-        // 打开调试工具，设置为单独窗口
-        win.webContents.openDevTools({ mode: 'detach' });
-        isOpenMianDevTools = true;
+// 设置页面IPC通信配置 end
 
-        // 监听DevTools关闭事件
-        win.webContents.once('devtools-closed', () => {
-            log.info('[主进程] 开发者工具已关闭');
-            isOpenMianDevTools = false;
-        });
-    }
+// 标签页面IPC通信配置 start
+
+// 监听剪贴板列表内容删除
+ipcMain.handle('add-tag', async (_event, name, color) => {
+    log.info('[主进程] 标签添加', name, color);
+    const db = ClipboardDB.getInstance()
+    db.addTag(name, color);
+    const tags = db.getAllTags();
+    win?.webContents.send('load-tag-items', tags);
 });
 
-// 监听重新加载应用程序的请求
-ipcMain.on('reload-app', () => {
-    log.info('[主进程] 重新加载应用程序');
-    if (win) {
-        win.reload();
-    }
+// 监听标签修改
+ipcMain.handle('update-tag', async (_event, id, name, color) => {
+    log.info('[主进程] 更新标签', id, name, color);
+    const db = ClipboardDB.getInstance()
+    db.updateTag(id, name, color);
+    const tags = db.getAllTags();
+    win?.webContents.send('load-tag-items', tags);
 });
 
-// 监听退出应用程序的请求
-ipcMain.on('quit-app', () => {
-    log.info('[主进程] 退出应用程序');
-    app.quit();
+// 监听标签删除
+ipcMain.handle('delete-tag', async (_event, id) => {
+    log.info('[主进程] 删除标签', id);
+    const db = ClipboardDB.getInstance()
+    db.deleteTag(id);
+    const tags = db.getAllTags();
+    win?.webContents.send('load-tag-items', tags);
 });
 
-// 监听关闭窗口的请求
-ipcMain.on('close-app', () => {
-    closeOrHide();
+// 监听获取所有标签
+ipcMain.handle('get-all-tags', async () => {
+    log.info('[主进程] 获取所有标签');
+    const db = ClipboardDB.getInstance()
+    return db.getAllTags();
 });
 
-// 打开设置窗口
-ipcMain.on('open-settings', createSettingsWindow);
-
-// 监听重启应用的请求
-// todo：测试环境重启有bug，重启后会白屏，原因：测试环境会停止vue端口服务，重新启动时没有重启vue服务，导致地址无法访问
-ipcMain.on('restart-app', () => {
-    // 重置窗口状态变量，确保重启后能正确创建窗口
-    isOpenWindow = false;
-    isOpenSettingsWindow = false;
-    // 关闭所有窗口
-    BrowserWindow.getAllWindows().forEach(window => {
-        if (!window.isDestroyed()) {
-            window.close();
-        }
-    });
-    // 重启应用
-    app.relaunch();
-    app.exit(0);
-});
-
-// 打开标签管理窗口
-ipcMain.on('open-tags', createTagsWindow);
-
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
-app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') {
-        app.quit()
-        win = undefined
-    }
-    // 对于 Mac 系统， 关闭窗口时并不会直接退出应用， 此时需要我们来手动处理
-    if (process.platform === 'darwin') {
-        log.info('[主进程] 关闭程序')
-        app.quit()
-    }
-})
-
-// 限制只能同时存在启动一个程序
-const gotTheLock = app.requestSingleInstanceLock()
-if (!gotTheLock) {
-    app.quit()
-} else {
-    // 当 Electron 完成初始化并准备创建浏览器窗口时调用此方法
-    app.whenReady().then(async () => {
-        // 应用启动时执行一次存储检查和清理
-        try {
-            const db = ClipboardDB.getInstance();
-            await db.checkStorageSize();
-            log.info('[主进程] 应用启动时的存储检查和清理完成');
-        } catch (error) {
-            log.error('[主进程] 应用启动时的存储检查和清理失败:', error);
-        }
-
-        createMainWindow()
-
-        // 仅 macOS 支持
-        app.on('activate', () => {
-            // On OS X it's common to re-create a window in the app when the
-            // dock icon is clicked and there are no other windows open.
-            if (BrowserWindow.getAllWindows().length === 0) {
-                createMainWindow()
-            }
-        })
-    })
-}
+// 标签页面IPC通信配置 end
 
 let lastText = clipboard.readText();
 let lastImage = clipboard.readImage().isEmpty() ? null : clipboard.readImage().toPNG();

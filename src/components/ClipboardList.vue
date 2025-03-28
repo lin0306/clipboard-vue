@@ -72,33 +72,37 @@ const MenuItems = computed((): NavBarItem[] => [
       {
         key: '数据视图',
         label: languageTexts.list.menu.dataView,
+        isHide: true,
+      },
+      {
+        key: '清空剪贴板',
+        label: languageTexts.list.menu.clearData,
+        onClick: () => {
+          // 清空历史记录
+          try {
+            window.ipcRenderer.invoke('clear-items')
+            itemList.value = []
+            message.success(languageTexts.list.menu.clearDataSuccessMsg)
+          } catch (error) {
+            message.error(languageTexts.list.menu.clearDataFailedMsg)
+          }
+        },
       },
       {
         type: 'divider',
+        isHide: true,
       },
       {
         key: '数据导入',
         label: languageTexts.list.menu.dataImport,
+        isHide: true,
       },
       {
         key: '数据导出',
         label: languageTexts.list.menu.dataExport,
+        isHide: true,
       },
     ],
-  },
-  {
-    key: '清空剪贴板',
-    label: languageTexts.list.menu.clearData,
-    onClick: () => {
-      // 清空历史记录
-      try {
-        window.ipcRenderer.invoke('clear-items')
-        itemList.value = []
-        message.success(languageTexts.list.menu.clearDataSuccessMsg)
-      } catch (error) {
-        message.error(languageTexts.list.menu.clearDataFailedMsg)
-      }
-    },
   },
   {
     key: '主题',
@@ -124,14 +128,17 @@ const MenuItems = computed((): NavBarItem[] => [
       {
         key: '使用说明',
         label: languageTexts.list.menu.instructions,
+        isHide: true,
       },
       {
         key: '更新日志',
         label: languageTexts.list.menu.updateLog,
+        isHide: true,
       },
       {
         key: '检查更新',
         label: languageTexts.list.menu.checkForUpdate,
+        isHide: true,
       },
       {
         key: '关于',
@@ -255,7 +262,7 @@ async function filterClipboardItems(reset: boolean = true) {
         loadImageBase64(item.file_path);
       }
     }
-    
+
     // 在数据更新后，使用nextTick确保DOM已更新，然后重新初始化懒加载
     nextTick(() => {
       // 重新初始化图片懒加载

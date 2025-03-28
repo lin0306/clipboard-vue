@@ -40154,15 +40154,7 @@ function createMainWindow() {
     closeOrHide();
   });
   require$$0$5.ipcMain.on("restart-app", () => {
-    isOpenWindow = false;
-    isOpenSettingsWindow = false;
-    require$$0$5.BrowserWindow.getAllWindows().forEach((window2) => {
-      if (!window2.isDestroyed()) {
-        window2.close();
-      }
-    });
-    require$$0$5.app.relaunch();
-    require$$0$5.app.exit(0);
+    restartAPP();
   });
   require$$0$5.ipcMain.on("open-settings", createSettingsWindow);
   require$$0$5.ipcMain.on("open-tags", createTagsWindow);
@@ -40274,25 +40266,20 @@ function createTray(win2) {
   }
   const trayMenuTemplate = [
     {
-      label: "打开主窗口",
-      click: function() {
-        createMainWindow();
-      }
-    },
-    {
-      label: "设置",
+      label: "偏好设置",
       click: function() {
         createSettingsWindow();
       }
     },
     {
-      label: "帮助",
+      label: "关于",
       click: function() {
       }
     },
     {
-      label: "关于",
+      label: "重新启动",
       click: function() {
+        restartAPP();
       }
     },
     {
@@ -40457,9 +40444,17 @@ require$$0$5.ipcMain.handle("get-all-tags", async () => {
   const db = ClipboardDB.getInstance();
   return db.getAllTags();
 });
-let lastText = require$$0$5.clipboard.readText();
-let lastImage = require$$0$5.clipboard.readImage().isEmpty() ? null : require$$0$5.clipboard.readImage().toPNG();
-let clipboardTimer = null;
+function restartAPP() {
+  isOpenWindow = false;
+  isOpenSettingsWindow = false;
+  require$$0$5.BrowserWindow.getAllWindows().forEach((window2) => {
+    if (!window2.isDestroyed()) {
+      window2.close();
+    }
+  });
+  require$$0$5.app.relaunch();
+  require$$0$5.app.exit(0);
+}
 function closeOrHide() {
   isOpenWindow = false;
   if (Boolean(config.value.colsingHideToTaskbar)) {
@@ -40475,6 +40470,9 @@ function closeOrHide() {
     require$$0$5.app.quit();
   }
 }
+let lastText = require$$0$5.clipboard.readText();
+let lastImage = require$$0$5.clipboard.readImage().isEmpty() ? null : require$$0$5.clipboard.readImage().toPNG();
+let clipboardTimer = null;
 function watchClipboard() {
   if (!win || win.isDestroyed() || !win.webContents || win.webContents.isDestroyed()) {
     log.info("[主进程] 窗口或渲染进程不可用，跳过剪贴板检查");

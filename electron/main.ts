@@ -196,7 +196,6 @@ function createMainWindow() {
         updateSettings(config.value);
     }
 
-
     // 监听打开开发者工具的请求
     ipcMain.on('open-main-tools', () => {
         log.info('[主进程] 打开开发者工具');
@@ -236,17 +235,7 @@ function createMainWindow() {
     // todo：测试环境重启有bug，重启后会白屏，原因：测试环境会停止vue端口服务，重新启动时没有重启vue服务，导致地址无法访问
     ipcMain.on('restart-app', () => {
         // 重置窗口状态变量，确保重启后能正确创建窗口
-        isOpenWindow = false;
-        isOpenSettingsWindow = false;
-        // 关闭所有窗口
-        BrowserWindow.getAllWindows().forEach(window => {
-            if (!window.isDestroyed()) {
-                window.close();
-            }
-        });
-        // 重启应用
-        app.relaunch();
-        app.exit(0);
+        restartAPP()
     });
 
     // 打开设置窗口
@@ -398,24 +387,20 @@ function createTray(win: BrowserWindow) {
     }
     const trayMenuTemplate = [
         {
-            label: '打开主窗口',
-            click: function () {
-                createMainWindow();
-            }
-        },
-        {
-            label: '设置',
+            label: '偏好设置',
             click: function () {
                 createSettingsWindow();
             }
         },
         {
-            label: '帮助',
+            label: '关于',
             click: function () { }
         },
         {
-            label: '关于',
-            click: function () { }
+            label: '重新启动',
+            click: function () {
+                restartAPP();
+            } 
         },
         {
             label: '退出',
@@ -664,10 +649,19 @@ ipcMain.handle('get-all-tags', async () => {
 
 // 标签页面IPC通信配置 end
 
-let lastText = clipboard.readText();
-let lastImage = clipboard.readImage().isEmpty() ? null : clipboard.readImage().toPNG();
-// let lastFiles: string[] = [];
-let clipboardTimer: string | number | NodeJS.Timeout | null | undefined = null;
+function restartAPP() {
+    isOpenWindow = false
+    isOpenSettingsWindow = false
+    // 关闭所有窗口
+    BrowserWindow.getAllWindows().forEach(window => {
+        if (!window.isDestroyed()) {
+            window.close()
+        }
+    })
+    // 重启应用
+    app.relaunch()
+    app.exit(0)
+}
 
 /**
  * 关闭或隐藏主窗口
@@ -689,6 +683,10 @@ function closeOrHide() {
 }
 
 // 监听剪贴板变化
+let lastText = clipboard.readText();
+let lastImage = clipboard.readImage().isEmpty() ? null : clipboard.readImage().toPNG();
+// let lastFiles: string[] = [];
+let clipboardTimer: string | number | NodeJS.Timeout | null | undefined = null;
 function watchClipboard() {
     // 首先检查窗口和渲染进程状态
     if (!win || win.isDestroyed() || !win.webContents || win.webContents.isDestroyed()) {

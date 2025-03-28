@@ -31,6 +31,10 @@ export interface PageConfig {
         languages: string;
         // 存储设置页面文字
         tempPath: string;
+        maxHistoryItems: string,
+        maxStorageSize: string,
+        autoCleanupDays: string,
+        maxItemSize: string,
         // 快捷键设置页面文字
         search: string;
         wakeUpRoutine: string;
@@ -111,6 +115,10 @@ export const zhCN: LanguageConfig = {
             windowWidth: '宽：',
             languages: '语言',
             tempPath: '临时文件路径',
+            maxHistoryItems: '最大历史记录数',
+            maxStorageSize: '最大存储空间(MB)',
+            autoCleanupDays: '自动清理天数',
+            maxItemSize: '单项最大大小(MB)',
             search: '搜索',
             wakeUpRoutine: '唤醒程序',
             emptyShortcutConfig: '暂无快捷键配置',
@@ -131,7 +139,7 @@ export const zhCN: LanguageConfig = {
             resetSuccessMsg: '已重置',
         },
         list: {
-            title: '剪贴板', 
+            title: '剪贴板',
             copyFailedMsg: '复制失败',
             searchHint: '输入关键词搜索',
             deleteBtn: '删除',
@@ -158,7 +166,7 @@ export const zhCN: LanguageConfig = {
                 instructions: '使用说明',
                 updateLog: '更新日志',
                 checkForUpdate: '检查更新',
-                about: '关于', 
+                about: '关于',
             }
         }
     },
@@ -186,6 +194,10 @@ export const enUS: LanguageConfig = {
             windowWidth: 'Width:',
             languages: 'Languages',
             tempPath: 'Temporary File Path',
+            maxHistoryItems: 'Max History Items',
+            maxStorageSize: 'Max Storage Size (MB)',
+            autoCleanupDays: 'Auto Cleanup Days',
+            maxItemSize: 'Max Item Size (MB)',
             search: 'Search',
             wakeUpRoutine: 'Wake Up Routine',
             emptyShortcutConfig: 'No Shortcut Config',
@@ -210,7 +222,7 @@ export const enUS: LanguageConfig = {
             copyFailedMsg: 'Copy Failed',
             searchHint: 'Input keywords to search',
             deleteBtn: 'Delete',
-            bindTagBtn: 'Bind Tag', 
+            bindTagBtn: 'Bind Tag',
             menu: {
                 program: 'Program',
                 settings: 'Settings',
@@ -233,7 +245,7 @@ export const enUS: LanguageConfig = {
                 instructions: 'Instructions',
                 updateLog: 'Update Log',
                 checkForUpdate: 'Check For Update',
-                about: 'About', 
+                about: 'About',
             }
         }
     }
@@ -263,7 +275,7 @@ let currentLanguageId: string = '';
 
 // 语言初始化，由于createLanguageContext执行早于ipc通信，所以这里需要重新设置语言
 window.ipcRenderer.on('init-language', (_event, language) => {
-    if(currentLanguageId === language) {
+    if (currentLanguageId === language) {
         console.log('[渲染进程] 接收项目初始化语言，当前语言id和配置文件中的语言id一致，不做处理')
         return;
     }

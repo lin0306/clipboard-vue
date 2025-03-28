@@ -28,7 +28,11 @@ const originalConfig = reactive({
   replaceGlobalHotkey: false,
   languages: 'chinese',
   colsingHideToTaskbar: false,
-  tempPath: ''
+  tempPath: '',
+  maxHistoryItems: 100,
+  maxStorageSize: 500,
+  autoCleanupDays: 30,
+  maxItemSize: 50
 });
 
 // 当前编辑的配置
@@ -132,8 +136,8 @@ const saveConfig = async () => {
   if (!hasChanges.value) {
     return; // 如果没有修改，不做任何处理
   }
-  if (selectedKeys.value[0] === 'general') {
-    console.log('保存通用设置:', currentConfig);
+  if (selectedKeys.value[0] === 'general' || selectedKeys.value[0] === 'storage') {
+    console.log('保存设置:', currentConfig);
 
     // 是否修改了【固定窗口大小】
     const isUpdateFixedWindowSize = currentConfig.fixedWindowSize !== originalConfig.fixedWindowSize;
@@ -315,9 +319,24 @@ onMounted(() => {
           <h2>{{ languageTexts.settings.storageTitle }}</h2>
           <div class="setting-item">
             <span class="setting-label">{{ languageTexts.settings.tempPath }}</span>
-            <Input v-model:value="currentConfig.tempPath" placeholder="请输入临时文件路径" />
+            <Input v-model:value="currentConfig.tempPath" placeholder="请输入临时文件路径" disabled />
           </div>
-          <p class="setting-description">更多存储设置功能开发中...</p>
+          <div class="setting-item">
+            <span class="setting-label">{{ languageTexts.settings.maxHistoryItems }}</span>
+            <InputNumber v-model:value="currentConfig.maxHistoryItems" :min="10" :max="10000" />
+          </div>
+          <div class="setting-item">
+            <span class="setting-label">{{ languageTexts.settings.maxStorageSize }}</span>
+            <InputNumber v-model:value="currentConfig.maxStorageSize" :min="50" :max="10000" />
+          </div>
+          <div class="setting-item">
+            <span class="setting-label">{{ languageTexts.settings.autoCleanupDays }}</span>
+            <InputNumber v-model:value="currentConfig.autoCleanupDays" :min="1" :max="365" />
+          </div>
+          <div class="setting-item">
+            <span class="setting-label">{{ languageTexts.settings.maxItemSize }}</span>
+            <InputNumber v-model:value="currentConfig.maxItemSize" :min="1" :max="200" />
+          </div>
         </div>
 
         <!-- 快捷键设置 -->

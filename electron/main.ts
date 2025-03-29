@@ -42,13 +42,11 @@ let isOpenWindow = false;
 let isOpenSettingsWindow = false;
 let isOpenTagsWindow = false;
 let isOpenAboutWindow = false;
-let isOpenUpdateWindow = false;
 let isHideWindow = false;
 let isOpenMianDevTools = false;
 let isOpenSettingsDevTools = false;
 let isOpenTagsDevTools = false;
 let isOpenAboutDevTools = false;
-let isOpenUpdateDevTools = false;
 let x: number | undefined = undefined;
 let y: number | undefined = undefined;
 let wakeUpRoutineShortcut: ShortcutManager; // 唤醒程序快捷键

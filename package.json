@@ -11,7 +11,7 @@
     "preview": "vite preview",
     "analyze": "vite build --mode analyze",
     "rebuild": "electron-rebuild -f -w better-sqlite3",
-    "postinstall": "electron-builder install-app-deps --production"
+    "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
     "@ant-design/icons-vue": "^7.0.1",
@@ -49,7 +49,7 @@
     "productName": "Clipboard",
     "asar": true,
     "compression": "maximum",
-    "afterPack": "./removeLocales.js",
+    "afterPack": "build-config/removeLocales.js",
     "artifactName": "clipboard-${os}-${arch}-${version}.${ext}",
     "directories": {
       "output": "release"
@@ -86,7 +86,7 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "license": "LICENSE.txt",
-      "include": "nsis/installer.nsh"
+      "include": "build-config/installer.nsh"
     },
     "extraResources": [
       {

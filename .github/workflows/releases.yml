@@ -9,12 +9,19 @@ on:
       - 'v*-rc*'
       - 'v*-ga*'
 
+# 确保同一时间只运行一个工作流
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   release:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [windows-latest, macos-latest]
+      # 确保一个任务失败不影响其他任务
+      fail-fast: false
 
     steps:
       - name: Check out Git repository
@@ -45,9 +52,11 @@ jobs:
       - name: Extract Tag Name
         id: extract_tag
         run: echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+        shell: bash
 
       - name: Release
         uses: softprops/action-gh-release@v1
+        if: success() && matrix.os == 'windows-latest'  # 只在Windows构建成功后执行一次发布
         with:
           files: release/**/clipboard-*.{exe,dmg,zip}
           draft: false

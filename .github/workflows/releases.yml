@@ -65,6 +65,12 @@ jobs:
       - name: Install Dependencies
         run: yarn install --frozen-lockfile
         
+      # 获取当前时间作为构建标识符，避免文件名冲突
+      - name: Get current time
+        id: current-time
+        run: echo "BUILD_TIME=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
+        shell: bash
+        
       - name: Build Electron App
         run: yarn build
         env:
@@ -85,6 +91,28 @@ jobs:
         id: extract_tag
         run: echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
         shell: bash
+        
+      # 重命名文件以避免冲突  
+      - name: Rename Files with Build Time (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          for file in $(find release -type f -name "*.zip" -o -name "*.yml" -o -name "*.yaml"); do
+            new_file="${file%.*}-${{ env.BUILD_TIME }}.${file##*.}"
+            mv "$file" "$new_file"
+            echo "Renamed $file to $new_file"
+          done
+        shell: bash
+          
+      - name: Rename Files with Build Time (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          Get-ChildItem -Path release -Recurse -Include "*.exe","*.zip","*.yml","*.yaml" | ForEach-Object {
+            $newName = $_.BaseName + "-${{ env.BUILD_TIME }}" + $_.Extension
+            $newPath = Join-Path $_.Directory $newName
+            Rename-Item -Path $_.FullName -NewName $newName -Force
+            Write-Host "Renamed $($_.Name) to $newName"
+          }
+        shell: pwsh
           
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v1
@@ -103,7 +131,7 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.os }}-artifacts
+          name: ${{ matrix.os }}-artifacts-${{ env.BUILD_TIME }}
           path: |
             release/**/*.exe
             release/**/*.dmg

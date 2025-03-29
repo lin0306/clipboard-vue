@@ -58,7 +58,6 @@
     "mac": {
       "category": "public.app-category.developer-tools",
       "target": [
-        "dmg",
         "zip"
       ],
       "icon": "public/logo.icns",

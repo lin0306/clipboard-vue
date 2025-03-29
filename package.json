@@ -58,15 +58,33 @@
     "mac": {
       "category": "public.app-category.developer-tools",
       "target": [
+        "dmg",
         "zip"
       ],
       "icon": "public/logo.icns",
-      "publish": ["github"]
+      "publish": ["github"],
+      "darkModeSupport": true
     },
     "dmg": {
       "background": null,
       "title": "Clipboard",
-      "icon": "public/logo.icns"
+      "icon": "public/logo.icns",
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ],
+      "window": {
+        "width": 540,
+        "height": 380
+      }
     },
     "win": {
       "icon": "public/logo.ico",

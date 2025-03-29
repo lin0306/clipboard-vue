@@ -60,15 +60,15 @@
         "dmg",
         "zip"
       ],
-      "icon": "public/favicon.ico"
+      "icon": "public/logo-512.ico"
     },
     "dmg": {
       "background": "build/background.tiff or build/background.png",
       "title": "Clipboard",
-      "icon": "public/favicon.ico"
+      "icon": "public/logo-512.ico"
     },
     "win": {
-      "icon": "public/favicon.ico",
+      "icon": "public/logo-256.ico",
       "target": [
         "nsis",
         "zip"
@@ -80,9 +80,9 @@
       "oneClick": false,
       "allowElevation": true,
       "allowToChangeInstallationDirectory": true,
-      "installerIcon": "public/favicon.ico",
-      "uninstallerIcon": "public/favicon.ico",
-      "installerHeaderIcon": "public/favicon.ico",
+      "installerIcon": "public/logo-512.ico",
+      "uninstallerIcon": "public/logo-512.ico",
+      "installerHeaderIcon": "public/logo-512.ico",
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "license": "LICENSE.txt",

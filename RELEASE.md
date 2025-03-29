@@ -42,6 +42,13 @@
    - 发布将自动包含这些安装包
    - 你可以在GitHub仓库的Releases页面查看发布状态
 
+7. 删除标签
+
+   ```bash
+   git tag -d vx.x.x
+   git push origin --delete vx.x.x
+   ```
+
 ## 手动构建
 
 如果你想在本地构建应用，可以使用以下命令：

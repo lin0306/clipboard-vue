@@ -51,6 +51,7 @@
     "compression": "maximum",
     "afterPack": "build-config/removeLocales.js",
     "artifactName": "clipboard-${os}-${arch}-${version}.${ext}",
+    "generateUpdatesFilesForAllChannels": true,
     "directories": {
       "output": "release/${os}"
     },
@@ -112,7 +113,8 @@
         "repo": "clipboard-vue",
         "releaseType": "prerelease",
         "private": false,
-        "publishAutoUpdate": true
+        "publishAutoUpdate": true,
+        "vPrefixedTagName": true
       }
     ]
   }

@@ -14,6 +14,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# 设置权限
+permissions:
+  contents: write
+
 jobs:
   release:
     runs-on: ${{ matrix.os }}
@@ -44,12 +48,12 @@ jobs:
           
       - name: Debug List Directories (macOS)
         if: matrix.os == 'macos-latest'
-        run: find release -type f -name "*.dmg" -o -name "*.zip" | sort
+        run: find release -type f -name "*.dmg" -o -name "*.zip" -o -name "*.yml" -o -name "*.yaml" | sort
         shell: bash
           
       - name: Debug List Directories (Windows)
         if: matrix.os == 'windows-latest'
-        run: Get-ChildItem -Path release -Recurse -Include "*.exe","*.zip" | Sort-Object FullName
+        run: Get-ChildItem -Path release -Recurse -Include "*.exe","*.zip","*.yml","*.yaml" | Sort-Object FullName
         shell: pwsh
           
       - name: Upload Artifacts
@@ -60,6 +64,8 @@ jobs:
             release/**/*.exe
             release/**/*.dmg
             release/**/*.zip
+            release/**/*.yml
+            release/**/*.yaml
           if-no-files-found: error
 
       - name: Extract Tag Name
@@ -74,6 +80,8 @@ jobs:
             release/**/*.exe
             release/**/*.dmg
             release/**/*.zip
+            release/**/*.yml
+            release/**/*.yaml
           draft: false
           name: ${{ env.TAG_NAME }}
           tag_name: ${{ env.TAG_NAME }}

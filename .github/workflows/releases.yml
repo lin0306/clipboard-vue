@@ -86,6 +86,23 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: Get-ChildItem -Path release -Recurse -Include "*.exe","*.zip","*.yml","*.yaml" | Sort-Object FullName
         shell: pwsh
+        
+      # 删除不需要的文件
+      - name: Remove Unnecessary Files (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          find release -type f -name "app-update.yml" -o -name "builder-debug.yml" -delete
+          echo "Removed unnecessary files"
+        shell: bash
+          
+      - name: Remove Unnecessary Files (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          Get-ChildItem -Path release -Recurse -Include "app-update.yml","builder-debug.yml","elevate.exe" | ForEach-Object {
+            Remove-Item -Path $_.FullName -Force
+            Write-Host "Removed $($_.Name)"
+          }
+        shell: pwsh
           
       - name: Extract Tag Name
         id: extract_tag

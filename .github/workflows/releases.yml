@@ -69,7 +69,6 @@ jobs:
 
       - name: Release
         uses: softprops/action-gh-release@v1
-        if: success() && matrix.os == 'windows-latest'  # 只在Windows构建成功后执行一次发布
         with:
           files: |
             release/**/*.exe

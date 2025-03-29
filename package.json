@@ -52,7 +52,7 @@
     "afterPack": "build-config/removeLocales.js",
     "artifactName": "clipboard-${os}-${arch}-${version}.${ext}",
     "directories": {
-      "output": "release"
+      "output": "release/${os}"
     },
     "mac": {
       "category": "public.app-category.developer-tools",

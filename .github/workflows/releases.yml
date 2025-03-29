@@ -42,11 +42,24 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_IDENTITY_AUTO_DISCOVERY: false  # 禁用自动发现代码签名证书
           
+      - name: Debug List Directories (macOS)
+        if: matrix.os == 'macos-latest'
+        run: find release -type f -name "*.dmg" -o -name "*.zip" | sort
+        shell: bash
+          
+      - name: Debug List Directories (Windows)
+        if: matrix.os == 'windows-latest'
+        run: Get-ChildItem -Path release -Recurse -Include "*.exe","*.zip" | Sort-Object FullName
+        shell: pwsh
+          
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.os }}-artifacts
-          path: release/**/clipboard-*.{exe,dmg,zip}
+          path: |
+            release/**/*.exe
+            release/**/*.dmg
+            release/**/*.zip
           if-no-files-found: error
 
       - name: Extract Tag Name
@@ -58,7 +71,10 @@ jobs:
         uses: softprops/action-gh-release@v1
         if: success() && matrix.os == 'windows-latest'  # 只在Windows构建成功后执行一次发布
         with:
-          files: release/**/clipboard-*.{exe,dmg,zip}
+          files: |
+            release/**/*.exe
+            release/**/*.dmg
+            release/**/*.zip
           draft: false
           name: ${{ env.TAG_NAME }}
           tag_name: ${{ env.TAG_NAME }}

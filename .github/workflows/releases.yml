@@ -19,7 +19,32 @@ permissions:
   contents: write
 
 jobs:
-  release:
+  # 先创建一个空的Release，供两个平台共享
+  create-release:
+    runs-on: ubuntu-latest
+    outputs:
+      release_id: ${{ steps.create-release.outputs.id }}
+      
+    steps:
+      - name: Extract Tag Name
+        id: extract_tag
+        run: echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+        shell: bash
+        
+      - name: Create Release
+        id: create-release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.TAG_NAME }}
+          name: ${{ env.TAG_NAME }}
+          draft: false
+          prerelease: ${{ contains(github.ref, '-beta') || contains(github.ref, '-alpha') || contains(github.ref, '-rc') }}
+          
+  # 然后构建各个平台的应用
+  build:
+    needs: create-release
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -56,6 +81,25 @@ jobs:
         run: Get-ChildItem -Path release -Recurse -Include "*.exe","*.zip","*.yml","*.yaml" | Sort-Object FullName
         shell: pwsh
           
+      - name: Extract Tag Name
+        id: extract_tag
+        run: echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+        shell: bash
+          
+      - name: Upload Release Assets
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.TAG_NAME }}
+          files: |
+            release/**/*.exe
+            release/**/*.dmg
+            release/**/*.zip
+            release/**/*.yml
+            release/**/*.yaml
+          draft: false
+          
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -67,24 +111,3 @@ jobs:
             release/**/*.yml
             release/**/*.yaml
           if-no-files-found: error
-
-      - name: Extract Tag Name
-        id: extract_tag
-        run: echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-        shell: bash
-
-      - name: Release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
-            release/**/*.exe
-            release/**/*.dmg
-            release/**/*.zip
-            release/**/*.yml
-            release/**/*.yaml
-          draft: false
-          name: ${{ env.TAG_NAME }}
-          tag_name: ${{ env.TAG_NAME }}
-          prerelease: ${{ contains(github.ref, '-beta') || contains(github.ref, '-alpha') || contains(github.ref, '-rc') }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

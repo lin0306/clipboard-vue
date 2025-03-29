@@ -61,7 +61,8 @@
         "dmg",
         "zip"
       ],
-      "icon": "public/logo.icns"
+      "icon": "public/logo.icns",
+      "publish": ["github"]
     },
     "dmg": {
       "background": null,
@@ -73,7 +74,8 @@
       "target": [
         "nsis",
         "zip"
-      ]
+      ],
+      "publish": ["github"]
     },
     "nsis": {
       "guid": "Clipboard",
@@ -106,16 +108,14 @@
       "node_modules/bindings",
       "node_modules/file-uri-to-path"
     ],
-    "publish": [
-      {
-        "provider": "github",
-        "owner": "lin0306",
-        "repo": "clipboard-vue",
-        "releaseType": "prerelease",
-        "private": false,
-        "publishAutoUpdate": true,
-        "vPrefixedTagName": true
-      }
-    ]
+    "publish": {
+      "provider": "github",
+      "owner": "lin0306",
+      "repo": "clipboard-vue",
+      "releaseType": "prerelease",
+      "private": false,
+      "publishAutoUpdate": true,
+      "vPrefixedTagName": true
+    }
   }
 }

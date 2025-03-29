@@ -4,7 +4,10 @@ on:
   push:
     tags:
       - 'v*'
-      - 'v*-beta'
+      - 'v*-beta*'
+      - 'v*-alpha*'
+      - 'v*-rc*'
+      - 'v*-ga*'
 
 jobs:
   release:
@@ -44,6 +47,6 @@ jobs:
         with:
           files: release/**/clipboard-*.{exe,dmg,zip}
           draft: false
-          prerelease: false
+          prerelease: ${{ contains(github.ref, '-beta') || contains(github.ref, '-alpha') || contains(github.ref, '-rc') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

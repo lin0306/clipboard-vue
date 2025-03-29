@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - 'v*'
+      - 'v*-beta'
 
 jobs:
   release:
@@ -26,7 +27,7 @@ jobs:
         run: yarn install --frozen-lockfile
         
       - name: Build Electron App
-        run: npm run build
+        run: yarn build
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           

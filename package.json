@@ -1,7 +1,7 @@
 {
   "name": "clipboard",
   "private": true,
-  "version": "0.0.2",
+  "version": "0.0.2-beta",
   "description": "Clipboard",
   "author": "lin",
   "scripts": {
@@ -63,7 +63,7 @@
       "icon": "public/logo-512.ico"
     },
     "dmg": {
-      "background": "build/background.tiff or build/background.png",
+      "background": null,
       "title": "Clipboard",
       "icon": "public/logo-512.ico"
     },

@@ -7,6 +7,7 @@ import log from './log.js'
 import { getSettings, updateSettings, getShortcutKeys, updateShortcutKeys } from './ConfigFileManager.js'
 import { computed } from 'vue'
 import ShortcutManager from './shortcutManager.js'
+import { getUpdaterService, initUpdaterService } from './updater.js'
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
 
 let __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -41,11 +42,13 @@ let isOpenWindow = false;
 let isOpenSettingsWindow = false;
 let isOpenTagsWindow = false;
 let isOpenAboutWindow = false;
+let isOpenUpdateWindow = false;
 let isHideWindow = false;
 let isOpenMianDevTools = false;
 let isOpenSettingsDevTools = false;
 let isOpenTagsDevTools = false;
 let isOpenAboutDevTools = false;
+let isOpenUpdateDevTools = false;
 let x: number | undefined = undefined;
 let y: number | undefined = undefined;
 let wakeUpRoutineShortcut: ShortcutManager; // 唤醒程序快捷键
@@ -195,6 +198,9 @@ function createMainWindow() {
         openAsHidden: false, // 设置为 true 可以隐藏启动时的窗口
         args: [] // 自定义参数
     });
+    
+    // 初始化更新服务
+    initUpdaterService(win);
 
     // 临时文件位置没有设置，设置成当前程序的根目录为临时文件夹位置
     if (!config.value.tempPath) {
@@ -389,6 +395,58 @@ function createTagsWindow() {
     });
 }
 
+// 创建更新窗口
+export function createUpdateWindow() {
+    // 检查是否已经打开了更新窗口
+    const existingWindows = BrowserWindow.getAllWindows();
+    const updateWindow = existingWindows.find(win => win.getTitle() === 'update-window');
+    if (updateWindow) {
+        updateWindow.focus();
+        return;
+    }
+
+    const newUpdateWindow = new BrowserWindow({
+        width: 500,
+        height: 400,
+        frame: false,
+        resizable: false,
+        webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: true,
+            preload: path.join(path.dirname(fileURLToPath(import.meta.url)), 'preload.mjs'),
+            defaultEncoding: 'utf8', // 设置默认编码为 UTF-8
+        },
+        icon: path.join(process.env.VITE_PUBLIC, 'logo.png'),
+        transparent: false,
+        parent: win,
+    });
+
+    newUpdateWindow.setTitle('update-window');
+
+    if (VITE_DEV_SERVER_URL) {
+        newUpdateWindow.loadURL(VITE_DEV_SERVER_URL)
+    } else {
+        newUpdateWindow.loadFile(path.join(RENDERER_DIST, 'index.html'))
+    }
+
+    // 在页面加载完成后发送窗口类型
+    newUpdateWindow.webContents.on('did-finish-load', () => {
+        newUpdateWindow.webContents.send('window-type', 'update');
+    });
+
+    // 当窗口关闭时，移除事件监听器
+    newUpdateWindow.on('closed', () => {
+        // 窗口关闭时的清理工作
+    });
+
+    // 监听关闭窗口的请求
+    ipcMain.on('close-update', () => {
+        if (!newUpdateWindow.isDestroyed()) {
+            newUpdateWindow.close();
+        }
+    });
+}
+
 // 创建标签管理窗口
 function createAboutWindow() {
     if (isOpenAboutWindow) {
@@ -473,6 +531,16 @@ function createTray(win: BrowserWindow) {
             label: '偏好设置',
             click: function () {
                 createSettingsWindow();
+            }
+        },
+        {
+            label: '检查更新',
+            click: function () {
+                // 获取更新服务实例并调用检查更新方法
+                const updaterService = getUpdaterService();
+                if (updaterService) {
+                    updaterService.checkForUpdates();
+                }
             }
         },
         {

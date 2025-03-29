@@ -138,7 +138,10 @@ const MenuItems = computed((): NavBarItem[] => [
       {
         key: '检查更新',
         label: languageTexts.list.menu.checkForUpdate,
-        isHide: true,
+        onClick: () => {
+          // 调用检查更新接口
+          window.ipcRenderer.invoke('check-for-updates');
+        },
       },
       {
         key: '关于',

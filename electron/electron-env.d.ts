@@ -23,5 +23,16 @@ declare namespace NodeJS {
 
 // Used in Renderer process, expose in `preload.ts`
 interface Window {
-  ipcRenderer: import('electron').IpcRenderer
+  ipcRenderer: import('electron').IpcRenderer & {
+    // 更新相关的API
+    checkForUpdates: () => Promise<boolean>;
+    downloadUpdate: () => Promise<boolean>;
+    installUpdate: () => Promise<boolean>;
+  }
+}
+
+// 更新状态接口
+interface UpdateStatus {
+  status: string;
+  data?: any;
 }

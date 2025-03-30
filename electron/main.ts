@@ -290,6 +290,9 @@ function createSettingsWindow() {
         transparent: false,
         parent: win,
     });
+    
+    // 窗口居中显示
+    settingsWindow.center();
 
     // @ts-ignore
     settingsWindow.uniqueId = 'settings-window';
@@ -370,6 +373,9 @@ function createTagsWindow() {
         transparent: false,
         parent: win,
     });
+    
+    // 窗口居中显示
+    tagsWindow.center();
 
     // @ts-ignore
     tagsWindow.uniqueId = 'tags-window';
@@ -448,6 +454,9 @@ export function createUpdateWindow() {
         transparent: false,
         parent: win,
     });
+    
+    // 窗口居中显示
+    newUpdateWindow.center();
     // 自定义属性
     // @ts-ignore
     newUpdateWindow.uniqueId = 'update-window';
@@ -526,6 +535,9 @@ function createAboutWindow() {
         transparent: false,
         parent: win,
     });
+    
+    // 窗口居中显示
+    aboutWindow.center();
 
     // @ts-ignore
     aboutWindow.uniqueId = 'about-window';

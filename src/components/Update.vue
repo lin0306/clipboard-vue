@@ -1,25 +1,28 @@
 <template>
     <div class="update-container">
         <titleBar :title="languageTexts.about.title" :closeWindow="`close-update`" :dev-tool="`open-update-devtools`" />
-        
+
         <!-- 更新内容展示区域 -->
         <div class="update-content">
             <h2>{{ updateInfo.version || '新版本' }}</h2>
             <div class="release-date" v-if="updateInfo.releaseDate">
                 {{ new Date(updateInfo.releaseDate).toLocaleDateString() }}
             </div>
-            <div class="release-notes" v-html="updateInfo.releaseNotes || '暂无更新说明'">
+            <div class="release-notes" v-if="updateInfo.releaseNotes" v-html="updateInfo.releaseNotes">
+            </div>
+            <div class="release-notes" v-else>
+                暂无更新说明
             </div>
         </div>
-        
+
         <!-- 底部按钮区域 -->
         <div class="update-footer" v-if="!isDownloading || downloadCompleted">
             <!-- 初始状态：显示暂不更新和立即下载按钮 -->
             <div class="update-actions" v-if="!downloadCompleted">
                 <div class="left-action">
-                    <button class="btn btn-secondary" @click="postponeUpdate">
+                    <a-button class="btn btn-secondary" @click="postponeUpdate">
                         暂不更新
-                    </button>
+                    </a-button>
                     <span class="remind-text">{{ remindDays }}天后再次提醒</span>
                     <div class="days-selector">
                         <select v-model="remindDays">
@@ -28,33 +31,39 @@
                     </div>
                 </div>
                 <div class="right-action">
-                    <button class="btn btn-primary" @click="downloadUpdate">
+                    <a-button type="primary" @click="downloadUpdate">
                         立即下载
-                    </button>
+                    </a-button>
                 </div>
             </div>
-            
+
             <!-- 下载完成状态：显示立即重启和稍后重启按钮 -->
             <div class="update-actions" v-else>
                 <div class="left-action">
-                    <button class="btn btn-secondary" @click="laterRestart">
+                    <a-button @click="laterRestart">
                         稍后重启
-                    </button>
+                    </a-button>
                 </div>
                 <div class="right-action">
-                    <button class="btn btn-primary" @click="installNow">
+                    <a-button type="primary" @click="installNow">
                         立即重启
-                    </button>
+                    </a-button>
                 </div>
             </div>
         </div>
-        
+
         <!-- 下载进度条 -->
         <div class="download-progress" v-if="isDownloading">
             <div class="progress-bar">
                 <div class="progress-inner" :style="{ width: `${downloadProgress}%` }"></div>
             </div>
-            <div class="progress-text">{{ downloadProgress.toFixed(1) }}%</div>
+            <div class="progress-info">
+                <div class="progress-text">{{ downloadProgress.toFixed(1) }}%</div>
+                <div class="download-details">
+                    <span>{{ downloadedSize }}MB / {{ totalSize }}MB</span>
+                    <span class="download-speed">{{ downloadSpeed }}KB/s</span>
+                </div>
+            </div>
         </div>
     </div>
 </template>
@@ -79,6 +88,11 @@ const isDownloading = ref(false);
 const downloadProgress = ref(0);
 const downloadCompleted = ref(false);
 
+// 下载信息
+const downloadSpeed = ref<any>(0); // 下载速度 (KB/s)
+const downloadedSize = ref<any>(0); // 已下载大小 (MB)
+const totalSize = ref<any>(0); // 总大小 (MB)
+
 // 提醒天数
 const remindDays = ref(3);
 
@@ -86,8 +100,9 @@ const remindDays = ref(3);
 onMounted(() => {
     // 监听来自主进程的更新状态消息
     window.ipcRenderer.on('update-status', (_event: any, data: any) => {
+        console.log('update-status', data);
         const { status, data: updateData } = data;
-        
+
         switch (status) {
             case 'update-available':
                 // 有可用更新
@@ -95,19 +110,23 @@ onMounted(() => {
                 updateInfo.releaseDate = updateData.releaseDate;
                 updateInfo.releaseNotes = updateData.releaseNotes;
                 break;
-                
+
             case 'download-progress':
                 // 更新下载进度
                 isDownloading.value = true;
                 downloadProgress.value = updateData.percent || 0;
+                // 更新下载速度和文件大小信息
+                downloadSpeed.value = updateData.bytesPerSecond ? (updateData.bytesPerSecond / 1024).toFixed(2) : 0;
+                downloadedSize.value = updateData.transferred ? (updateData.transferred / 1024 / 1024).toFixed(2) : 0;
+                totalSize.value = updateData.total ? (updateData.total / 1024 / 1024).toFixed(2) : 0;
                 break;
-                
+
             case 'update-downloaded':
                 // 更新下载完成
                 isDownloading.value = false;
                 downloadCompleted.value = true;
                 break;
-                
+
             case 'download-error':
                 // 下载出错
                 isDownloading.value = false;
@@ -115,14 +134,14 @@ onMounted(() => {
                 break;
         }
     });
-    
+
     // 请求更新信息
     requestUpdateInfo();
 });
 
 onUnmounted(() => {
     // 移除事件监听
-    window.ipcRenderer.off('update-status', () => {});
+    window.ipcRenderer.off('update-status', () => { });
 });
 
 // 请求更新信息
@@ -174,7 +193,8 @@ function laterRestart() {
 .update-content {
     flex: 1;
     padding: 20px;
-    margin-top: 25px; /* 为标题栏留出空间 */
+    margin-top: 25px;
+    /* 为标题栏留出空间 */
     overflow-y: auto;
 }
 
@@ -211,7 +231,8 @@ function laterRestart() {
     align-items: center;
 }
 
-.left-action, .right-action {
+.left-action,
+.right-action {
     display: flex;
     align-items: center;
 }
@@ -232,33 +253,6 @@ function laterRestart() {
     border: 1px solid var(--theme-border);
     background-color: var(--theme-inputBackground);
     color: var(--theme-text);
-}
-
-.btn {
-    padding: 8px 16px;
-    border-radius: 4px;
-    border: none;
-    cursor: pointer;
-    font-size: 14px;
-    transition: all 0.2s;
-}
-
-.btn-primary {
-    background-color: var(--theme-primary);
-    color: white;
-}
-
-.btn-primary:hover {
-    background-color: var(--theme-primaryHover);
-}
-
-.btn-secondary {
-    background-color: var(--theme-secondaryButton);
-    color: var(--theme-secondaryButtonText);
-}
-
-.btn-secondary:hover {
-    background-color: var(--theme-secondaryButtonHover);
 }
 
 .download-progress {
@@ -285,9 +279,25 @@ function laterRestart() {
     transition: width 0.3s ease;
 }
 
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 5px;
+}
+
 .progress-text {
-    text-align: right;
     font-size: 12px;
     color: var(--theme-secondaryText);
+}
+
+.download-details {
+    display: flex;
+    font-size: 12px;
+    color: var(--theme-secondaryText);
+}
+
+.download-speed {
+    margin-left: 10px;
 }
 </style>

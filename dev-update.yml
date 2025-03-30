@@ -1,0 +1,8 @@
+owner: lin0306
+repo: clipboard-vue
+provider: github
+releaseType: prerelease
+private: false
+publishAutoUpdate: true
+vPrefixedTagName: true
+updaterCacheDirName: clipboard-updater

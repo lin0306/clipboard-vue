@@ -1,11 +1,11 @@
-import { app, BrowserWindow, clipboard, ipcMain, screen, Tray, Menu, nativeImage, shell } from 'electron'
-import { fileURLToPath } from 'node:url'
-import path from 'node:path'
+import { app, BrowserWindow, clipboard, ipcMain, Menu, nativeImage, screen, shell, Tray } from 'electron'
 import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { computed } from 'vue'
+import { getSettings, getShortcutKeys, updateSettings, updateShortcutKeys } from './ConfigFileManager.js'
 import ClipboardDB from './db.js'
 import log from './log.js'
-import { getSettings, updateSettings, getShortcutKeys, updateShortcutKeys } from './ConfigFileManager.js'
-import { computed } from 'vue'
 import ShortcutManager from './shortcutManager.js'
 import { getUpdaterService, initUpdaterService } from './updater.js'
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
@@ -37,11 +37,11 @@ if (env !== 'development') {
     __dirname = __dirname.replace("\\app.asar\\dist-electron", "");
 }
 
+if (process.platform === 'win32') {
+    app.setAppUserModelId('com.lin.clipboard'); // 替换为你的应用唯一标识符
+}
+
 let win: BrowserWindow | undefined
-let isOpenWindow = false;
-let isOpenSettingsWindow = false;
-let isOpenTagsWindow = false;
-let isOpenAboutWindow = false;
 let isHideWindow = false;
 let isOpenMianDevTools = false;
 let isOpenSettingsDevTools = false;
@@ -56,11 +56,14 @@ const config: any = computed(() => getSettings());
 const shortcutKeys: any = computed(() => getShortcutKeys());
 
 function createMainWindow() {
-    log.info("是否打开了主窗口：" + isOpenWindow);
-    if (isOpenWindow) {
+    // 检查是否已经打开了更新窗口
+    const existingWindows = BrowserWindow.getAllWindows();
+    // @ts-ignore
+    const window = existingWindows.find(win => win.uniqueId === 'main-window');
+    if (window) {
+        window.focus();
         return;
     }
-    isOpenWindow = true;
 
     // 获取屏幕尺寸和鼠标位置
     const primaryDisplay = screen.getPrimaryDisplay();
@@ -106,6 +109,9 @@ function createMainWindow() {
         transparent: false
     })
 
+    // @ts-ignore
+    win.uniqueId = 'main-window';
+
     // 窗口置顶
     // 这个设置允许在Keynote演示模式下显示在顶部。BrowserWindow中有一项alwaysOnTop。
     // 当我设置为true时，其他应用程序会被覆盖在顶部，但Keynote演示模式下不行。
@@ -117,11 +123,10 @@ function createMainWindow() {
     // 添加窗口失去焦点事件监听
     if (Boolean(config.value.colsingHideToTaskbar)) {
         win.on('blur', () => {
+            const existingWindows = BrowserWindow.getAllWindows();
             // 没有打开其他窗口，才能触发失焦事件
             if (
-                !isOpenSettingsWindow
-                && !isOpenTagsWindow
-                && !isOpenAboutWindow
+                existingWindows.length === 1
 
                 && !isOpenMianDevTools
                 && !isOpenSettingsDevTools
@@ -196,9 +201,9 @@ function createMainWindow() {
         openAsHidden: false, // 设置为 true 可以隐藏启动时的窗口
         args: [] // 自定义参数
     });
-    
+
     // 初始化更新服务
-    initUpdaterService(win);
+    initUpdaterService();
 
     // 临时文件位置没有设置，设置成当前程序的根目录为临时文件夹位置
     if (!config.value.tempPath) {
@@ -261,10 +266,14 @@ function createMainWindow() {
 
 // 创建设置窗口
 function createSettingsWindow() {
-    if (isOpenSettingsWindow) {
+    // 检查是否已经打开了更新窗口
+    const existingWindows = BrowserWindow.getAllWindows();
+    // @ts-ignore
+    const window = existingWindows.find(win => win.uniqueId === 'settings-window');
+    if (window) {
+        window.focus();
         return;
     }
-    isOpenSettingsWindow = true;
 
     const settingsWindow = new BrowserWindow({
         width: 650,
@@ -281,6 +290,9 @@ function createSettingsWindow() {
         transparent: false,
         parent: win,
     });
+
+    // @ts-ignore
+    settingsWindow.uniqueId = 'settings-window';
 
     if (VITE_DEV_SERVER_URL) {
         settingsWindow.loadURL(VITE_DEV_SERVER_URL)
@@ -301,11 +313,16 @@ function createSettingsWindow() {
 
     // 当窗口关闭时，移除事件监听器
     settingsWindow.on('closed', () => {
-        isOpenSettingsWindow = false;
+        // 检查是否已经打开了更新窗口
+        const existingWindows = BrowserWindow.getAllWindows();
+        // @ts-ignore
+        const window = existingWindows.find(win => win.uniqueId === 'main-window');
+        if (window) {
+            window.focus();
+        }
     });
 
     ipcMain.on('close-settings', () => {
-        isOpenSettingsWindow = false;
         if (!settingsWindow.isDestroyed()) {
             settingsWindow.close();
         }
@@ -329,10 +346,14 @@ function createSettingsWindow() {
 
 // 创建标签管理窗口
 function createTagsWindow() {
-    if (isOpenTagsWindow) {
+    // 检查是否已经打开了更新窗口
+    const existingWindows = BrowserWindow.getAllWindows();
+    // @ts-ignore
+    const window = existingWindows.find(win => win.uniqueId === 'tags-window');
+    if (window) {
+        window.focus();
         return;
     }
-    isOpenTagsWindow = true;
 
     const tagsWindow = new BrowserWindow({
         width: 650,
@@ -349,6 +370,9 @@ function createTagsWindow() {
         transparent: false,
         parent: win,
     });
+
+    // @ts-ignore
+    tagsWindow.uniqueId = 'tags-window';
 
     if (VITE_DEV_SERVER_URL) {
         tagsWindow.loadURL(VITE_DEV_SERVER_URL)
@@ -367,12 +391,17 @@ function createTagsWindow() {
 
     // 当窗口关闭时，移除事件监听器
     tagsWindow.on('closed', () => {
-        isOpenTagsWindow = false;
+        // 检查是否已经打开了更新窗口
+        const existingWindows = BrowserWindow.getAllWindows();
+        // @ts-ignore
+        const window = existingWindows.find(win => win.uniqueId === 'main-window');
+        if (window) {
+            window.focus();
+        }
     });
 
     // 监听关闭窗口的请求
     ipcMain.on('close-tags', () => {
-        isOpenTagsWindow = false;
         if (!tagsWindow.isDestroyed()) {
             tagsWindow.close();
         }
@@ -397,7 +426,8 @@ function createTagsWindow() {
 export function createUpdateWindow() {
     // 检查是否已经打开了更新窗口
     const existingWindows = BrowserWindow.getAllWindows();
-    const updateWindow = existingWindows.find(win => win.getTitle() === 'update-window');
+    // @ts-ignore
+    const updateWindow = existingWindows.find(win => win.uniqueId === 'update-window');
     if (updateWindow) {
         updateWindow.focus();
         return;
@@ -418,14 +448,18 @@ export function createUpdateWindow() {
         transparent: false,
         parent: win,
     });
-
-    newUpdateWindow.setTitle('update-window');
+    // 自定义属性
+    // @ts-ignore
+    newUpdateWindow.uniqueId = 'update-window';
 
     if (VITE_DEV_SERVER_URL) {
         newUpdateWindow.loadURL(VITE_DEV_SERVER_URL)
     } else {
         newUpdateWindow.loadFile(path.join(RENDERER_DIST, 'index.html'))
     }
+
+    // 打开调试工具，设置为单独窗口
+    // aboutWindow.webContents.openDevTools({ mode: 'detach' });
 
     // 在页面加载完成后发送窗口类型
     newUpdateWindow.webContents.on('did-finish-load', () => {
@@ -435,6 +469,13 @@ export function createUpdateWindow() {
     // 当窗口关闭时，移除事件监听器
     newUpdateWindow.on('closed', () => {
         // 窗口关闭时的清理工作
+        // 检查是否已经打开了更新窗口
+        const existingWindows = BrowserWindow.getAllWindows();
+        // @ts-ignore
+        const window = existingWindows.find(win => win.uniqueId === 'main-window');
+        if (window) {
+            window.focus();
+        }
     });
 
     // 监听关闭窗口的请求
@@ -443,14 +484,32 @@ export function createUpdateWindow() {
             newUpdateWindow.close();
         }
     });
+
+    // 监听打开开发者工具的请求
+    ipcMain.on('open-update-devtools', () => {
+        if (newUpdateWindow && !newUpdateWindow.isDestroyed()) {
+            // isOpenAboutDevTools = true;
+            newUpdateWindow.webContents.openDevTools({ mode: 'detach' });
+
+            // 监听DevTools关闭事件
+            newUpdateWindow.webContents.once('devtools-closed', () => {
+                log.info('[主进程] 关于窗口开发者工具已关闭');
+                // isOpenAboutDevTools = false;
+            });
+        }
+    });
 }
 
 // 创建标签管理窗口
 function createAboutWindow() {
-    if (isOpenAboutWindow) {
+    // 检查是否已经打开了更新窗口
+    const existingWindows = BrowserWindow.getAllWindows();
+    // @ts-ignore
+    const window = existingWindows.find(win => win.uniqueId === 'about-window');
+    if (window) {
+        window.focus();
         return;
     }
-    isOpenAboutWindow = true;
 
     const aboutWindow = new BrowserWindow({
         width: 350,
@@ -467,6 +526,9 @@ function createAboutWindow() {
         transparent: false,
         parent: win,
     });
+
+    // @ts-ignore
+    aboutWindow.uniqueId = 'about-window';
 
     if (VITE_DEV_SERVER_URL) {
         aboutWindow.loadURL(VITE_DEV_SERVER_URL)
@@ -488,12 +550,17 @@ function createAboutWindow() {
 
     // 当窗口关闭时，移除事件监听器
     aboutWindow.on('closed', () => {
-        isOpenAboutWindow = false;
+        // 检查是否已经打开了更新窗口
+        const existingWindows = BrowserWindow.getAllWindows();
+        // @ts-ignore
+        const window = existingWindows.find(win => win.uniqueId === 'main-window');
+        if (window) {
+            window.focus();
+        }
     });
 
     // 监听关闭窗口的请求
     ipcMain.on('close-about', () => {
-        isOpenAboutWindow = false;
         if (!aboutWindow.isDestroyed()) {
             aboutWindow.close();
         }
@@ -537,7 +604,7 @@ function createTray(win: BrowserWindow) {
                 // 获取更新服务实例并调用检查更新方法
                 const updaterService = getUpdaterService();
                 if (updaterService) {
-                    updaterService.checkForUpdates();
+                    updaterService.checkForUpdates(true);
                 }
             }
         },
@@ -801,8 +868,6 @@ ipcMain.handle('get-all-tags', async () => {
 // 标签页面IPC通信配置 end
 
 function restartAPP() {
-    isOpenWindow = false
-    isOpenSettingsWindow = false
     // 关闭所有窗口
     BrowserWindow.getAllWindows().forEach(window => {
         if (!window.isDestroyed()) {
@@ -818,7 +883,6 @@ function restartAPP() {
  * 关闭或隐藏主窗口
  */
 function closeOrHide() {
-    isOpenWindow = false
     if (Boolean(config.value.colsingHideToTaskbar)) {
         const location: number[] | undefined = win?.getPosition()
         if (location) {
@@ -1098,3 +1162,9 @@ function watchClipboard() {
 
     clipboardTimer = setTimeout(watchClipboard, 100); // 每100毫秒检查一次
 }
+
+Object.defineProperty(app, 'isPackaged', {
+    get() {
+        return true;
+    }
+})

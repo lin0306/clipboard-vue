@@ -62,7 +62,9 @@
         "zip"
       ],
       "icon": "public/logo.icns",
-      "publish": ["github"],
+      "publish": [
+        "github"
+      ],
       "darkModeSupport": true
     },
     "dmg": {
@@ -92,7 +94,9 @@
         "nsis",
         "zip"
       ],
-      "publish": ["github"]
+      "publish": [
+        "github"
+      ]
     },
     "nsis": {
       "guid": "Clipboard",

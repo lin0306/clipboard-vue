@@ -96,12 +96,14 @@ jobs:
           
       - name: Debug List Directories (macOS)
         if: matrix.os == 'macos-latest'
-        run: find release -type f -name "*.dmg" -o -name "*.zip" -o -name "*.yml" -o -name "*.yaml" | sort
+        run: find release -type f | sort
         shell: bash
           
       - name: Debug List Directories (Windows)
         if: matrix.os == 'windows-latest'
-        run: Get-ChildItem -Path release -Recurse -Include "*.exe","*.zip","*.yml","*.yaml" | Sort-Object FullName
+        run: |
+          Get-ChildItem -Path release -Recurse | Select-Object FullName
+          echo "Current working directory: $(Get-Location)"
         shell: pwsh
         
       # 删除不需要的文件
@@ -121,33 +123,39 @@ jobs:
           }
         shell: pwsh
           
-      - name: Extract Tag Name
-        id: extract_tag
-        run: echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+      - name: Prepare Release Files (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          mkdir -p release_files
+          find release -type f -name "*.dmg" -o -name "*.zip" -o -name "latest-mac.yml" | while read file; do
+            cp "$file" release_files/
+          done
+          ls -la release_files/
         shell: bash
-
+          
+      - name: Prepare Release Files (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          New-Item -Path release_files -ItemType Directory -Force
+          Get-ChildItem -Path release -Recurse -Include "*.exe","*.zip","latest*.yml" | ForEach-Object {
+            Copy-Item -Path $_.FullName -Destination release_files/ -Force
+            Write-Host "Copied $($_.Name) to release_files/"
+          }
+          Get-ChildItem -Path release_files
+        shell: pwsh
+          
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ env.TAG_NAME }}
-          files: |
-            release/**/*.exe
-            release/**/*.dmg
-            release/**/*.zip
-            release/**/*.yml
-            release/**/*.yaml
+          files: release_files/*
           draft: false
           
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.os }}-artifacts
-          path: |
-            release/**/*.exe
-            release/**/*.dmg
-            release/**/*.zip
-            release/**/*.yml
-            release/**/*.yaml
-          if-no-files-found: error
+          path: release_files/
+          if-no-files-found: warn

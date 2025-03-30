@@ -53764,7 +53764,6 @@ NsisUpdater$1.NsisUpdater = NsisUpdater;
   });
 })(main$1);
 let updaterService = null;
-main$1.autoUpdater.updateConfigPath = require$$1.join(__dirname, "../dev-update.yml");
 function initUpdaterService() {
   try {
     updaterService = new UpdaterService();

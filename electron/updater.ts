@@ -17,7 +17,7 @@ import path from 'path';
 let updaterService: UpdaterService | null = null;
 
 // 本地开发时使用的更新配置文件路径
-autoUpdater.updateConfigPath = path.join(__dirname, "../dev-update.yml");
+// autoUpdater.updateConfigPath = path.join(__dirname, "../dev-update.yml");
 
 /**
  * 初始化更新服务

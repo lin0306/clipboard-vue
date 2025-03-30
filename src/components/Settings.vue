@@ -15,7 +15,7 @@ const selectedKeys = ref(['general']);
 const menuItems = [
   { key: 'general', label: languageTexts.settings.generalMenu },
   { key: 'storage', label: languageTexts.settings.storageMenu },
-  { key: 'shortcut', label: languageTexts.settings.storageMenu },
+  { key: 'shortcut', label: languageTexts.settings.shortcutMenu },
 ];
 
 // 配置相关

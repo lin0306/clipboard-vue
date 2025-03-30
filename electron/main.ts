@@ -8,6 +8,7 @@ import ClipboardDB from './db.js'
 import log from './log.js'
 import ShortcutManager from './shortcutManager.js'
 import { getUpdaterService, initUpdaterService } from './updater.js'
+import { getTrayText } from './languages.js'
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
 
 let __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -203,7 +204,7 @@ function createMainWindow() {
     });
 
     // 初始化更新服务
-    initUpdaterService();
+    initUpdaterService(savedLanguage);
 
     // 临时文件位置没有设置，设置成当前程序的根目录为临时文件夹位置
     if (!config.value.tempPath) {
@@ -599,15 +600,21 @@ function createTray(win: BrowserWindow) {
     if (isHideWindow) {
         return;
     }
+    
+    // 获取当前语言设置
+    const savedLanguage = config.value.languages || 'chinese';
+    // 根据语言设置获取对应的菜单文本
+    let menuTexts = getTrayText(savedLanguage);
+    
     const trayMenuTemplate = [
         {
-            label: '偏好设置',
+            label: menuTexts.settings,
             click: function () {
                 createSettingsWindow();
             }
         },
         {
-            label: '检查更新',
+            label: menuTexts.checkUpdate,
             click: function () {
                 // 获取更新服务实例并调用检查更新方法
                 const updaterService = getUpdaterService();
@@ -617,19 +624,19 @@ function createTray(win: BrowserWindow) {
             }
         },
         {
-            label: '关于',
+            label: menuTexts.about,
             click: function () {
                 createAboutWindow();
             }
         },
         {
-            label: '重新启动',
+            label: menuTexts.restart,
             click: function () {
                 restartAPP();
             }
         },
         {
-            label: '退出',
+            label: menuTexts.exit,
             click: function () {
                 app.quit();
                 app.quit(); //因为程序设定关闭为最小化，所以调用两次关闭，防止最大化时一次不能关闭的情况
@@ -646,7 +653,7 @@ function createTray(win: BrowserWindow) {
     const contextMenu = Menu.buildFromTemplate(trayMenuTemplate);
 
     //设置此托盘图标的悬停提示内容
-    appTray.setToolTip('我的剪贴板');
+    appTray.setToolTip(menuTexts.clipboardTooltip);
 
     //设置此图标的上下文菜单
     appTray.setContextMenu(contextMenu);
@@ -654,6 +661,21 @@ function createTray(win: BrowserWindow) {
     appTray.on('click', function () {
         win.show();
     });
+    
+    // 监听语言变化，更新托盘菜单
+    ipcMain.on('language-changed', (_event, newLanguage) => {
+        log.info('[主进程] 收到语言变更通知，更新托盘菜单:', newLanguage);
+        // 重新创建托盘菜单
+        createTray(win);
+    });
+    
+    // 监听语言变化，更新托盘菜单
+    ipcMain.on('language-changed', (_event, newLanguage) => {
+        log.info('[主进程] 收到语言变更通知，更新托盘菜单:', newLanguage);
+        // 重新创建托盘菜单
+        createTray(win);
+    });
+
 }
 
 app.on('window-all-closed', () => {

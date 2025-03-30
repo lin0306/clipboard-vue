@@ -53763,10 +53763,62 @@ NsisUpdater$1.NsisUpdater = NsisUpdater;
     }
   });
 })(main$1);
+const chineseTexts = {
+  tray: {
+    settings: "偏好设置",
+    checkUpdate: "检查更新",
+    about: "关于",
+    restart: "重新启动",
+    exit: "退出",
+    clipboardTooltip: "我的剪贴板"
+  },
+  update: {
+    checking: "检查更新",
+    upToDateText: "当前已是最新版本",
+    checkFailure: "检查更新失败",
+    unknown: "未知错误"
+  }
+};
+const englishTexts = {
+  tray: {
+    settings: "Preferences",
+    checkUpdate: "Check for Updates",
+    about: "About",
+    restart: "Restart",
+    exit: "Exit",
+    clipboardTooltip: "My Clipboard"
+  },
+  update: {
+    checking: "Checking for updates",
+    upToDateText: "You are using the latest version",
+    checkFailure: "Check for updates failed",
+    unknown: "Unknown error"
+  }
+};
+function getTrayText(language) {
+  switch (language) {
+    case "chinese":
+      return chineseTexts.tray;
+    case "english":
+      return englishTexts.tray;
+    default:
+      return chineseTexts.tray;
+  }
+}
+function getUpdateText(language) {
+  switch (language) {
+    case "chinese":
+      return chineseTexts.update;
+    case "english":
+      return englishTexts.update;
+    default:
+      return chineseTexts.update;
+  }
+}
 let updaterService = null;
-function initUpdaterService() {
+function initUpdaterService(language) {
   try {
-    updaterService = new UpdaterService();
+    updaterService = new UpdaterService(language);
     updaterService.startAutoUpdateCheck(60);
     log.info("[主进程] 更新服务初始化成功");
   } catch (error2) {
@@ -53777,11 +53829,14 @@ function getUpdaterService() {
   return updaterService;
 }
 class UpdaterService {
-  // 标记是否为手动检查更新
-  constructor() {
+  constructor(language) {
     __publicField(this, "updateCheckInterval", null);
     __publicField(this, "isCheckingForUpdate", false);
     __publicField(this, "isManualCheck", false);
+    // 标记是否为手动检查更新
+    __publicField(this, "language");
+    this.language = getUpdateText(language);
+    log.info("[主进程] 更新服务初始化", language);
     main$1.autoUpdater.logger = log;
     main$1.autoUpdater.autoDownload = false;
     main$1.autoUpdater.autoInstallOnAppQuit = true;
@@ -53819,7 +53874,6 @@ class UpdaterService {
         releaseDate: info.releaseDate,
         releaseNotes
       });
-      log.info("更新说明:", releaseNotes ? "有更新说明" : "无更新说明");
       const { createUpdateWindow: createUpdateWindow2 } = require("./main");
       createUpdateWindow2();
     });
@@ -53828,8 +53882,8 @@ class UpdaterService {
       this.isCheckingForUpdate = false;
       if (this.isManualCheck) {
         new require$$1$4.Notification({
-          title: "检查更新",
-          body: `当前已是最新版本 (${require$$1$4.app.getVersion()})`,
+          title: this.language.checking,
+          body: `${this.language.upToDateText} (${require$$1$4.app.getVersion()})`,
           icon: require$$1$4.nativeImage.createFromPath(require$$1.join(process.env.VITE_PUBLIC, "logo.png")),
           silent: false
         }).show();
@@ -53899,7 +53953,7 @@ class UpdaterService {
       updateWindow.webContents.send("update-status", { status, data });
     } else {
       if (retryTimes < 100) {
-        log.info(`渲染进程未准备好，重试发送更新信息，状态: ${status}，数据: ${JSON.stringify(data)}，重试次数: ${retryTimes}`);
+        log.info(`渲染进程未准备好，重试发送更新信息，状态: ${status}，重试次数: ${retryTimes}`);
         setTimeout(() => {
           this.sendStatusToWindow(status, data, retryTimes + 1);
         }, 500);
@@ -53923,43 +53977,13 @@ class UpdaterService {
       return true;
     } catch (error2) {
       log.error("检查更新出错:", error2);
-      let errorMessage = error2.message || "未知错误";
-      let userFriendlyMessage = "检查更新失败";
-      if (errorMessage.includes("Cannot parse releases feed") || errorMessage.includes("Unable to find latest version on GitHub") || errorMessage.includes("Unexpected end of JSON input")) {
-        userFriendlyMessage = "GitHub仓库版本检查失败";
-        errorMessage = "请确保GitHub仓库已创建正确的发布版本，支持beta版本(v0.0.1-beta.1)格式";
-        log.debug("GitHub releases解析错误详情:", error2);
-        log.debug("当前allowPrerelease设置:", main$1.autoUpdater.allowPrerelease);
-        log.debug("当前releaseType设置:", "prerelease (已修改)");
-        new require$$1$4.Notification({
-          title: "更新检查失败",
-          body: `${userFriendlyMessage}: ${errorMessage}`,
-          icon: require$$1$4.nativeImage.createFromPath(require$$1.join(process.env.VITE_PUBLIC, "logo.png")),
-          silent: false
-        }).show();
-      } else if (errorMessage.includes("Cannot find latest.yml") && errorMessage.includes("HttpError: 404")) {
-        userFriendlyMessage = "更新文件配置错误";
-        errorMessage = "找不到更新配置文件(latest.yml)，请确保GitHub发布版本中包含了必要的更新文件";
-        log.debug("更新文件错误详情:", error2);
-        log.debug("提示: 请检查electron-builder配置，确保已启用yml文件生成");
-        new require$$1$4.Notification({
-          title: "更新检查失败",
-          body: `${userFriendlyMessage}: ${errorMessage}`,
-          icon: require$$1$4.nativeImage.createFromPath(require$$1.join(process.env.VITE_PUBLIC, "logo.png")),
-          silent: false
-        }).show();
-      } else if (errorMessage.includes("Cannot find latest-mac.yml") && errorMessage.includes("HttpError: 404")) {
-        userFriendlyMessage = "更新文件配置错误";
-        errorMessage = "找不到更新配置文件(latest-mac.yml)，请确保GitHub发布版本中包含了必要的更新文件";
-        log.debug("更新文件错误详情:", error2);
-        log.debug("提示: 请检查electron-builder配置，确保已启用yml文件生成");
-        new require$$1$4.Notification({
-          title: "更新检查失败",
-          body: `${userFriendlyMessage}: ${errorMessage}`,
-          icon: require$$1$4.nativeImage.createFromPath(require$$1.join(process.env.VITE_PUBLIC, "logo.png")),
-          silent: false
-        }).show();
-      }
+      let errorMessage = error2.message || this.language.unknown;
+      new require$$1$4.Notification({
+        title: this.language.checkFailure,
+        body: errorMessage,
+        icon: require$$1$4.nativeImage.createFromPath(require$$1.join(process.env.VITE_PUBLIC, "logo.png")),
+        silent: false
+      }).show();
       return false;
     } finally {
       this.isCheckingForUpdate = false;
@@ -54137,7 +54161,7 @@ function createMainWindow() {
     args: []
     // 自定义参数
   });
-  initUpdaterService();
+  initUpdaterService(savedLanguage);
   if (!config.value.tempPath) {
     const tempDir = path$s.join(__dirname$1, "../temp");
     config.value.tempPath = tempDir;
@@ -54406,15 +54430,17 @@ function createTray(win2) {
   if (isHideWindow) {
     return;
   }
+  const savedLanguage = config.value.languages || "chinese";
+  let menuTexts = getTrayText(savedLanguage);
   const trayMenuTemplate = [
     {
-      label: "偏好设置",
+      label: menuTexts.settings,
       click: function() {
         createSettingsWindow();
       }
     },
     {
-      label: "检查更新",
+      label: menuTexts.checkUpdate,
       click: function() {
         const updaterService2 = getUpdaterService();
         if (updaterService2) {
@@ -54423,19 +54449,19 @@ function createTray(win2) {
       }
     },
     {
-      label: "关于",
+      label: menuTexts.about,
       click: function() {
         createAboutWindow();
       }
     },
     {
-      label: "重新启动",
+      label: menuTexts.restart,
       click: function() {
         restartAPP();
       }
     },
     {
-      label: "退出",
+      label: menuTexts.exit,
       click: function() {
         require$$1$4.app.quit();
         require$$1$4.app.quit();
@@ -54445,10 +54471,18 @@ function createTray(win2) {
   const trayIcon = path$s.join(process.env.VITE_PUBLIC, "logo.png");
   const appTray = new require$$1$4.Tray(trayIcon);
   const contextMenu = require$$1$4.Menu.buildFromTemplate(trayMenuTemplate);
-  appTray.setToolTip("我的剪贴板");
+  appTray.setToolTip(menuTexts.clipboardTooltip);
   appTray.setContextMenu(contextMenu);
   appTray.on("click", function() {
     win2.show();
+  });
+  require$$1$4.ipcMain.on("language-changed", (_event, newLanguage) => {
+    log.info("[主进程] 收到语言变更通知，更新托盘菜单:", newLanguage);
+    createTray(win2);
+  });
+  require$$1$4.ipcMain.on("language-changed", (_event, newLanguage) => {
+    log.info("[主进程] 收到语言变更通知，更新托盘菜单:", newLanguage);
+    createTray(win2);
   });
 }
 require$$1$4.app.on("window-all-closed", () => {

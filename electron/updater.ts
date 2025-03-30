@@ -7,6 +7,7 @@ import { app, BrowserWindow, ipcMain, nativeImage, Notification } from 'electron
 import { autoUpdater } from 'electron-updater';
 import log from './log.js';
 import path from 'path';
+import { getUpdateText, UpdateLanguageConfig } from './languages.js';
 
 /**
  * 主进程中初始化更新服务的代码
@@ -16,6 +17,8 @@ import path from 'path';
 // 更新服务实例
 let updaterService: UpdaterService | null = null;
 
+
+
 // 本地开发时使用的更新配置文件路径
 // autoUpdater.updateConfigPath = path.join(__dirname, "../dev-update.yml");
 
@@ -23,10 +26,10 @@ let updaterService: UpdaterService | null = null;
  * 初始化更新服务
  * @param mainWindow 主窗口实例
  */
-export function initUpdaterService() {
+export function initUpdaterService(language: string) {
     try {
         // 创建更新服务实例
-        updaterService = new UpdaterService();
+        updaterService = new UpdaterService(language);
 
         // 启动自动更新检查，默认每60分钟检查一次
         updaterService.startAutoUpdateCheck(60);
@@ -48,8 +51,11 @@ export default class UpdaterService {
     private updateCheckInterval: NodeJS.Timeout | null = null;
     private isCheckingForUpdate = false;
     private isManualCheck = false; // 标记是否为手动检查更新
+    private language: UpdateLanguageConfig;
 
-    constructor() {
+    constructor(language: string) {
+        this.language = getUpdateText(language);
+        log.info('[主进程] 更新服务初始化', language);
 
         // 配置自动更新
         autoUpdater.logger = log;
@@ -90,7 +96,7 @@ export default class UpdaterService {
                         // 尝试将对象转为字符串
                         releaseNotes = JSON.stringify(releaseNotes, null, 2);
                     }
-                    
+
                     // 处理Markdown格式，确保GitHub风格的更新日志正确显示
                     // 支持emoji图标和列表格式
                     if (typeof releaseNotes === 'string') {
@@ -109,8 +115,6 @@ export default class UpdaterService {
                 releaseNotes: releaseNotes
             });
 
-            log.info('更新说明:', releaseNotes ? '有更新说明' : '无更新说明');
-
             // 打开更新窗口而不是显示弹窗
             const { createUpdateWindow } = require('./main');
             createUpdateWindow();
@@ -120,17 +124,17 @@ export default class UpdaterService {
         autoUpdater.on('update-not-available', (_info) => {
             log.info('当前已是最新版本');
             this.isCheckingForUpdate = false;
-            
+
             // 只有在手动检查更新时才显示通知
             if (this.isManualCheck) {
                 // 使用Electron原生的Notification API显示系统级提示，告知用户当前已是最新版本
                 new Notification({
-                    title: '检查更新',
-                    body: `当前已是最新版本 (${app.getVersion()})`,
+                    title: this.language.checking,
+                    body: `${this.language.upToDateText} (${app.getVersion()})`,
                     icon: nativeImage.createFromPath(path.join(process.env.VITE_PUBLIC, 'logo.png')),
                     silent: false
                 }).show();
-                
+
                 // 重置手动检查标志
                 this.isManualCheck = false;
             }
@@ -214,11 +218,11 @@ export default class UpdaterService {
             updateWindow.webContents.send('update-status', { status, data });
         } else {
             if (retryTimes < 100) {
-                log.info(`渲染进程未准备好，重试发送更新信息，状态: ${status}，数据: ${JSON.stringify(data)}，重试次数: ${retryTimes}`);
+                log.info(`渲染进程未准备好，重试发送更新信息，状态: ${status}，重试次数: ${retryTimes}`);
                 // 等待一段时间后重试
                 setTimeout(() => {
                     this.sendStatusToWindow(status, data, retryTimes + 1);
-                }, 500); // 0.1秒后重试 
+                }, 500); // 0.5秒后重试 
             }
         }
     }
@@ -243,63 +247,16 @@ export default class UpdaterService {
             log.error('检查更新出错:', error);
 
             // 处理特定的GitHub release错误
-            let errorMessage = error.message || '未知错误';
-            let userFriendlyMessage = '检查更新失败';
+            let errorMessage = error.message || this.language.unknown;
 
-            // 检测GitHub release相关错误
-            if (errorMessage.includes('Cannot parse releases feed') ||
-                errorMessage.includes('Unable to find latest version on GitHub') ||
-                errorMessage.includes('Unexpected end of JSON input')) {
-                userFriendlyMessage = 'GitHub仓库版本检查失败';
-                errorMessage = '请确保GitHub仓库已创建正确的发布版本，支持beta版本(v0.0.1-beta.1)格式';
 
-                // 记录详细错误信息，帮助开发者排查
-                log.debug('GitHub releases解析错误详情:', error);
-                log.debug('当前allowPrerelease设置:', autoUpdater.allowPrerelease);
-                log.debug('当前releaseType设置:', 'prerelease (已修改)');
-
-                // 使用Electron原生的Notification API显示系统级提示，告知用户GitHub仓库配置问题
-                new Notification({
-                    title: '更新检查失败',
-                    body: `${userFriendlyMessage}: ${errorMessage}`,
-                    icon: nativeImage.createFromPath(path.join(process.env.VITE_PUBLIC, 'logo.png')),
-                    silent: false
-                }).show();
-            }
-            // 检测找不到latest.yml文件的错误
-            else if (errorMessage.includes('Cannot find latest.yml') && errorMessage.includes('HttpError: 404')) {
-                userFriendlyMessage = '更新文件配置错误';
-                errorMessage = '找不到更新配置文件(latest.yml)，请确保GitHub发布版本中包含了必要的更新文件';
-
-                // 记录详细错误信息，帮助开发者排查
-                log.debug('更新文件错误详情:', error);
-                log.debug('提示: 请检查electron-builder配置，确保已启用yml文件生成');
-
-                // 使用Electron原生的Notification API显示系统级提示，告知用户更新文件配置问题
-                new Notification({
-                    title: '更新检查失败',
-                    body: `${userFriendlyMessage}: ${errorMessage}`,
-                    icon: nativeImage.createFromPath(path.join(process.env.VITE_PUBLIC, 'logo.png')),
-                    silent: false
-                }).show();
-            }
-            // 检测找不到latest-mac.yml文件的错误
-            else if (errorMessage.includes('Cannot find latest-mac.yml') && errorMessage.includes('HttpError: 404')) {
-                userFriendlyMessage = '更新文件配置错误';
-                errorMessage = '找不到更新配置文件(latest-mac.yml)，请确保GitHub发布版本中包含了必要的更新文件';
-
-                // 记录详细错误信息，帮助开发者排查
-                log.debug('更新文件错误详情:', error);
-                log.debug('提示: 请检查electron-builder配置，确保已启用yml文件生成');
-
-                // 使用Electron原生的Notification API显示系统级提示，告知用户更新文件配置问题
-                new Notification({
-                    title: '更新检查失败',
-                    body: `${userFriendlyMessage}: ${errorMessage}`,
-                    icon: nativeImage.createFromPath(path.join(process.env.VITE_PUBLIC, 'logo.png')),
-                    silent: false
-                }).show();
-            }
+            // 使用Electron原生的Notification API显示系统级提示，告知用户更新文件配置问题
+            new Notification({
+                title: this.language.checkFailure,
+                body: errorMessage,
+                icon: nativeImage.createFromPath(path.join(process.env.VITE_PUBLIC, 'logo.png')),
+                silent: false
+            }).show();
 
             return false;
         } finally {

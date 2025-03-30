@@ -8,6 +8,8 @@
     "dev": "vite",
     "prebuild": "rimraf release && rimraf dist",
     "build": "vue-tsc && vite build && electron-builder",
+    "build:mac": "vue-tsc && vite build && electron-builder --mac",
+    "build:win": "vue-tsc && vite build && electron-builder --win",
     "preview": "vite preview",
     "analyze": "vite build --mode analyze",
     "rebuild": "electron-rebuild -f -w better-sqlite3",
@@ -58,8 +60,8 @@
     "mac": {
       "category": "public.app-category.developer-tools",
       "target": [
-        "dmg",
-        "zip"
+        { "target": "dmg", "arch": ["x64", "arm64"] },
+        { "target": "zip", "arch": ["x64", "arm64"] }
       ],
       "icon": "public/logo.icns",
       "publish": [
@@ -86,13 +88,14 @@
       "window": {
         "width": 540,
         "height": 380
-      }
+      },
+      "sign": false
     },
     "win": {
       "icon": "public/logo.ico",
       "target": [
-        "nsis",
-        "zip"
+        { "target": "nsis", "arch": ["x64", "arm64"] },
+        { "target": "zip", "arch": ["x64", "arm64"] }
       ],
       "publish": [
         "github"

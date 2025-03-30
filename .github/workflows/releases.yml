@@ -72,14 +72,28 @@ jobs:
           sudo rm -rf /Library/Developer/CommandLineTools
           sudo rm -rf /Applications/Xcode.app
           sudo rm -rf /usr/local/lib/node_modules
+          rm -rf ~/Library/Developer
+          rm -rf ~/Library/Caches
+          rm -rf /usr/local/Homebrew
           df -h
         shell: bash
         
-      - name: Build Electron App
-        run: yarn build
+      # 针对不同平台执行不同的构建命令
+      - name: Build for macOS
+        if: matrix.os == 'macos-latest'
+        run: yarn build:mac
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CSC_IDENTITY_AUTO_DISCOVERY: false  # 禁用自动发现代码签名证书
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+          USE_HARD_LINKS: false
+          
+      - name: Build for Windows
+        if: matrix.os == 'windows-latest'
+        run: yarn build:win
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+          USE_HARD_LINKS: false
           
       - name: Debug List Directories (macOS)
         if: matrix.os == 'macos-latest'

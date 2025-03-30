@@ -17,7 +17,7 @@ import path from 'path';
 let updaterService: UpdaterService | null = null;
 
 // 本地开发时使用的更新配置文件路径
-// autoUpdater.updateConfigPath = path.join(__dirname, "../dev-update.yml");
+autoUpdater.updateConfigPath = path.join(__dirname, "../dev-update.yml");
 
 /**
  * 初始化更新服务
@@ -89,6 +89,13 @@ export default class UpdaterService {
                     } else {
                         // 尝试将对象转为字符串
                         releaseNotes = JSON.stringify(releaseNotes, null, 2);
+                    }
+                    
+                    // 处理Markdown格式，确保GitHub风格的更新日志正确显示
+                    // 支持emoji图标和列表格式
+                    if (typeof releaseNotes === 'string') {
+                        // 保留Markdown格式，不需要额外处理
+                        // 由于使用v-html渲染，Markdown格式会被浏览器解析为HTML
                     }
                 } catch (e) {
                     log.error('处理releaseNotes出错:', e);

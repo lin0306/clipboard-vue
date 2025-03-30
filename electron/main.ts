@@ -440,8 +440,8 @@ export function createUpdateWindow() {
     }
 
     const newUpdateWindow = new BrowserWindow({
-        width: 500,
-        height: 400,
+        width: 600,
+        height: 500,
         frame: false,
         resizable: false,
         webPreferences: {
@@ -590,10 +590,6 @@ function createAboutWindow() {
                 isOpenAboutDevTools = false;
             });
         }
-    });
-
-    ipcMain.on('open-external-link', (_event, url) => {
-        shell.openExternal(url);
     });
 }
 
@@ -875,6 +871,10 @@ ipcMain.handle('get-all-tags', async () => {
     log.info('[主进程] 获取所有标签');
     const db = ClipboardDB.getInstance()
     return db.getAllTags();
+});
+
+ipcMain.on('open-external-link', (_event, url) => {
+    shell.openExternal(url);
 });
 
 // 标签页面IPC通信配置 end

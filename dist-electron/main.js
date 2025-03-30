@@ -53808,6 +53808,8 @@ class UpdaterService {
           } else {
             releaseNotes = JSON.stringify(releaseNotes, null, 2);
           }
+          if (typeof releaseNotes === "string") {
+          }
         } catch (e) {
           log.error("处理releaseNotes出错:", e);
           releaseNotes = "无法解析更新说明";
@@ -54196,6 +54198,7 @@ function createSettingsWindow() {
     transparent: false,
     parent: win
   });
+  settingsWindow.center();
   settingsWindow.uniqueId = "settings-window";
   if (VITE_DEV_SERVER_URL) {
     settingsWindow.loadURL(VITE_DEV_SERVER_URL);
@@ -54253,6 +54256,7 @@ function createTagsWindow() {
     transparent: false,
     parent: win
   });
+  tagsWindow.center();
   tagsWindow.uniqueId = "tags-window";
   if (VITE_DEV_SERVER_URL) {
     tagsWindow.loadURL(VITE_DEV_SERVER_URL);
@@ -54293,8 +54297,8 @@ function createUpdateWindow() {
     return;
   }
   const newUpdateWindow = new require$$1$4.BrowserWindow({
-    width: 500,
-    height: 400,
+    width: 600,
+    height: 500,
     frame: false,
     resizable: false,
     webPreferences: {
@@ -54308,6 +54312,7 @@ function createUpdateWindow() {
     transparent: false,
     parent: win
   });
+  newUpdateWindow.center();
   newUpdateWindow.uniqueId = "update-window";
   if (VITE_DEV_SERVER_URL) {
     newUpdateWindow.loadURL(VITE_DEV_SERVER_URL);
@@ -54361,6 +54366,7 @@ function createAboutWindow() {
     transparent: false,
     parent: win
   });
+  aboutWindow.center();
   aboutWindow.uniqueId = "about-window";
   if (VITE_DEV_SERVER_URL) {
     aboutWindow.loadURL(VITE_DEV_SERVER_URL);
@@ -54394,9 +54400,6 @@ function createAboutWindow() {
         isOpenAboutDevTools = false;
       });
     }
-  });
-  require$$1$4.ipcMain.on("open-external-link", (_event, url) => {
-    require$$1$4.shell.openExternal(url);
   });
 }
 function createTray(win2) {
@@ -54593,6 +54596,9 @@ require$$1$4.ipcMain.handle("get-all-tags", async () => {
   log.info("[主进程] 获取所有标签");
   const db = ClipboardDB.getInstance();
   return db.getAllTags();
+});
+require$$1$4.ipcMain.on("open-external-link", (_event, url) => {
+  require$$1$4.shell.openExternal(url);
 });
 function restartAPP() {
   require$$1$4.BrowserWindow.getAllWindows().forEach((window2) => {

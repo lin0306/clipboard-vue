@@ -115,6 +115,18 @@ export interface PageConfig {
         version: string;
         problemFeedback: string;
     },
+    update: {
+        title: string;
+        versionName: string;
+        updateNotes: string;
+        notUpdateBtn: string;
+        reminderText: string;
+        days: string;
+        downloadNowBtn: string;
+        restartLaterBtn: string;
+        restartImmediatelyBtn: string;
+        viewMoreBtn: string;
+    }
 }
 
 // 简体中文配置
@@ -217,6 +229,18 @@ export const zhCN: LanguageConfig = {
             version: '版本',
             problemFeedback: '问题反馈', 
         },
+        update: {
+            title: '更新',
+            versionName: '新版本',
+            updateNotes: '暂无更新说明',
+            notUpdateBtn: '暂不更新',
+            reminderText: '下次提醒时间：',
+            days: '天后',
+            downloadNowBtn: '立即下载',
+            restartLaterBtn: '稍后重启',
+            restartImmediatelyBtn: '立即重启',
+            viewMoreBtn: '查看更多'
+        }
     },
 }
 
@@ -320,6 +344,18 @@ export const enUS: LanguageConfig = {
             version: 'Version',
             problemFeedback: 'Problem Feedback', 
         },
+        update: {
+            title: 'Update',
+            versionName: 'Version',
+            updateNotes: 'No Update Notes',
+            notUpdateBtn: 'Not Update',
+            reminderText: 'Next reminder time: ',
+            days: ' days',
+            downloadNowBtn: 'Download Now',
+            restartLaterBtn: 'Restart Later',
+            restartImmediatelyBtn: 'Restart Immediately',
+            viewMoreBtn: 'View More'
+        }
     }
 }
 

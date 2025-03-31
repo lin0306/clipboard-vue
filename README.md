@@ -10,6 +10,8 @@
 - **快捷键支持**：通过自定义快捷键，快速唤醒应用和搜索内容
 - **标签管理**：对剪贴板内容进行分类和标记，便于整理和查找
 - **自定义设置**：灵活配置窗口大小、存储限制、自动清理等功能
+- **自动更新**：支持应用内检查更新和自动下载安装新版本
+- **数据备份与恢复**：在应用更新时自动备份用户数据，确保数据安全
 
 ## 安装说明
 
@@ -69,6 +71,18 @@ yarn build
 - **存储设置**：历史记录数量限制、存储大小限制、自动清理天数等
 - **快捷键设置**：自定义唤醒和搜索快捷键
 
+### 自动更新
+
+- 应用会定期检查新版本，发现更新时会通知您
+- 您可以选择立即下载安装或稍后提醒
+- 更新前会自动备份用户数据，确保更新过程安全可靠
+
+### 数据备份与恢复
+
+- 在应用更新前会自动创建用户数据备份
+- 更新完成后，如果发现问题，可以通过恢复功能还原之前的数据
+- 备份数据包括用户配置、剪贴板历史记录和标签信息
+
 ## 技术栈
 
 - **前端框架**：Vue 3 + TypeScript
@@ -76,16 +90,31 @@ yarn build
 - **桌面应用框架**：Electron
 - **UI 组件库**：Ant Design Vue
 - **数据存储**：SQLite (better-sqlite3)
+- **自动更新**：electron-updater
+- **文件操作**：fs-extra
 
-## 开发相关
+## 贡献指南
 
-### TypeScript 支持
+欢迎为项目做出贡献！您可以通过以下方式参与：
 
-TypeScript 默认无法处理 `.vue` 导入的类型信息，因此我们使用 `vue-tsc` 进行类型检查。在编辑器中，需要 [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin) 使 TypeScript 语言服务能够识别 `.vue` 类型。
+1. 提交 Bug 报告或功能请求
+2. 提交代码改进或新功能实现
+3. 完善文档或翻译
 
-### 推荐的 IDE 设置
+### 开发流程
 
-- [VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (并禁用 Vetur) + [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin)
+1. Fork 本仓库
+2. 创建您的特性分支 (`git checkout -b feature/amazing-feature`)
+3. 提交您的更改 (`git commit -m 'Add some amazing feature'`)
+4. 推送到分支 (`git push origin feature/amazing-feature`)
+5. 创建一个 Pull Request
+
+## 问题反馈
+
+如果您在使用过程中遇到任何问题，或有任何建议，请通过以下方式反馈：
+
+- 在 GitHub 仓库中提交 Issue
+- 发送邮件至开发者邮箱
 
 ## 许可证
 

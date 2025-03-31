@@ -54121,10 +54121,7 @@ function createMainWindow() {
   mainWindow.setVisibleOnAllWorkspaces(true);
   if (Boolean(config.value.colsingHideToTaskbar)) {
     mainWindow.on("blur", () => {
-      const existingWindows2 = require$$1$4.BrowserWindow.getAllWindows();
-      if (existingWindows2.length === 1 && !isOpenMianDevTools && !isOpenSettingsDevTools && !isOpenTagsDevTools && !isOpenAboutDevTools && !isFixedMainWindow) {
-        closeOrHide();
-      }
+      onBlur();
     });
   }
   if (VITE_DEV_SERVER_URL) {
@@ -54151,6 +54148,7 @@ function createMainWindow() {
     const tags = db.getAllTags();
     mainWindow == null ? void 0 : mainWindow.webContents.send("load-tag-items", tags);
     mainWindow == null ? void 0 : mainWindow.webContents.send("load-shortcut-keys", shortcutKeys.value);
+    mainWindow == null ? void 0 : mainWindow.webContents.send("load-settings", config.value);
     mainWindow == null ? void 0 : mainWindow.webContents.send("show-devtool", devtoolConfig);
     log.info("[主进程] 窗口加载完成，开始监听剪贴板");
     watchClipboard();
@@ -54606,6 +54604,9 @@ require$$1$4.ipcMain.handle("item-copy", async (_event, id) => {
 require$$1$4.ipcMain.handle("main-fixed", async (_event, fixed) => {
   isFixedMainWindow = fixed;
 });
+require$$1$4.ipcMain.handle("main-blur", async (_event) => {
+  onBlur();
+});
 require$$1$4.ipcMain.handle("update-config", async (_event, conf) => {
   log.info("[主进程] 更新配置", conf);
   updateSettings(conf);
@@ -54654,6 +54655,12 @@ require$$1$4.ipcMain.handle("get-all-tags", async () => {
 require$$1$4.ipcMain.on("open-external-link", (_event, url) => {
   require$$1$4.shell.openExternal(url);
 });
+function onBlur() {
+  const existingWindows = require$$1$4.BrowserWindow.getAllWindows();
+  if (existingWindows.length === 1 && !isOpenMianDevTools && !isOpenSettingsDevTools && !isOpenTagsDevTools && !isOpenAboutDevTools && !isFixedMainWindow) {
+    closeOrHide();
+  }
+}
 function restartAPP() {
   require$$1$4.BrowserWindow.getAllWindows().forEach((window2) => {
     if (!window2.isDestroyed()) {

@@ -184,6 +184,9 @@ const searchBoxState = reactive({
 // 快捷键配置
 const shortcutKeyConfig = ref<any>(null)
 
+// 系统配置
+const settingsConfig = ref<any>(null)
+
 // 图片缓存，用于存储图片的base64数据
 const imageCache = reactive(new Map<string, string>())
 
@@ -286,6 +289,10 @@ async function onCopy(info: any) {
   const isSuccess = await window.ipcRenderer.invoke('item-copy', info.id);
   if (isSuccess) {
     filterClipboardItems();
+    // 如果设置了关闭不会自动杀掉整个程序，则触发主窗口失焦事件，关闭窗口
+    if(settingsConfig.value?.colsingHideToTaskbar) {
+      window.ipcRenderer.invoke('main-blur');
+    }
   } else {
     message.error(languageTexts.list.copyFailedMsg);
   }
@@ -454,20 +461,22 @@ async function removeItem(id: number) {
 
 // 监听剪贴板更新
 window.ipcRenderer.on('clipboard-updated', () => {
-  console.log('[渲染进程] 接收到系统复制事件');
   filterClipboardItems(true) // 重置列表并重新加载
 })
 
 // 监听标签加载
 window.ipcRenderer.on('load-tag-items', (_event, tags) => {
-  console.log('[渲染进程] 接收到标签列表', tags);
   TagItems.value = tags;
 });
 
 // 监听快捷键配置加载
 window.ipcRenderer.on('load-shortcut-keys', (_event, config) => {
-  console.log('[渲染进程] 接收到快捷键配置', config);
   shortcutKeyConfig.value = config;
+});
+
+// 监听快捷键配置加载
+window.ipcRenderer.on('load-settings', (_event, config) => {
+  settingsConfig.value = config;
 });
 
 // 点击外部关闭下拉菜单

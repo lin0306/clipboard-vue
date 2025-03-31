@@ -133,20 +133,7 @@ function createMainWindow() {
     // 添加窗口失去焦点事件监听
     if (Boolean(config.value.colsingHideToTaskbar)) {
         mainWindow.on('blur', () => {
-            const existingWindows = BrowserWindow.getAllWindows();
-            // 没有打开其他窗口，才能触发失焦事件
-            if (
-                existingWindows.length === 1
-
-                && !isOpenMianDevTools
-                && !isOpenSettingsDevTools
-                && !isOpenTagsDevTools
-                && !isOpenAboutDevTools
-
-                && !isFixedMainWindow
-            ) {
-                closeOrHide();
-            }
+            onBlur()
         });
     }
 
@@ -183,6 +170,7 @@ function createMainWindow() {
         const tags = db.getAllTags();
         mainWindow?.webContents.send('load-tag-items', tags);
         mainWindow?.webContents.send('load-shortcut-keys', shortcutKeys.value);
+        mainWindow?.webContents.send('load-settings', config.value);
         mainWindow?.webContents.send('show-devtool', devtoolConfig);
         // 启动剪贴板监听
         log.info('[主进程] 窗口加载完成，开始监听剪贴板');
@@ -847,6 +835,10 @@ ipcMain.handle('main-fixed', async (_event, fixed: boolean) => {
     isFixedMainWindow = fixed;
 });
 
+ipcMain.handle('main-blur', async (_event) => {
+    onBlur();
+});
+
 // 主页面IPC通信配置 end
 
 // 设置页面IPC通信配置 start
@@ -919,6 +911,21 @@ ipcMain.on('open-external-link', (_event, url) => {
 });
 
 // 标签页面IPC通信配置 end
+
+function onBlur() {
+    const existingWindows = BrowserWindow.getAllWindows()
+    // 没有打开其他窗口，才能触发失焦事件
+    if (existingWindows.length === 1
+
+        && !isOpenMianDevTools
+        && !isOpenSettingsDevTools
+        && !isOpenTagsDevTools
+        && !isOpenAboutDevTools
+
+        && !isFixedMainWindow) {
+        closeOrHide()
+    }
+}
 
 function restartAPP() {
     // 关闭所有窗口

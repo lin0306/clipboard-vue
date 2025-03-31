@@ -26,7 +26,7 @@
         </div>
 
         <!-- 底部按钮区域 -->
-        <div class="update-footer" v-if="!isDownloading || downloadCompleted">
+        <div class="update-footer" v-if="!isDownloading && !isBackingUp || downloadCompleted">
             <!-- 初始状态：显示暂不更新和立即下载按钮 -->
             <div class="update-actions" v-if="!downloadCompleted">
                 <div class="left-action">
@@ -47,15 +47,10 @@
                 </div>
             </div>
 
-            <!-- 下载完成状态：显示立即重启和稍后重启按钮 -->
+            <!-- 下载完成状态：只显示立即重启按钮 -->
             <div class="update-actions" v-else>
-                <div class="left-action">
-                    <a-button @click="laterRestart">
-                        {{languageTexts.update.restartLaterBtn}}
-                    </a-button>
-                </div>
-                <div class="right-action">
-                    <a-button type="primary" @click="installNow">
+                <div class="right-action" style="width: 100%; display: flex; justify-content: center;">
+                    <a-button type="primary" @click="installNow" :disabled="!backupCompleted">
                         {{languageTexts.update.restartImmediatelyBtn}}
                     </a-button>
                 </div>
@@ -64,6 +59,7 @@
 
         <!-- 下载进度条 -->
         <div class="download-progress" v-if="isDownloading">
+            <div class="progress-title">{{languageTexts.update.downloadingTitle}}</div>
             <div class="progress-bar">
                 <div class="progress-inner" :style="{ width: `${downloadProgress}%` }"></div>
             </div>
@@ -73,6 +69,18 @@
                     <span>{{ downloadedSize }}MB / {{ totalSize }}MB</span>
                     <span class="download-speed">{{ downloadSpeed }}KB/s</span>
                 </div>
+            </div>
+        </div>
+
+        <!-- 备份进度条 -->
+        <div class="backup-progress" v-if="isBackingUp || backupCompleted">
+            <div class="progress-title">{{languageTexts.update.backupTitle}}</div>
+            <div class="progress-bar">
+                <div class="progress-inner" :style="{ width: `${backupProgress}%` }"></div>
+            </div>
+            <div class="progress-info">
+                <div class="progress-text">{{ backupProgress.toFixed(1) }}%</div>
+                <div class="status-text">{{ backupStatus }}</div>
             </div>
         </div>
     </div>
@@ -102,6 +110,12 @@ const downloadCompleted = ref(false);
 const downloadSpeed = ref<any>(0); // 下载速度 (KB/s)
 const downloadedSize = ref<any>(0); // 已下载大小 (MB)
 const totalSize = ref<any>(0); // 总大小 (MB)
+
+// 备份状态
+const isBackingUp = ref(false);
+const backupProgress = ref(0);
+const backupCompleted = ref(false);
+const backupStatus = ref('');
 
 // 提醒天数
 const remindDays = ref(3);
@@ -135,6 +149,16 @@ onMounted(() => {
                 // 更新下载完成
                 isDownloading.value = false;
                 downloadCompleted.value = true;
+                
+                // 开始备份过程
+                isBackingUp.value = true;
+                
+                // 如果备份已完成（从主进程传来的信息）
+                if (updateData.backupCompleted) {
+                    backupCompleted.value = true;
+                    backupProgress.value = 100;
+                    backupStatus.value = languageTexts.update.backupCompleted;
+                }
                 break;
 
             case 'download-error':
@@ -142,6 +166,21 @@ onMounted(() => {
                 isDownloading.value = false;
                 // 可以添加错误提示
                 break;
+        }
+    });
+    
+    // 监听备份状态
+    window.ipcRenderer.on('backup-status', (_event: any, data: any) => {
+        console.log('backup-status', data);
+        const { progress, status } = data;
+        
+        // 更新备份进度
+        backupProgress.value = progress || 0;
+        backupStatus.value = status || '';
+        
+        // 如果备份完成
+        if (progress === 100) {
+            backupCompleted.value = true;
         }
     });
 
@@ -152,6 +191,7 @@ onMounted(() => {
 onUnmounted(() => {
     // 移除事件监听
     window.ipcRenderer.off('update-status', () => { });
+    window.ipcRenderer.off('backup-status', () => { });
 });
 
 // 请求更新信息
@@ -178,15 +218,10 @@ function downloadUpdate() {
 
 // 立即安装更新并重启
 function installNow() {
-    window.ipcRenderer.invoke('install-update');
-}
-
-// 稍后重启
-function laterRestart() {
-    // 设置下次启动时安装
-    window.ipcRenderer.invoke('later-install-update');
-    // 关闭更新窗口
-    window.ipcRenderer.send('close-update');
+    // 只有在备份完成后才能安装更新
+    if (backupCompleted.value) {
+        window.ipcRenderer.invoke('install-update');
+    }
 }
 
 // 打开GitHub发布页面
@@ -363,7 +398,7 @@ function openGitHubReleases() {
     color: var(--theme-text);
 }
 
-.download-progress {
+.download-progress, .backup-progress {
     padding: 15px 20px;
     border-top: 1px solid var(--theme-border);
     background-color: var(--theme-cardBackground);
@@ -371,6 +406,12 @@ function openGitHubReleases() {
     bottom: 0;
     width: 100%;
     box-sizing: border-box;
+}
+
+.progress-title {
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: var(--theme-primary);
 }
 
 .progress-bar {

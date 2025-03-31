@@ -1,11 +1,11 @@
 /**
  * 管理Config文件夹下的文件读取，更新等操作
  */
-import path from 'node:path'
 import fs from 'node:fs'
-import log from './log.js'
+import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { ref } from 'vue'
+import log from './log.js'
 
 let __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -14,7 +14,7 @@ if (env !== 'development') {
     __dirname = __dirname.replace("\\app.asar\\dist-electron", "");
 }
 
-const settingsFileName = 'settings.conf';
+export const settingsFileName = 'settings.conf';
 const shortcutKeyFileName = 'shortcut-key.conf';
 
 const settings = ref<any>(null);
@@ -66,14 +66,20 @@ export function getTempPath() {
     return path.join(__dirname, '../temp');
 }
 
-// 获取配置文件路径
-function getConfigPath(fileName: string) {
+// 获取配置文件夹路径
+export function getConfigDir() {
     let configDir;
     if (env === 'development') {
         configDir = path.join(__dirname, '../config');
     } else {
         configDir = path.join(__dirname, './config');
     }
+    return configDir;
+}
+
+// 获取配置文件路径
+function getConfigPath(fileName: string) {
+    let configDir = getConfigDir();
     log.info('[配置文件] 配置文件夹目录:', configDir);
     const configPath = path.join(configDir, fileName);
     log.info('[配置文件] ' + fileName + ' 文件路径:', configPath);

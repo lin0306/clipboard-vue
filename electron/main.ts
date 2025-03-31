@@ -7,7 +7,7 @@ import { getSettings, getShortcutKeys, getTempPath, updateSettings, updateShortc
 import ClipboardDB from './db.js'
 import log from './log.js'
 import ShortcutManager from './shortcutManager.js'
-import { getUpdaterService, initUpdaterService } from './updater.js'
+import { getUpdaterService, initUpdaterService, getBackupManager } from './updater.js'
 import { getTrayText } from './languages.js'
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
 
@@ -512,6 +512,71 @@ export function createUpdateWindow() {
     });
 }
 
+// 创建恢复窗口
+export function createRestoreWindow(theme: string, languages: string) {
+    // 检查是否已经打开了恢复窗口
+    const existingWindows = BrowserWindow.getAllWindows();
+    // @ts-ignore
+    const window = existingWindows.find(win => win.uniqueId === 'restore-window');
+    if (window) {
+        window.focus();
+        return;
+    }
+
+    const restoreWindow = new BrowserWindow({
+        width: 500,
+        height: 400,
+        frame: false,
+        resizable: false,
+        webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: true,
+            preload: path.join(path.dirname(fileURLToPath(import.meta.url)), 'preload.mjs'),
+            defaultEncoding: 'utf8', // 设置默认编码为 UTF-8
+        },
+        icon: path.join(process.env.VITE_PUBLIC, 'logo.png'),
+        transparent: false,
+    });
+    
+    // 窗口居中显示
+    restoreWindow.center();
+
+    // @ts-ignore
+    restoreWindow.uniqueId = 'restore-window';
+
+    if (VITE_DEV_SERVER_URL) {
+        restoreWindow.loadURL(VITE_DEV_SERVER_URL)
+    } else {
+        restoreWindow.loadFile(path.join(RENDERER_DIST, 'index.html'))
+    }
+
+    // 在页面加载完成后发送窗口类型
+    restoreWindow.webContents.on('did-finish-load', () => {
+        restoreWindow.webContents.send('window-type', 'restore');
+        restoreWindow.webContents.send('show-devtool', devtoolConfig);
+        restoreWindow.webContents.send('init-themes', theme);
+        restoreWindow.webContents.send('init-language', languages);
+    });
+
+    // 监听恢复完成事件
+    ipcMain.on('restore-completed', () => {
+        log.info('[主进程] 恢复完成，重新启动程序');
+        restartAPP();
+    });
+
+    // 监听打开开发者工具的请求
+    ipcMain.on('open-restore-devtools', () => {
+        if (restoreWindow && !restoreWindow.isDestroyed()) {
+            restoreWindow.webContents.openDevTools({ mode: 'detach' });
+
+            // 监听DevTools关闭事件
+            restoreWindow.webContents.once('devtools-closed', () => {
+                log.info('[主进程] 恢复窗口开发者工具已关闭');
+            });
+        }
+    });
+}
+
 // 创建标签管理窗口
 function createAboutWindow() {
     // 检查是否已经打开了更新窗口
@@ -717,17 +782,30 @@ if (!gotTheLock) {
             log.error('[主进程] 应用启动时的存储检查和清理失败:', error);
         }
 
-        createMainWindow()
+        initWindow()
 
         // 仅 macOS 支持
         app.on('activate', () => {
             // On OS X it's common to re-create a window in the app when the
             // dock icon is clicked and there are no other windows open.
             if (BrowserWindow.getAllWindows().length === 0) {
-                createMainWindow()
+                initWindow()
             }
         })
     })
+}
+
+// 初始化窗口
+function initWindow() {
+    // 检查是否存在备份文件，如果存在则打开恢复窗口
+    const backupManager = getBackupManager();
+    if (backupManager && backupManager.hasBackup()) {
+        log.info('[主进程] 检测到备份文件，打开恢复窗口');
+        const config = backupManager.getBackupConfig();
+        createRestoreWindow(config.theme, config.languages);
+    } else{
+        createMainWindow();
+    }
 }
 
 // 主页面IPC通信配置 start

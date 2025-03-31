@@ -5,9 +5,10 @@
 
 import { app, BrowserWindow, ipcMain, nativeImage, Notification } from 'electron';
 import { autoUpdater } from 'electron-updater';
-import log from './log.js';
 import path from 'path';
+import BackupManager from './BackupManager.js';
 import { getUpdateText, UpdateLanguageConfig } from './languages.js';
+import log from './log.js';
 
 /**
  * 主进程中初始化更新服务的代码
@@ -17,7 +18,8 @@ import { getUpdateText, UpdateLanguageConfig } from './languages.js';
 // 更新服务实例
 let updaterService: UpdaterService | null = null;
 
-
+// 备份管理器实例
+let backupManager: BackupManager | null = null;
 
 // 本地开发时使用的更新配置文件路径
 // autoUpdater.updateConfigPath = path.join(__dirname, "../dev-update.yml");
@@ -28,6 +30,9 @@ let updaterService: UpdaterService | null = null;
  */
 export function initUpdaterService(language: string) {
     try {
+        // 创建备份管理器实例
+        backupManager = new BackupManager();
+
         // 创建更新服务实例
         updaterService = new UpdaterService(language);
 
@@ -47,15 +52,28 @@ export function getUpdaterService(): UpdaterService | null {
     return updaterService;
 }
 
+/**
+ * 获取备份管理器实例
+ */
+export function getBackupManager(): BackupManager | null {
+    return backupManager;
+}
+
 export default class UpdaterService {
     private updateCheckInterval: NodeJS.Timeout | null = null;
     private isCheckingForUpdate = false;
     private isManualCheck = false; // 标记是否为手动检查更新
+    private isBackupCompleted = false; // 标记是否已完成备份
     private language: UpdateLanguageConfig;
+    private updateLimitTime: number | null | undefined; // 更新限制时间
 
     constructor(language: string) {
         this.language = getUpdateText(language);
         log.info('[主进程] 更新服务初始化', language);
+        const updateLimitTime = localStorage.getItem('updateLimitTime');
+        if (updateLimitTime) {
+            this.updateLimitTime = Number(updateLimitTime);
+        }
 
         // 配置自动更新
         autoUpdater.logger = log;
@@ -159,15 +177,20 @@ export default class UpdaterService {
 
         // 更新下载完成
         autoUpdater.on('update-downloaded', (info) => {
-            log.info('更新已下载，准备安装');
-            this.sendStatusToWindow('update-downloaded', {
-                version: info.version,
-                releaseDate: info.releaseDate,
-                releaseNotes: info.releaseNotes
-            });
+            log.info('更新已下载，准备备份用户数据');
 
-            // 不再显示系统弹窗，由Update.vue组件内处理
-            // 用户可以在Update.vue界面中选择立即安装或稍后安装
+            // 开始备份用户数据
+            this.backupUserData().then(success => {
+                this.isBackupCompleted = success;
+
+                // 发送更新下载完成消息，包含备份状态
+                this.sendStatusToWindow('update-downloaded', {
+                    version: info.version,
+                    releaseDate: info.releaseDate,
+                    releaseNotes: info.releaseNotes,
+                    backupCompleted: success
+                });
+            });
         });
     }
 
@@ -187,21 +210,45 @@ export default class UpdaterService {
 
         // 立即安装更新
         ipcMain.handle('install-update', async () => {
-            autoUpdater.quitAndInstall(false, true);
-            return true;
-        });
+            // 如果备份未完成，则先进行备份
+            if (!this.isBackupCompleted) {
+                const success = await this.backupUserData();
+                this.isBackupCompleted = success;
+                if (!success) {
+                    log.error('备份失败，取消安装更新');
+                    return false;
+                }
+            }
 
-        // 稍后安装更新
-        ipcMain.handle('later-install-update', async () => {
-            // 设置下次启动时安装
-            log.info('用户选择稍后安装更新');
+            autoUpdater.quitAndInstall(false, true);
             return true;
         });
 
         // 推迟更新提醒
         ipcMain.handle('postpone-update', async (_event, days: number) => {
             log.info(`用户选择 ${days} 天后再次提醒更新`);
+            // 计算推迟的时间
+            const now = new Date();
+            now.setDate(now.getDate() + days);
+            this.updateLimitTime = now.getTime();
+
+            // 保存到本地存储
+            localStorage.setItem('updateLimitTime', this.updateLimitTime.toString());
             return true;
+        });
+
+        // 开始恢复备份
+        ipcMain.handle('start-restore', async () => {
+            return this.restoreUserData();
+        });
+
+        // 跳过恢复备份
+        ipcMain.handle('skip-restore', async () => {
+            const backupManager = getBackupManager();
+            if (backupManager) {
+                return backupManager.deleteBackup();
+            }
+            return false;
         });
     }
 
@@ -228,6 +275,60 @@ export default class UpdaterService {
     }
 
     /**
+     * 备份用户数据
+     * @returns 备份是否成功
+     */
+    private async backupUserData(): Promise<boolean> {
+        const backupManager = getBackupManager();
+        if (!backupManager) {
+            log.error('备份管理器未初始化');
+            return false;
+        }
+
+        // 获取更新窗口
+        const existingWindows = BrowserWindow.getAllWindows();
+        // @ts-ignore
+        const updateWindow = existingWindows.find(win => win.uniqueId === 'update-window');
+
+        // 设置进度回调
+        backupManager.setProgressCallback((progress, status) => {
+            if (updateWindow && !updateWindow.isDestroyed()) {
+                updateWindow.webContents.send('backup-status', { progress, status });
+            }
+        });
+
+        // 执行备份
+        return await backupManager.createBackup();
+    }
+
+    /**
+     * 恢复用户数据
+     * @returns 恢复是否成功
+     */
+    private async restoreUserData(): Promise<boolean> {
+        const backupManager = getBackupManager();
+        if (!backupManager) {
+            log.error('备份管理器未初始化');
+            return false;
+        }
+
+        // 获取恢复窗口
+        const existingWindows = BrowserWindow.getAllWindows();
+        // @ts-ignore
+        const restoreWindow = existingWindows.find(win => win.uniqueId === 'restore-window');
+
+        // 设置进度回调
+        backupManager.setProgressCallback((progress, status) => {
+            if (restoreWindow && !restoreWindow.isDestroyed()) {
+                restoreWindow.webContents.send('backup-status', { progress, status });
+            }
+        });
+
+        // 执行恢复
+        return await backupManager.restoreBackup();
+    }
+
+    /**
      * 检查更新
      * @param isManual 是否为手动检查，默认为false
      */
@@ -235,6 +336,13 @@ export default class UpdaterService {
         if (this.isCheckingForUpdate) {
             log.info('已有更新检查正在进行中');
             return false;
+        }
+        if (!isManual && this.updateLimitTime) {
+            const time = Date.now();
+            if (time < this.updateLimitTime) {
+                log.info('更新限制时间未到，不进行更新检查');
+                return false;
+            }
         }
 
         try {

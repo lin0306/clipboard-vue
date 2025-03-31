@@ -127,6 +127,17 @@ export interface PageConfig {
         restartLaterBtn: string;
         restartImmediatelyBtn: string;
         viewMoreBtn: string;
+        downloadingTitle: string;
+        backupTitle: string;
+        backupCompleted: string;
+    },
+    restore: {
+        title: string;
+        description: string;
+        startBtn: string;
+        skipBtn: string;
+        readyText: string;
+        startingText: string;
     }
 }
 
@@ -241,7 +252,18 @@ export const zhCN: LanguageConfig = {
             downloadNowBtn: '立即下载',
             restartLaterBtn: '稍后重启',
             restartImmediatelyBtn: '立即重启',
-            viewMoreBtn: '查看更多'
+            viewMoreBtn: '查看更多',
+            downloadingTitle: '下载更新中',
+            backupTitle: '备份用户数据',
+            backupCompleted: '备份完成',
+        },
+        restore: {
+            title: '数据恢复',
+            description: '检测到上次更新后的备份数据，是否要恢复？',
+            startBtn: '开始恢复',
+            skipBtn: '跳过恢复',
+            readyText: '准备恢复数据',
+            startingText: '开始恢复数据',
         }
     },
 }
@@ -357,7 +379,18 @@ export const enUS: LanguageConfig = {
             downloadNowBtn: 'Download Now',
             restartLaterBtn: 'Restart Later',
             restartImmediatelyBtn: 'Restart Immediately',
-            viewMoreBtn: 'View More'
+            viewMoreBtn: 'View More',
+            downloadingTitle: 'Downloading Update',
+            backupTitle: 'Backing Up User Data',
+            backupCompleted: 'Backup Completed'
+        },
+        restore: {
+            title: 'Data Recovery',
+            description: 'Backup data from the last update detected. Do you want to restore?',
+            startBtn: 'Start Recovery',
+            skipBtn: 'Skip Recovery',
+            readyText: 'Preparing to restore data',
+            startingText: 'Starting data recovery'
         }
     }
 }

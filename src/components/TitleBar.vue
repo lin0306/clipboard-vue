@@ -14,7 +14,7 @@
             <div v-if="minimizeWindow" class="control-button" @click="onMinimizeWindow">
                 <MinimizeIcon class="program-btn" />
             </div>
-            <div class="control-button close-button" @click="onClose">
+            <div v-if="closeWindow" class="control-button close-button" @click="onClose">
                 <CloseIcon class="program-btn" id="close-button-img" />
             </div>
         </div>
@@ -32,7 +32,7 @@ import { ref } from 'vue'
 
 const props = withDefaults(defineProps<{
     title: string;
-    closeWindow: string;
+    closeWindow?: string;
     showFixedBtn?: boolean;
     devTool?: string;
     minimizeWindow?: string;

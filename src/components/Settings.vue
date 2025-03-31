@@ -32,7 +32,8 @@ const originalConfig = reactive({
   maxHistoryItems: 100,
   maxStorageSize: 500,
   autoCleanupDays: 30,
-  maxItemSize: 50
+  maxItemSize: 50,
+  disableHardwareAcceleration: false
 });
 
 // 当前编辑的配置
@@ -153,6 +154,8 @@ const saveConfig = async () => {
     const isUpdateWindowHeight = currentConfig.windowHeight !== originalConfig.windowHeight;
     // 是否修改了【关闭窗口时隐藏到任务栏托盘】
     const isUpdateColsingHideToTaskbar = currentConfig.colsingHideToTaskbar !== originalConfig.colsingHideToTaskbar;
+    // 是否修改了【禁用硬件加速】
+    const isUpdateDisableHardwareAcceleration = currentConfig.disableHardwareAcceleration !== originalConfig.disableHardwareAcceleration;
 
     // 创建一个可序列化的配置对象副本
     const configJson = JSON.parse(JSON.stringify(currentConfig));
@@ -167,6 +170,7 @@ const saveConfig = async () => {
         || isUpdateWindowWidth
         || isUpdateWindowHeight
         || isUpdateColsingHideToTaskbar
+        || isUpdateDisableHardwareAcceleration
       ) {
         // 显示重启确认弹窗
         restartModalVisible.value = true;
@@ -327,6 +331,12 @@ onMounted(() => {
               </Select.Option>
             </Select>
           </div>
+          
+          <div class="setting-item">
+            <span class="setting-label">{{ languageTexts.settings.disableHardwareAcceleration }}</span>
+            <Switch v-model:checked="currentConfig.disableHardwareAcceleration" />
+          </div>
+          
           <div class="setting-item" v-if="!devtoolConfig.isDev">
             <span class="setting-label">{{ languageTexts.settings.devTools }}</span>
             <Switch v-model:checked="devtoolConfig.isShow" @change="updateDevtoolConfigShowStatus" />

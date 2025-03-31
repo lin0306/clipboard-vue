@@ -8,8 +8,22 @@ import ClipboardDB from './db.js'
 import log from './log.js'
 import ShortcutManager from './shortcutManager.js'
 import { getUpdaterService, initUpdaterService, getBackupManager } from './updater.js'
-import { getTrayText } from './languages.js'
+import { getTrayText, getHardwareAccelerationDialogText } from './languages.js'
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
+
+// 在应用启动前读取设置并应用硬件加速设置
+try {
+  const userSettings = getSettings();
+  if (userSettings && userSettings.disableHardwareAcceleration) {
+    log.info("[主进程] 读取到禁用硬件加速设置，将禁用硬件加速");
+    app.disableHardwareAcceleration();
+  }
+} catch (error) {
+  log.error("[主进程] 读取硬件加速设置失败:", error);
+}
+
+app.commandLine.appendSwitch('disable-http-cache'); // 禁用 HTTP 缓存
+app.commandLine.appendSwitch('enable-features', 'LayoutNG'); // 启用新的布局引擎
 
 let __dirname = path.dirname(fileURLToPath(import.meta.url))
 log.info("[主进程] 程序文件夹位置", __dirname);
@@ -447,7 +461,6 @@ export function createUpdateWindow() {
         },
         icon: path.join(process.env.VITE_PUBLIC, 'logo.png'),
         transparent: false,
-        parent: mainWindow,
     });
     
     // 窗口居中显示
@@ -674,7 +687,7 @@ function createTray(win: BrowserWindow) {
     // 根据语言设置获取对应的菜单文本
     let menuTexts = getTrayText(savedLanguage);
     
-    const trayMenuTemplate = [
+    const trayMenuTemplate: Electron.MenuItemConstructorOptions[] = [
         {
             label: menuTexts.settings,
             click: function () {
@@ -689,6 +702,36 @@ function createTray(win: BrowserWindow) {
                 if (updaterService) {
                     updaterService.checkForUpdates(true);
                 }
+            }
+        },
+        {
+            label: menuTexts.disableHardwareAcceleration,
+            type: 'checkbox',
+            checked: Boolean(config.value.disableHardwareAcceleration),
+            click: function () {
+                // 切换禁用硬件加速设置
+                config.value.disableHardwareAcceleration = !config.value.disableHardwareAcceleration;
+                updateSettings(config.value);
+                
+                // 获取当前语言的对话框文本
+                const hardwareAccelerationDialogText = getHardwareAccelerationDialogText(savedLanguage);
+                
+                // 显示重启确认对话框
+                const dialogOptions = {
+                    type: 'info',
+                    buttons: [hardwareAccelerationDialogText.restartNow, hardwareAccelerationDialogText.restartLater],
+                    title: hardwareAccelerationDialogText.title,
+                    message: hardwareAccelerationDialogText.message,
+                    defaultId: 0
+                };
+                
+                const { dialog } = require('electron');
+                dialog.showMessageBox(dialogOptions).then((result: { response: number }) => {
+                    if (result.response === 0) {
+                        // 用户选择立即重启
+                        restartAPP();
+                    }
+                });
             }
         },
         {
@@ -757,11 +800,7 @@ app.on('window-all-closed', () => {
     if (process.platform === 'darwin') {
         log.info('[主进程] macOS 平台，应用保持活动状态')
         // 如果您希望 macOS 上的行为与其他平台一致，可以取消下面的注释
-        // app.quit()
-    } else {
-        log.info('[主进程] 非 macOS 平台，退出应用')
         app.quit()
-        mainWindow = undefined
     }
 })
 

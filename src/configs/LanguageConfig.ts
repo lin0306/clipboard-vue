@@ -30,6 +30,7 @@ export interface PageConfig {
         windowWidth: string;
         languages: string;
         devTools: string;
+        disableHardwareAcceleration: string;
         // 存储设置页面文字
         tempPath: string;
         maxHistoryItems: string,
@@ -48,6 +49,11 @@ export interface PageConfig {
         restartModalContent: string;
         restartModalCancelBtn: string;
         restartModalConfirmBtn: string;
+        // 硬件加速设置对话框内容
+        hardwareAccelerationDialogTitle: string;
+        hardwareAccelerationDialogContent: string;
+        hardwareAccelerationDialogRestartNow: string;
+        hardwareAccelerationDialogRestartLater: string;
         // 快捷键编辑弹窗内容
         editHotkeyModalTitle: string;
         editHotkeyModalHint: string;
@@ -163,6 +169,7 @@ export const zhCN: LanguageConfig = {
             windowWidth: '宽：',
             languages: '语言',
             devTools: '开发者工具',
+            disableHardwareAcceleration: '禁用硬件加速',
             tempPath: '临时文件路径',
             maxHistoryItems: '最大历史记录数',
             maxStorageSize: '最大存储空间(MB)',
@@ -177,6 +184,10 @@ export const zhCN: LanguageConfig = {
             restartModalContent: '部分设置需要重启程序后生效，是否现在重启？',
             restartModalCancelBtn: '稍后重启',
             restartModalConfirmBtn: '现在重启',
+            hardwareAccelerationDialogTitle: '需要重启',
+            hardwareAccelerationDialogContent: '禁用硬件加速设置已更改，需要重启应用才能生效。',
+            hardwareAccelerationDialogRestartNow: '现在重启',
+            hardwareAccelerationDialogRestartLater: '稍后重启',
             editHotkeyModalTitle: '编辑快捷键',
             editHotkeyModalHint: '按下快捷键...',
             editHotkeyModalContent: '请按下您想要设置的快捷键组合',
@@ -290,6 +301,7 @@ export const enUS: LanguageConfig = {
             windowWidth: 'Width:',
             languages: 'Languages',
             devTools: 'Developer Tools',
+            disableHardwareAcceleration: 'Disable Hardware Acceleration',
             tempPath: 'Temporary File Path',
             maxHistoryItems: 'Max History Items',
             maxStorageSize: 'Max Storage Size (MB)',
@@ -304,6 +316,10 @@ export const enUS: LanguageConfig = {
             restartModalContent: 'Some settings require restarting the program to take effect. Do you want to restart now?',
             restartModalCancelBtn: 'Restart Later',
             restartModalConfirmBtn: 'Now Restart',
+            hardwareAccelerationDialogTitle: 'Restart Required',
+            hardwareAccelerationDialogContent: 'Hardware acceleration setting has been changed. Application needs to restart to apply changes.',
+            hardwareAccelerationDialogRestartNow: 'Restart Now',
+            hardwareAccelerationDialogRestartLater: 'Restart Later',
             editHotkeyModalTitle: 'Edit Shortcut',
             editHotkeyModalHint: 'Press the shortcut key...',
             editHotkeyModalContent: 'Please press the shortcut key combination you want to set',

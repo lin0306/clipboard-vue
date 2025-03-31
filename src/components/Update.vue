@@ -1,12 +1,14 @@
 <template>
     <div class="update-container">
-        <titleBar :title="languageTexts.update.title" :closeWindow="`close-update`" :dev-tool="`open-update-devtools`" :minimizeWindow="`minimize-update`" />
+        <titleBar :title="languageTexts.update.title" :closeWindow="`close-update`" :dev-tool="`open-update-devtools`"
+            :minimizeWindow="`minimize-update`" />
 
         <!-- 更新内容展示区域 -->
         <div class="update-content">
             <div class="release-header">
                 <h2 class="release-version">{{ updateInfo.version || languageTexts.update.versionName }}</h2>
-                <span class="release-tag" v-if="updateInfo.version && updateInfo.version.includes('beta')">Pre-release</span>
+                <span class="release-tag"
+                    v-if="updateInfo.version && updateInfo.version.includes('beta')">Pre-release</span>
             </div>
             <div class="release-date" v-if="updateInfo.releaseDate">
                 {{ new Date(updateInfo.releaseDate).toLocaleDateString() }}
@@ -14,81 +16,86 @@
             <div class="release-notes github-markdown" v-if="updateInfo.releaseNotes" v-html="updateInfo.releaseNotes">
             </div>
             <div class="release-notes" v-else>
-                {{languageTexts.update.updateNotes}}
+                {{ languageTexts.update.updateNotes }}
             </div>
             <!-- 查看更多按钮 -->
             <div class="view-more-container">
                 <a-button class="view-more-btn" type="link" @click="openGitHubReleases">
-                    {{languageTexts.update.viewMoreBtn}}
+                    {{ languageTexts.update.viewMoreBtn }}
                     <span class="view-more-icon">→</span>
                 </a-button>
             </div>
         </div>
 
-        <!-- 底部按钮区域 -->
-        <div class="update-footer" v-if="!isDownloading && !isBackingUp || downloadCompleted">
-            <!-- 初始状态：显示暂不更新和立即下载按钮 -->
-            <div class="update-actions" v-if="!downloadCompleted">
-                <div class="left-action">
-                    <a-button class="btn btn-secondary" @click="postponeUpdate">
-                        {{languageTexts.update.notUpdateBtn}}
-                    </a-button>
-                    <span class="remind-text">{{languageTexts.update.reminderText}}</span>
-                    <div class="days-selector">
-                        <select v-model="remindDays">
-                            <option v-for="day in [1, 3, 7, 15, 30]" :key="day" :value="day">{{ day }}{{languageTexts.update.days}}</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="right-action">
-                    <a-button type="primary" @click="downloadUpdate">
-                        {{languageTexts.update.downloadNowBtn}}
-                    </a-button>
-                </div>
-            </div>
-
-            <!-- 下载完成状态：只显示立即重启按钮 -->
-            <div class="update-actions" v-else>
-                <div class="right-action" style="width: 100%; display: flex; justify-content: center;">
-                    <a-button type="primary" @click="installNow" :disabled="!backupCompleted">
-                        {{languageTexts.update.restartImmediatelyBtn}}
-                    </a-button>
-                </div>
-            </div>
-        </div>
-
         <!-- 下载进度条 -->
         <div class="download-progress" v-if="isDownloading">
-            <div class="progress-title">{{languageTexts.update.downloadingTitle}}</div>
+            <div class="progress-title">{{ languageTexts.update.downloadingTitle }}</div>
             <div class="progress-bar">
-                <div class="progress-inner" :style="{ width: `${downloadProgress}%` }"></div>
+                <div class="progress-inner" :style="{ width: downloadProgress + '%' }"></div>
             </div>
             <div class="progress-info">
                 <div class="progress-text">{{ downloadProgress.toFixed(1) }}%</div>
                 <div class="download-details">
                     <span>{{ downloadedSize }}MB / {{ totalSize }}MB</span>
-                    <span class="download-speed">{{ downloadSpeed }}KB/s</span>
+                    <span class="download-speed">{{ downloadSpeed }} {{ downloadSpeedUnit }}</span>
                 </div>
             </div>
         </div>
 
         <!-- 备份进度条 -->
-        <div class="backup-progress" v-if="isBackingUp || backupCompleted">
-            <div class="progress-title">{{languageTexts.update.backupTitle}}</div>
+        <div class="backup-progress" v-if="isBackingUp">
+            <div class="progress-title">{{ languageTexts.update.backupTitle }}</div>
             <div class="progress-bar">
-                <div class="progress-inner" :style="{ width: `${backupProgress}%` }"></div>
+                <div class="progress-inner" :style="{ width: backupProgress + '%' }"></div>
             </div>
             <div class="progress-info">
                 <div class="progress-text">{{ backupProgress.toFixed(1) }}%</div>
                 <div class="status-text">{{ backupStatus }}</div>
             </div>
         </div>
+
+        <!-- 底部按钮区域 -->
+        <div class="update-footer" v-show="!isDownloading && !isBackingUp">
+            <!-- 初始状态：显示暂不更新和立即下载按钮 -->
+            <div class="update-actions">
+                <div class="left-action">
+                    <a-button class="btn btn-secondary" @click="postponeUpdate" v-if="!backupCompleted">
+                        {{ languageTexts.update.notUpdateBtn }}
+                    </a-button>
+                    <span class="remind-text" v-if="!backupCompleted">{{ languageTexts.update.reminderText }}</span>
+                    <div class="days-selector" v-if="!backupCompleted">
+                        <select v-model="remindDays" v-if="!backupCompleted">
+                            <option v-for="day in [1, 3, 7, 15, 30]" :key="day" :value="day">{{ day
+                                }}{{ languageTexts.update.days }}</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="right-action">
+                    <a-button type="primary" @click="downloadUpdate" v-if="!backupCompleted">
+                        {{ languageTexts.update.downloadNowBtn }}
+                    </a-button>
+                    <!-- 备份完成后显示立即重启按钮 -->
+                    <a-button type="primary" @click="installNow" v-if="backupCompleted">
+                        {{ languageTexts.update.restartImmediatelyBtn }}
+                    </a-button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 调试信息 -->
+        <div class="debug-info"
+            style="padding: 5px; font-size: 10px; color: #999; position: absolute; bottom: 0; right: 0; z-index: 200;">
+            Download: {{ isDownloading ? 'Yes' : 'No' }} | Backup: {{ isBackingUp ? 'Yes' : 'No' }} |
+            Download Completed: {{ downloadCompleted ? 'Yes' : 'No' }} | Backup Completed: {{ backupCompleted ? 'Yes' :
+            'No' }} |
+            Progress: {{ downloadProgress }}%
+        </div>
     </div>
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, onMounted, onUnmounted } from 'vue'
-import { useLanguage } from '../configs/LanguageConfig'
+import { onMounted, onUnmounted, reactive, ref } from 'vue';
+import { useLanguage } from '../configs/LanguageConfig';
 import titleBar from './TitleBar.vue';
 
 // 获取语言和主题配置
@@ -108,6 +115,7 @@ const downloadCompleted = ref(false);
 
 // 下载信息
 const downloadSpeed = ref<any>(0); // 下载速度 (KB/s)
+const downloadSpeedUnit = ref('KB/s');
 const downloadedSize = ref<any>(0); // 已下载大小 (MB)
 const totalSize = ref<any>(0); // 总大小 (MB)
 
@@ -138,49 +146,106 @@ onMounted(() => {
             case 'download-progress':
                 // 更新下载进度
                 isDownloading.value = true;
-                downloadProgress.value = updateData.percent || 0;
+                // 确保进度值是数字且在0-100之间
+                const rawPercent = updateData.percent || 0;
+                downloadProgress.value = parseFloat(rawPercent.toFixed(1));
+                console.log('下载进度更新:', downloadProgress.value, '%', '原始数据:', JSON.stringify(updateData));
+                console.log('进度条样式:', `width: ${downloadProgress.value}%`);
+
+                // 强制更新UI
+                setTimeout(() => {
+                    // 再次确认进度值
+                    console.log('强制更新后的进度值:', downloadProgress.value);
+                }, 100);
+
                 // 更新下载速度和文件大小信息
-                downloadSpeed.value = updateData.bytesPerSecond ? (updateData.bytesPerSecond / 1024).toFixed(2) : 0;
+                const bytesPerSecond = updateData.bytesPerSecond || 0;
+                // 当速度超过1MB/s时，显示为MB/s
+                if (bytesPerSecond > 1024 * 1024) {
+                    downloadSpeed.value = (bytesPerSecond / 1024 / 1024).toFixed(2);
+                    // 修改速度单位为MB/s
+                    downloadSpeedUnit.value = 'MB/s';
+                } else {
+                    downloadSpeed.value = (bytesPerSecond / 1024).toFixed(2);
+                    downloadSpeedUnit.value = 'KB/s';
+                }
+
                 downloadedSize.value = updateData.transferred ? (updateData.transferred / 1024 / 1024).toFixed(2) : 0;
                 totalSize.value = updateData.total ? (updateData.total / 1024 / 1024).toFixed(2) : 0;
                 break;
 
             case 'update-downloaded':
                 // 更新下载完成
+                console.log('下载完成');
                 isDownloading.value = false;
                 downloadCompleted.value = true;
-                
+
                 // 开始备份过程
                 isBackingUp.value = true;
-                
+                console.log('开始备份过程:', isBackingUp.value);
+
                 // 如果备份已完成（从主进程传来的信息）
                 if (updateData.backupCompleted) {
                     backupCompleted.value = true;
+                    isBackingUp.value = false; // 重要：设置正在备份标志为false
                     backupProgress.value = 100;
                     backupStatus.value = languageTexts.update.backupCompleted;
+                    console.log('备份已完成:', backupCompleted.value);
+
+                    // 强制更新UI状态
+                    setTimeout(() => {
+                        backupCompleted.value = true;
+                        isBackingUp.value = false;
+                    }, 100);
                 }
                 break;
 
             case 'download-error':
                 // 下载出错
-                isDownloading.value = false;
-                // 可以添加错误提示
+                console.log('下载出错:', updateData.error);
+
+                // 显示错误信息，但不重置状态
+                // 由于我们已经移除了取消功能，这里只需处理真正的错误情况
+                break;
+
+            case 'download-started':
+                // 开始下载
+                isDownloading.value = true;
+                downloadProgress.value = 0;
+                // 初始化下载信息
+                downloadSpeed.value = 0;
+                downloadSpeedUnit.value = 'KB/s';
+                downloadedSize.value = 0;
+                totalSize.value = 0;
+                console.log('开始下载:', isDownloading.value);
                 break;
         }
     });
-    
+
     // 监听备份状态
     window.ipcRenderer.on('backup-status', (_event: any, data: any) => {
         console.log('backup-status', data);
         const { progress, status } = data;
-        
+
         // 更新备份进度
         backupProgress.value = progress || 0;
         backupStatus.value = status || '';
-        
+
         // 如果备份完成
         if (progress === 100) {
             backupCompleted.value = true;
+            isBackingUp.value = false; // 设置为false表示备份已完成
+            console.log('备份已完成，状态更新:', {
+                backupCompleted: backupCompleted.value,
+                isBackingUp: isBackingUp.value,
+                downloadCompleted: downloadCompleted.value
+            });
+
+            // 强制更新UI
+            setTimeout(() => {
+                backupCompleted.value = true;
+                isBackingUp.value = false;
+            }, 100);
         }
     });
 
@@ -213,6 +278,15 @@ function postponeUpdate() {
 // 下载更新
 function downloadUpdate() {
     isDownloading.value = true;
+    downloadProgress.value = 0; // 初始化进度值
+    console.log('设置isDownloading为true', isDownloading.value);
+
+    // 强制更新UI状态，确保按钮区域立即隐藏并显示进度条
+    setTimeout(() => {
+        isDownloading.value = true;
+        console.log('强制更新UI后的isDownloading状态:', isDownloading.value);
+    }, 0);
+
     window.ipcRenderer.invoke('download-update');
 }
 
@@ -231,7 +305,7 @@ function openGitHubReleases() {
 }
 </script>
 
-<style>
+<style scoped>
 .update-container {
     display: flex;
     flex-direction: column;
@@ -364,8 +438,10 @@ function openGitHubReleases() {
     background-color: var(--theme-cardBackground);
     position: fixed;
     bottom: 0;
+    left: 0;
     width: 100%;
     box-sizing: border-box;
+    z-index: 90;
 }
 
 .update-actions {
@@ -398,14 +474,19 @@ function openGitHubReleases() {
     color: var(--theme-text);
 }
 
-.download-progress, .backup-progress {
+.download-progress,
+.backup-progress {
     padding: 15px 20px;
     border-top: 1px solid var(--theme-border);
     background-color: var(--theme-cardBackground);
     position: fixed;
     bottom: 0;
+    left: 0;
     width: 100%;
     box-sizing: border-box;
+    z-index: 200;
+    display: block !important;
+    /* 强制显示 */
 }
 
 .progress-title {
@@ -415,17 +496,39 @@ function openGitHubReleases() {
 }
 
 .progress-bar {
-    height: 8px;
-    background-color: var(--theme-progressBackground);
+    height: 10px;
+    background-color: var(--theme-background);
+    /* 使用固定颜色而非变量 */
     border-radius: 4px;
-    overflow: hidden;
-    margin-bottom: 5px;
+    overflow: visible;
+    /* 确保内容不被裁剪 */
+    margin-bottom: 8px;
+    border: 1px solid var(--theme-border);
+    position: relative;
+    /* 添加相对定位 */
+    z-index: 95;
+    /* 确保进度条容器有较高的z-index */
 }
 
 .progress-inner {
     height: 100%;
     background-color: var(--theme-primary);
+    /* 使用固定颜色而非变量 */
     transition: width 0.3s ease;
+    min-width: 2px;
+    /* 确保即使是0%也能看到一点点 */
+    position: absolute;
+    /* 使用绝对定位 */
+    left: 0;
+    top: 0;
+    z-index: 100;
+    /* 提高z-index确保进度条内容可见 */
+    border-radius: 4px;
+    /* 添加圆角与外层一致 */
+    display: block !important;
+    /* 强制显示 */
+    opacity: 1 !important;
+    /* 确保不透明 */
 }
 
 .progress-info {
@@ -473,5 +576,11 @@ function openGitHubReleases() {
 
 .view-more-btn:hover .view-more-icon {
     transform: translateX(3px);
+}
+
+.restart-button-container {
+    margin-top: 15px;
+    display: flex;
+    justify-content: flex-end;
 }
 </style>

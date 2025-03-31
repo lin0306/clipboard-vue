@@ -92,7 +92,7 @@ function skipRestore() {
 }
 </script>
 
-<style>
+<style scoped>
 .restore-container {
     display: flex;
     flex-direction: column;

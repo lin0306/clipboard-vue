@@ -3,12 +3,12 @@
  * 负责在更新时备份用户数据，以及在更新后恢复数据
  */
 
-import fs from 'fs-extra';
-import path from 'path';
-import os from 'os';
-import log from './log.js';
 import { BrowserWindow } from 'electron';
+import fs from 'fs-extra';
+import os from 'os';
+import path from 'path';
 import { getConfigDir, getDBPath, getTempPath, settingsFileName } from './FileManager.js';
+import log from './log.js';
 
 export default class BackupManager {
     private backupDir: string;
@@ -26,15 +26,6 @@ export default class BackupManager {
         this.dataDir = getDBPath();
         this.tempDir = getTempPath();
         this.configDir = getConfigDir();
-
-        // 确保备份目录存在
-        try {
-            if (!fs.existsSync(this.backupDir)) {
-                fs.ensureDirSync(this.backupDir);
-            }
-        } catch (error) {
-            log.error('[备份管理器] 创建备份目录失败:', error);
-        }
 
         log.info('[备份管理器] 初始化，备份目录:', this.backupDir);
     }
@@ -190,26 +181,26 @@ export default class BackupManager {
                 this.updateProgress(90, '恢复配置文件...');
                 // 确保目标目录存在
                 await fs.ensureDir(this.configDir);
-                
+
                 // 读取备份的配置文件目录
                 const backupConfigFiles = await fs.readdir(backupConfigDir);
-                
+
                 // 遍历每个配置文件
                 for (const fileName of backupConfigFiles) {
                     const backupFilePath = path.join(backupConfigDir, fileName);
                     const currentFilePath = path.join(this.configDir, fileName);
-                    
+
                     // 如果是文件夹，则跳过
                     if ((await fs.stat(backupFilePath)).isDirectory()) {
                         continue;
                     }
-                    
+
                     // 如果当前配置文件不存在，直接复制
                     if (!fs.existsSync(currentFilePath)) {
                         await fs.copy(backupFilePath, currentFilePath);
                         continue;
                     }
-                    
+
                     // 如果是JSON文件，尝试合并配置
                     if (fileName.endsWith('.conf') || fileName.endsWith('.json')) {
                         try {
@@ -217,10 +208,10 @@ export default class BackupManager {
                             const backupConfig = JSON.parse(await fs.readFile(backupFilePath, 'utf8'));
                             // 读取当前的配置
                             const currentConfig = JSON.parse(await fs.readFile(currentFilePath, 'utf8'));
-                            
+
                             // 合并配置，优先使用备份的配置
                             const mergedConfig = { ...currentConfig, ...backupConfig };
-                            
+
                             // 写入合并后的配置
                             await fs.writeFile(currentFilePath, JSON.stringify(mergedConfig, null, 4), 'utf8');
                         } catch (error) {
@@ -256,13 +247,36 @@ export default class BackupManager {
     public async deleteBackup(): Promise<boolean> {
         try {
             if (fs.existsSync(this.backupDir)) {
-                log.info('[备份管理器] 删除备份目录');
+                log.info('[备份管理器] 删除备份目录:', this.backupDir);
                 await fs.remove(this.backupDir);
-                return true;
             }
-            return false;
+            return true;
         } catch (error) {
             log.error('[备份管理器] 删除备份失败:', error);
+            return false;
+        }
+    }
+
+    /**
+     * 清理备份文件
+     * 当取消备份时使用
+     * @returns 清理是否成功
+     */
+    public async cleanBackupFiles(): Promise<boolean> {
+        try {
+            // 重置备份状态
+            this.backupInProgress = false;
+
+            if (fs.existsSync(this.backupDir)) {
+                log.info('[备份管理器] 清理备份文件:', this.backupDir);
+                await fs.remove(this.backupDir);
+                await fs.ensureDir(this.backupDir);
+            }
+
+            this.updateProgress(0, '备份已取消');
+            return true;
+        } catch (error) {
+            log.error('[备份管理器] 清理备份文件失败:', error);
             return false;
         }
     }

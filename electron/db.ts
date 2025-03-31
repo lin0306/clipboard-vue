@@ -6,7 +6,7 @@ import Database from 'better-sqlite3';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { getSettings } from './ConfigFileManager.js';
+import { getDBPath, getSettings } from './FileManager.js';
 import log from './log.js';
 
 // 获取当前文件的目录路径
@@ -33,7 +33,7 @@ class ClipboardDB {
      */
     private constructor() {
         log.info("[数据库进程] 数据库初始化");
-        const dbFolder = path.join(__dirname, '../data');
+        const dbFolder = getDBPath();
         log.info("[数据库进程] 数据文件存储文件夹位置：", dbFolder);
         if (!fs.existsSync(dbFolder)) {
             fs.mkdirSync(dbFolder);

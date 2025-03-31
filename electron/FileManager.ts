@@ -56,6 +56,16 @@ export function updateShortcutKeys(config: any) {
     shortcutKeyConfig.value = config;
 }
 
+// 获取数据库路径
+export function getDBPath() {
+    return path.join(__dirname, '../data');
+}
+
+// 获取文件存储路径
+export function getTempPath() {
+    return path.join(__dirname, '../temp');
+}
+
 // 获取配置文件路径
 function getConfigPath(fileName: string) {
     let configDir;

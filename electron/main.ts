@@ -3,7 +3,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { computed } from 'vue'
-import { getSettings, getShortcutKeys, updateSettings, updateShortcutKeys } from './ConfigFileManager.js'
+import { getSettings, getShortcutKeys, getTempPath, updateSettings, updateShortcutKeys } from './FileManager.js'
 import ClipboardDB from './db.js'
 import log from './log.js'
 import ShortcutManager from './shortcutManager.js'
@@ -200,7 +200,7 @@ function createMainWindow() {
 
     // 临时文件位置没有设置，设置成当前程序的根目录为临时文件夹位置
     if (!config.value.tempPath) {
-        const tempDir = path.join(__dirname, '../temp');
+        const tempDir = getTempPath();
         config.value.tempPath = tempDir;
         updateSettings(config.value);
     }
@@ -1002,7 +1002,7 @@ function watchClipboard() {
                 });
                 lastImage = currentImageBuffer;
                 const timestamp = Date.now();
-                const tempDir = path.join(config.value.tempPath || path.join(__dirname, '../temp'));
+                const tempDir = path.join(config.value.tempPath || getTempPath());
 
                 // 检查是否存在相同内容的图片文件
                 let existingImagePath = null;
@@ -1131,7 +1131,7 @@ function watchClipboard() {
         //                 log.info('[主进程] 检测到新的文件:', newFiles);
 
         //                 const timestamp = Date.now();
-        //                 const tempDir = path.join(config.value.tempPath || path.join(__dirname, '../temp'));
+        //                 const tempDir = path.join(config.value.tempPath || getTempPath());
 
         //                 // 确保临时目录存在
         //                 if (!fs.existsSync(tempDir)) {

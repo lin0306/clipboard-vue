@@ -39466,6 +39466,12 @@ function updateShortcutKeys(config2) {
   fs$o.writeFileSync(configPath, JSON.stringify(config2, null, 4));
   shortcutKeyConfig.value = config2;
 }
+function getDBPath() {
+  return path$s.join(__dirname$3, "../data");
+}
+function getTempPath() {
+  return path$s.join(__dirname$3, "../temp");
+}
 function getConfigPath(fileName) {
   let configDir;
   if (env$2 === "development") {
@@ -39493,7 +39499,7 @@ const _ClipboardDB = class _ClipboardDB {
     // 单例实例
     __publicField(this, "db");
     log.info("[数据库进程] 数据库初始化");
-    const dbFolder = path$s.join(__dirname$2, "../data");
+    const dbFolder = getDBPath();
     log.info("[数据库进程] 数据文件存储文件夹位置：", dbFolder);
     if (!fs$o.existsSync(dbFolder)) {
       fs$o.mkdirSync(dbFolder);
@@ -54169,7 +54175,7 @@ function createMainWindow() {
   });
   initUpdaterService(savedLanguage);
   if (!config.value.tempPath) {
-    const tempDir = path$s.join(__dirname$1, "../temp");
+    const tempDir = getTempPath();
     config.value.tempPath = tempDir;
     updateSettings(config.value);
   }
@@ -54376,7 +54382,7 @@ function createUpdateWindow() {
   });
   require$$1$4.ipcMain.on("minimize-update", () => {
     if (!(newUpdateWindow == null ? void 0 : newUpdateWindow.isDestroyed())) {
-      newUpdateWindow == null ? void 0 : newUpdateWindow.maximize();
+      newUpdateWindow == null ? void 0 : newUpdateWindow.minimize();
     }
   });
 }
@@ -54716,7 +54722,7 @@ function watchClipboard() {
         });
         lastImage = currentImageBuffer;
         const timestamp2 = Date.now();
-        const tempDir = path$s.join(config.value.tempPath || path$s.join(__dirname$1, "../temp"));
+        const tempDir = path$s.join(config.value.tempPath || getTempPath());
         let existingImagePath = null;
         if (fs$o.existsSync(tempDir)) {
           const files = fs$o.readdirSync(tempDir);

@@ -29,6 +29,7 @@ export interface PageConfig {
         windowHeight: string;
         windowWidth: string;
         languages: string;
+        devTools: string;
         // 存储设置页面文字
         tempPath: string;
         maxHistoryItems: string,
@@ -150,6 +151,7 @@ export const zhCN: LanguageConfig = {
             windowHeight: '高：',
             windowWidth: '宽：',
             languages: '语言',
+            devTools: '开发者工具',
             tempPath: '临时文件路径',
             maxHistoryItems: '最大历史记录数',
             maxStorageSize: '最大存储空间(MB)',
@@ -265,6 +267,7 @@ export const enUS: LanguageConfig = {
             windowHeight: 'Height:',
             windowWidth: 'Width:',
             languages: 'Languages',
+            devTools: 'Developer Tools',
             tempPath: 'Temporary File Path',
             maxHistoryItems: 'Max History Items',
             maxStorageSize: 'Max Storage Size (MB)',

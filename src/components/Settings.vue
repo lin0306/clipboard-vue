@@ -328,7 +328,7 @@ onMounted(() => {
             </Select>
           </div>
           <div class="setting-item" v-if="!devtoolConfig.isDev">
-            <span class="setting-label">调试工具是否打开</span>
+            <span class="setting-label">{{ languageTexts.settings.devTools }}</span>
             <Switch v-model:checked="devtoolConfig.isShow" @change="updateDevtoolConfigShowStatus" />
           </div>
         </div>

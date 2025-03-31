@@ -6,7 +6,6 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { ref } from 'vue'
 import log from './log.js'
-import { app } from 'electron'
 
 let __dirname = path.dirname(fileURLToPath(import.meta.url))
 

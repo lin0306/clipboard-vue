@@ -1,5 +1,5 @@
 import { app, BrowserWindow, clipboard, ipcMain, Menu, nativeImage, screen, shell, Tray } from 'electron'
-import fs from 'node:fs'
+import fs from 'fs-extra'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { computed } from 'vue'

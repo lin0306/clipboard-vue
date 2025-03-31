@@ -4,7 +4,7 @@
  */
 
 exports.default = async function (context) {
-    const fs = require("fs");
+    const fs = require("fs-extra");
     const localeDir = context.appOutDir + "/locales/";
   
     fs.readdir(localeDir, function (err, files) {

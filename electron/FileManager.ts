@@ -1,7 +1,7 @@
 /**
  * 管理Config文件夹下的文件读取，更新等操作
  */
-import fs from 'node:fs'
+import fs from 'fs-extra'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { ref } from 'vue'

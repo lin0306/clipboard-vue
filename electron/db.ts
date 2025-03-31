@@ -3,7 +3,7 @@
  * 负责管理剪贴板内容的存储、检索和操作
  */
 import Database from 'better-sqlite3';
-import fs from 'node:fs';
+import fs from 'fs-extra';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getDBPath, getSettings } from './FileManager.js';

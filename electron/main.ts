@@ -503,6 +503,13 @@ export function createUpdateWindow() {
             });
         }
     });
+
+    // 监听关闭窗口的请求
+    ipcMain.on('minimize-update', () => {
+        if (!newUpdateWindow?.isDestroyed()) {
+            newUpdateWindow?.minimize();
+        }
+    });
 }
 
 // 创建标签管理窗口

@@ -11,7 +11,10 @@
             <div v-if="showFixedBtn && isFixed" class="control-button unfixation-button" @click="onUnfixWindow">
                 <UnFixedIcon class="program-btn" id="unfixation-button-img" />
             </div>
-            <div class="control-button close-button" @click="onClose(closeWindow)">
+            <div v-if="minimizeWindow" class="control-button" @click="onMinimizeWindow">
+                <MinimizeIcon class="program-btn" />
+            </div>
+            <div class="control-button close-button" @click="onClose">
                 <CloseIcon class="program-btn" id="close-button-img" />
             </div>
         </div>
@@ -22,15 +25,17 @@
 import CloseIcon from '../assets/icons/CloseIcon.vue'
 import DevToolIcon from '../assets/icons/DevToolIcon.vue'
 import FixedIcon from '../assets/icons/FixedIcon.vue'
+import MinimizeIcon from '../assets/icons/MinimizeIcon.vue'
 import UnFixedIcon from '../assets/icons/UnFixedIcon.vue'
 
 import { ref } from 'vue'
 
-withDefaults(defineProps<{
+const props = withDefaults(defineProps<{
     title: string;
     closeWindow: string;
     showFixedBtn?: boolean;
     devTool?: string;
+    minimizeWindow?: string;
 }>(), {
     showFixedBtn: false
 });
@@ -60,8 +65,16 @@ function onUnfixWindow() {
     window.ipcRenderer.invoke('main-fixed', false);
 }
 
-function onClose(win: string) {
-    window.ipcRenderer.send(win);
+function onMinimizeWindow() {
+    if (props.minimizeWindow) {
+        window.ipcRenderer.send(props.minimizeWindow);
+    }
+}
+
+function onClose() {
+    if (props.closeWindow) {
+        window.ipcRenderer.send(props.closeWindow);
+    }
 }
 
 function openDevTool(devTool: string | undefined) {

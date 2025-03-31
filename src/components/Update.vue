@@ -1,6 +1,6 @@
 <template>
     <div class="update-container">
-        <titleBar :title="languageTexts.update.title" :closeWindow="`close-update`" :dev-tool="`open-update-devtools`" />
+        <titleBar :title="languageTexts.update.title" :closeWindow="`close-update`" :dev-tool="`open-update-devtools`" :minimizeWindow="`minimize-update`" />
 
         <!-- 更新内容展示区域 -->
         <div class="update-content">

@@ -54374,6 +54374,11 @@ function createUpdateWindow() {
       });
     }
   });
+  require$$1$4.ipcMain.on("minimize-update", () => {
+    if (!(newUpdateWindow == null ? void 0 : newUpdateWindow.isDestroyed())) {
+      newUpdateWindow == null ? void 0 : newUpdateWindow.maximize();
+    }
+  });
 }
 function createAboutWindow() {
   const existingWindows = require$$1$4.BrowserWindow.getAllWindows();

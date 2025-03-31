@@ -6,6 +6,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { ref } from 'vue'
 import log from './log.js'
+import { app } from 'electron'
 
 let __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -16,6 +17,7 @@ if (env !== 'development') {
 
 export const settingsFileName = 'settings.conf';
 const shortcutKeyFileName = 'shortcut-key.conf';
+const updateConfigFileName = 'update-config.conf';
 
 const settings = ref<any>(null);
 const shortcutKeyConfig = ref<any>(null);
@@ -84,4 +86,65 @@ function getConfigPath(fileName: string) {
     const configPath = path.join(configDir, fileName);
     log.info('[配置文件] ' + fileName + ' 文件路径:', configPath);
     return configPath;
+}
+
+/**
+ * 获取更新配置路径
+ * @returns 更新配置文件路径
+ */
+export function getUpdateConfigPath(): string {
+    const updateConfigPath = getConfigDir();
+    return path.join(updateConfigPath, updateConfigFileName);
+}
+
+/**
+ * 读取更新配置
+ * @returns 更新配置对象
+ */
+export function getUpdateConfig(): { updateLimitTime?: string } {
+    try {
+        const configPath = getUpdateConfigPath();
+        if (fs.existsSync(configPath)) {
+            return JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        }
+    } catch (error) {
+        log.error('[文件管理] 读取更新配置失败:', error);
+    }
+    return {};
+}
+
+/**
+ * 保存更新配置
+ * @param config 配置对象
+ * @returns 是否保存成功
+ */
+export function saveUpdateConfig(config: any): boolean {
+    try {
+        const configPath = getUpdateConfigPath();
+        fs.writeFileSync(configPath, JSON.stringify(config, null, 4), 'utf8');
+        log.info('[文件管理] 更新配置已保存');
+        return true;
+    } catch (error) {
+        log.error('[文件管理] 保存更新配置失败:', error);
+        return false;
+    }
+}
+
+/**
+ * 删除更新配置文件
+ * @returns 是否删除成功
+ */
+export function deleteUpdateConfig(): boolean {
+    try {
+        const configPath = getUpdateConfigPath();
+        if (fs.existsSync(configPath)) {
+            fs.unlinkSync(configPath);
+            log.info('[文件管理] 更新配置文件已删除');
+            return true;
+        }
+        return false;
+    } catch (error) {
+        log.error('[文件管理] 删除更新配置文件失败:', error);
+        return false;
+    }
 }

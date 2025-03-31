@@ -8,6 +8,7 @@ import { autoUpdater } from 'electron-updater';
 import path from 'path';
 import BackupManager from './BackupManager.js';
 import { getUpdateText, UpdateLanguageConfig } from './languages.js';
+import { getUpdateConfig, saveUpdateConfig, deleteUpdateConfig } from './FileManager.js';
 import log from './log.js';
 
 /**
@@ -70,9 +71,11 @@ export default class UpdaterService {
     constructor(language: string) {
         this.language = getUpdateText(language);
         log.info('[主进程] 更新服务初始化', language);
-        const updateLimitTime = localStorage.getItem('updateLimitTime');
-        if (updateLimitTime) {
-            this.updateLimitTime = Number(updateLimitTime);
+        
+        // 从文件中读取更新限制时间
+        const updateConfig = getUpdateConfig();
+        if (updateConfig.updateLimitTime) {
+            this.updateLimitTime = Number(updateConfig.updateLimitTime);
         }
 
         // 配置自动更新
@@ -232,8 +235,8 @@ export default class UpdaterService {
             now.setDate(now.getDate() + days);
             this.updateLimitTime = now.getTime();
 
-            // 保存到本地存储
-            localStorage.setItem('updateLimitTime', this.updateLimitTime.toString());
+            // 保存到配置文件
+            saveUpdateConfig({ updateLimitTime: this.updateLimitTime.toString() });
             return true;
         });
 
@@ -342,6 +345,11 @@ export default class UpdaterService {
             if (time < this.updateLimitTime) {
                 log.info('更新限制时间未到，不进行更新检查');
                 return false;
+            } else {
+                // 时间已到，清除更新限制并删除配置文件
+                log.info('更新限制时间已到，清除限制并删除配置文件');
+                this.updateLimitTime = undefined;
+                deleteUpdateConfig();
             }
         }
 

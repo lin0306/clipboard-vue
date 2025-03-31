@@ -6,9 +6,9 @@
 import { app, BrowserWindow, ipcMain, nativeImage, Notification } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import path from 'path';
+import Store from 'electron-store';
 import BackupManager from './BackupManager.js';
 import { getUpdateText, UpdateLanguageConfig } from './languages.js';
-import { getUpdateConfig, saveUpdateConfig, deleteUpdateConfig } from './FileManager.js';
 import log from './log.js';
 
 /**
@@ -67,13 +67,20 @@ export default class UpdaterService {
     private isBackupCompleted = false; // 标记是否已完成备份
     private language: UpdateLanguageConfig;
     private updateLimitTime: number | null | undefined; // 更新限制时间
+    private updateStore: Store; // 用于存储更新配置的Store实例
 
     constructor(language: string) {
         this.language = getUpdateText(language);
         log.info('[主进程] 更新服务初始化', language);
         
-        // 从文件中读取更新限制时间
-        const updateConfig = getUpdateConfig();
+        // 创建更新配置存储实例
+        this.updateStore = new Store({
+            name: 'update-config',  // 不含扩展名的文件名
+            cwd: app.getPath('userData'),  // 存储在应用的userData目录下
+        });
+        
+        // 从Store中读取更新限制时间
+        const updateConfig = this.updateStore.store as { updateLimitTime?: string };
         if (updateConfig.updateLimitTime) {
             this.updateLimitTime = Number(updateConfig.updateLimitTime);
         }
@@ -235,8 +242,9 @@ export default class UpdaterService {
             now.setDate(now.getDate() + days);
             this.updateLimitTime = now.getTime();
 
-            // 保存到配置文件
-            saveUpdateConfig({ updateLimitTime: this.updateLimitTime.toString() });
+            // 保存到Store
+            this.updateStore.store = { updateLimitTime: this.updateLimitTime.toString() };
+            log.info('[主进程] 更新限制时间已保存');
             return true;
         });
 
@@ -349,7 +357,8 @@ export default class UpdaterService {
                 // 时间已到，清除更新限制并删除配置文件
                 log.info('更新限制时间已到，清除限制并删除配置文件');
                 this.updateLimitTime = undefined;
-                deleteUpdateConfig();
+                this.updateStore.clear();
+                log.info('[主进程] 更新配置已清空');
             }
         }
 

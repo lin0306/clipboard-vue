@@ -2,7 +2,7 @@
     <div id="title-bar" :class="{ 'fixed': isFixed }">
         <div class="window-title">{{ title }}</div>
         <div class="window-controls">
-            <div v-if="isDev && devTool" class="control-button" @click="openDevTool(devTool)">
+            <div v-if="isShow && devTool" class="control-button" @click="openDevTool(devTool)">
                 <DevToolIcon class="program-btn" id="devtool-button-img" />
             </div>
             <div v-if="showFixedBtn && !isFixed" class="control-button fixation-button" @click="onFixWindow">
@@ -19,10 +19,10 @@
     <div style="width: 100%;height: 25px;"></div>
 </template>
 <script lang="ts" setup>
-import FixedIcon from '../assets/icons/FixedIcon.vue'
-import UnFixedIcon from '../assets/icons/UnFixedIcon.vue'
 import CloseIcon from '../assets/icons/CloseIcon.vue'
 import DevToolIcon from '../assets/icons/DevToolIcon.vue'
+import FixedIcon from '../assets/icons/FixedIcon.vue'
+import UnFixedIcon from '../assets/icons/UnFixedIcon.vue'
 
 import { ref } from 'vue'
 
@@ -35,10 +35,18 @@ withDefaults(defineProps<{
     showFixedBtn: false
 });
 
-const env = process.env.NODE_ENV;
-const isDev = env === 'development';
-
 const isFixed = ref(false);
+
+const isShow = ref(false);
+
+// 监听标签加载
+window.ipcRenderer.on('show-devtool', (_event, devtoolConfig) => {
+    if (devtoolConfig.isDev) {
+        isShow.value = true;
+    } else {
+        isShow.value = devtoolConfig.isShow;
+    }
+});
 
 // 固定窗口
 function onFixWindow() {

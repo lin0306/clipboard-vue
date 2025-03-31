@@ -42,7 +42,11 @@ if (process.platform === 'win32') {
     app.setAppUserModelId('com.lin.clipboard'); // 替换为你的应用唯一标识符
 }
 
-let win: BrowserWindow | undefined
+let mainWindow: BrowserWindow | undefined
+let settingsWindow: BrowserWindow | undefined
+let tagsWindow: BrowserWindow | undefined
+let newUpdateWindow: BrowserWindow | undefined
+let aboutWindow: BrowserWindow | undefined
 let isHideWindow = false;
 let isOpenMianDevTools = false;
 let isOpenSettingsDevTools = false;
@@ -52,6 +56,11 @@ let x: number | undefined = undefined;
 let y: number | undefined = undefined;
 let wakeUpRoutineShortcut: ShortcutManager; // 唤醒程序快捷键
 let isFixedMainWindow = false; // 是否固定窗口大小
+const devtoolConfig: any = {
+   isDev: env === 'development',
+//    isDev: false,
+   isShow: false, 
+}
 
 const config: any = computed(() => getSettings());
 const shortcutKeys: any = computed(() => getShortcutKeys());
@@ -93,7 +102,7 @@ function createMainWindow() {
         }
     }
 
-    win = new BrowserWindow({
+    mainWindow = new BrowserWindow({
         icon: path.join(process.env.VITE_PUBLIC, 'logo.png'),
         webPreferences: {
             nodeIntegration: true,
@@ -111,19 +120,19 @@ function createMainWindow() {
     })
 
     // @ts-ignore
-    win.uniqueId = 'main-window';
+    mainWindow.uniqueId = 'main-window';
 
     // 窗口置顶
     // 这个设置允许在Keynote演示模式下显示在顶部。BrowserWindow中有一项alwaysOnTop。
     // 当我设置为true时，其他应用程序会被覆盖在顶部，但Keynote演示模式下不行。
     // 所以我需要设置mainWindow.setAlwaysOnTop(true, "screen-saver")。
-    win.setAlwaysOnTop(true, "screen-saver")
+    mainWindow.setAlwaysOnTop(true, "screen-saver")
     // 这个设置允许在切换到其他工作区时显示。
-    win.setVisibleOnAllWorkspaces(true)
+    mainWindow.setVisibleOnAllWorkspaces(true)
 
     // 添加窗口失去焦点事件监听
     if (Boolean(config.value.colsingHideToTaskbar)) {
-        win.on('blur', () => {
+        mainWindow.on('blur', () => {
             const existingWindows = BrowserWindow.getAllWindows();
             // 没有打开其他窗口，才能触发失焦事件
             if (
@@ -142,17 +151,17 @@ function createMainWindow() {
     }
 
     if (VITE_DEV_SERVER_URL) {
-        win.loadURL(VITE_DEV_SERVER_URL)
+        mainWindow.loadURL(VITE_DEV_SERVER_URL)
         log.info("[主进程] 加载url页面", VITE_DEV_SERVER_URL)
     } else {
         // win.loadFile('dist/index.html')
-        win.loadFile(path.join(RENDERER_DIST, 'index.html'))
+        mainWindow.loadFile(path.join(RENDERER_DIST, 'index.html'))
         log.info("[主进程] 加载index.html页面", path.join(RENDERER_DIST, 'index.html'))
     }
 
     if (shortcutKeys.value.wakeUpRoutine) {
         log.info('[主进程] 注册唤醒程序快捷键:', shortcutKeys.value.wakeUpRoutine.key.join("+"));
-        wakeUpRoutineShortcut = new ShortcutManager(win, shortcutKeys.value.wakeUpRoutine.key.join("+"));
+        wakeUpRoutineShortcut = new ShortcutManager(mainWindow, shortcutKeys.value.wakeUpRoutine.key.join("+"));
         wakeUpRoutineShortcut.loadShortcuts();
     }
 
@@ -166,27 +175,22 @@ function createMainWindow() {
     log.info('[主进程] 读取到的语言配置:', savedLanguage);
 
     // 在页面加载完成后发送主题设置
-    win.webContents.on('did-finish-load', () => {
-        log.info('[主进程] 发送窗口类型到渲染进程：list')
-        win?.webContents.send('window-type', 'list');
-        log.info('[主进程] 发送主题设置到渲染进程');
-        win?.webContents.send('init-themes', savedTheme);
-        log.info('[主进程] 发送程序语言到渲染进程');
-        win?.webContents.send('init-language', savedLanguage);
-        log.info('[主进程] 发送标签列表到渲染进程');
+    mainWindow.webContents.on('did-finish-load', () => {
+        mainWindow?.webContents.send('window-type', 'list');
+        mainWindow?.webContents.send('init-themes', savedTheme);
+        mainWindow?.webContents.send('init-language', savedLanguage);
         const db = ClipboardDB.getInstance()
         const tags = db.getAllTags();
-        win?.webContents.send('load-tag-items', tags);
-        // 发送快捷键配置
-        log.info('[主进程] 发送快捷键配置到渲染进程');
-        win?.webContents.send('load-shortcut-keys', shortcutKeys.value);
+        mainWindow?.webContents.send('load-tag-items', tags);
+        mainWindow?.webContents.send('load-shortcut-keys', shortcutKeys.value);
+        mainWindow?.webContents.send('show-devtool', devtoolConfig);
         // 启动剪贴板监听
         log.info('[主进程] 窗口加载完成，开始监听剪贴板');
         watchClipboard();
     });
 
     // 监听窗口关闭事件，清理定时器
-    win.on('closed', () => {
+    mainWindow.on('closed', () => {
         if (clipboardTimer) {
             clearTimeout(clipboardTimer);
             clipboardTimer = null;
@@ -194,7 +198,7 @@ function createMainWindow() {
     });
 
     //创建系统托盘右键菜单
-    createTray(win);
+    createTray(mainWindow);
 
     // 设置应用程序开机自启动
     app.setLoginItemSettings({
@@ -216,13 +220,13 @@ function createMainWindow() {
     // 监听打开开发者工具的请求
     ipcMain.on('open-main-tools', () => {
         log.info('[主进程] 打开开发者工具');
-        if (win) {
+        if (mainWindow) {
             // 打开调试工具，设置为单独窗口
-            win.webContents.openDevTools({ mode: 'detach' });
+            mainWindow.webContents.openDevTools({ mode: 'detach' });
             isOpenMianDevTools = true;
 
             // 监听DevTools关闭事件
-            win.webContents.once('devtools-closed', () => {
+            mainWindow.webContents.once('devtools-closed', () => {
                 log.info('[主进程] 开发者工具已关闭');
                 isOpenMianDevTools = false;
             });
@@ -232,8 +236,8 @@ function createMainWindow() {
     // 监听重新加载应用程序的请求
     ipcMain.on('reload-app', () => {
         log.info('[主进程] 重新加载应用程序');
-        if (win) {
-            win.reload();
+        if (mainWindow) {
+            mainWindow.reload();
         }
     });
 
@@ -276,7 +280,7 @@ function createSettingsWindow() {
         return;
     }
 
-    const settingsWindow = new BrowserWindow({
+    settingsWindow = new BrowserWindow({
         width: 650,
         height: 500,
         frame: false,
@@ -289,7 +293,7 @@ function createSettingsWindow() {
         },
         icon: path.join(process.env.VITE_PUBLIC, 'logo.png'),
         transparent: false,
-        parent: win,
+        parent: mainWindow,
     });
     
     // 窗口居中显示
@@ -310,9 +314,10 @@ function createSettingsWindow() {
 
     // 在页面加载完成后发送主题设置
     settingsWindow.webContents.on('did-finish-load', () => {
-        settingsWindow.webContents.send('window-type', 'settings');
-        settingsWindow.webContents.send('load-config', getSettings());
-        settingsWindow.webContents.send('load-shortcut-keys', shortcutKeys.value);
+        settingsWindow?.webContents.send('window-type', 'settings');
+        settingsWindow?.webContents.send('load-config', getSettings());
+        settingsWindow?.webContents.send('load-shortcut-keys', shortcutKeys.value);
+        settingsWindow?.webContents.send('show-devtool', devtoolConfig);
     });
 
     // 当窗口关闭时，移除事件监听器
@@ -327,8 +332,8 @@ function createSettingsWindow() {
     });
 
     ipcMain.on('close-settings', () => {
-        if (!settingsWindow.isDestroyed()) {
-            settingsWindow.close();
+        if (!settingsWindow?.isDestroyed()) {
+            settingsWindow?.close();
         }
     });
 
@@ -359,7 +364,7 @@ function createTagsWindow() {
         return;
     }
 
-    const tagsWindow = new BrowserWindow({
+    tagsWindow = new BrowserWindow({
         width: 650,
         height: 500,
         frame: false,
@@ -372,7 +377,7 @@ function createTagsWindow() {
         },
         icon: path.join(process.env.VITE_PUBLIC, 'logo.png'),
         transparent: false,
-        parent: win,
+        parent: mainWindow,
     });
     
     // 窗口居中显示
@@ -393,7 +398,8 @@ function createTagsWindow() {
 
     // 在页面加载完成后发送主题设置
     tagsWindow.webContents.on('did-finish-load', () => {
-        tagsWindow.webContents.send('window-type', 'tags');
+        tagsWindow?.webContents.send('window-type', 'tags');
+        tagsWindow?.webContents.send('show-devtool', devtoolConfig);
     });
 
     // 当窗口关闭时，移除事件监听器
@@ -409,8 +415,8 @@ function createTagsWindow() {
 
     // 监听关闭窗口的请求
     ipcMain.on('close-tags', () => {
-        if (!tagsWindow.isDestroyed()) {
-            tagsWindow.close();
+        if (!tagsWindow?.isDestroyed()) {
+            tagsWindow?.close();
         }
     });
 
@@ -440,7 +446,7 @@ export function createUpdateWindow() {
         return;
     }
 
-    const newUpdateWindow = new BrowserWindow({
+    newUpdateWindow = new BrowserWindow({
         width: 600,
         height: 500,
         frame: false,
@@ -453,7 +459,7 @@ export function createUpdateWindow() {
         },
         icon: path.join(process.env.VITE_PUBLIC, 'logo.png'),
         transparent: false,
-        parent: win,
+        parent: mainWindow,
     });
     
     // 窗口居中显示
@@ -473,7 +479,8 @@ export function createUpdateWindow() {
 
     // 在页面加载完成后发送窗口类型
     newUpdateWindow.webContents.on('did-finish-load', () => {
-        newUpdateWindow.webContents.send('window-type', 'update');
+        newUpdateWindow?.webContents.send('window-type', 'update');
+        newUpdateWindow?.webContents.send('show-devtool', devtoolConfig);
     });
 
     // 当窗口关闭时，移除事件监听器
@@ -490,8 +497,8 @@ export function createUpdateWindow() {
 
     // 监听关闭窗口的请求
     ipcMain.on('close-update', () => {
-        if (!newUpdateWindow.isDestroyed()) {
-            newUpdateWindow.close();
+        if (!newUpdateWindow?.isDestroyed()) {
+            newUpdateWindow?.close();
         }
     });
 
@@ -521,7 +528,7 @@ function createAboutWindow() {
         return;
     }
 
-    const aboutWindow = new BrowserWindow({
+    aboutWindow = new BrowserWindow({
         width: 350,
         height: 270,
         frame: false,
@@ -534,7 +541,7 @@ function createAboutWindow() {
         },
         icon: path.join(process.env.VITE_PUBLIC, 'logo.png'),
         transparent: false,
-        parent: win,
+        parent: mainWindow,
     });
     
     // 窗口居中显示
@@ -555,10 +562,11 @@ function createAboutWindow() {
 
     // 在页面加载完成后发送主题设置
     aboutWindow.webContents.on('did-finish-load', () => {
-        aboutWindow.webContents.send('window-type', 'about');
+        aboutWindow?.webContents.send('window-type', 'about');
         const image = nativeImage.createFromPath(path.join(process.env.VITE_PUBLIC, 'logo.png'));
         const imageBase64 = `data:image/png;base64,${image.resize({ quality: 'good' }).toPNG().toString('base64')}`;
-        aboutWindow.webContents.send('load-logo', imageBase64);
+        aboutWindow?.webContents.send('load-logo', imageBase64);
+        aboutWindow?.webContents.send('show-devtool', devtoolConfig);
     });
 
     // 当窗口关闭时，移除事件监听器
@@ -574,8 +582,8 @@ function createAboutWindow() {
 
     // 监听关闭窗口的请求
     ipcMain.on('close-about', () => {
-        if (!aboutWindow.isDestroyed()) {
-            aboutWindow.close();
+        if (!aboutWindow?.isDestroyed()) {
+            aboutWindow?.close();
         }
     });
 
@@ -693,7 +701,7 @@ app.on('window-all-closed', () => {
     } else {
         log.info('[主进程] 非 macOS 平台，退出应用')
         app.quit()
-        win = undefined
+        mainWindow = undefined
     }
 })
 
@@ -702,6 +710,7 @@ const gotTheLock = app.requestSingleInstanceLock()
 if (!gotTheLock) {
     app.quit()
 } else {
+    Menu.setApplicationMenu(null)
     // 当 Electron 完成初始化并准备创建浏览器窗口时调用此方法
     app.whenReady().then(async () => {
         // 应用启动时执行一次存储检查和清理
@@ -853,8 +862,18 @@ ipcMain.handle('update-config', async (_event, conf) => {
 ipcMain.handle('update-shortcut-keys', async (_event, config) => {
     log.info('[主进程] 更新快捷键配置', config);
     updateShortcutKeys(config);
-    win?.webContents.send('load-shortcut-keys', config);
+    mainWindow?.webContents.send('load-shortcut-keys', config);
     return true;
+});
+
+// 监听修改开发者工具显示状态
+ipcMain.handle('update-devtool-show', async (_event, isShow) => {
+    devtoolConfig.isShow = isShow;
+    mainWindow?.webContents.send('show-devtool', devtoolConfig);
+    settingsWindow?.webContents.send('show-devtool', devtoolConfig);
+    newUpdateWindow?.webContents.send('show-devtool', devtoolConfig);
+    tagsWindow?.webContents.send('show-devtool', devtoolConfig);
+    aboutWindow?.webContents.send('show-devtool', devtoolConfig);
 });
 
 // 设置页面IPC通信配置 end
@@ -867,7 +886,7 @@ ipcMain.handle('add-tag', async (_event, name, color) => {
     const db = ClipboardDB.getInstance()
     db.addTag(name, color);
     const tags = db.getAllTags();
-    win?.webContents.send('load-tag-items', tags);
+    mainWindow?.webContents.send('load-tag-items', tags);
 });
 
 // 监听标签修改
@@ -876,7 +895,7 @@ ipcMain.handle('update-tag', async (_event, id, name, color) => {
     const db = ClipboardDB.getInstance()
     db.updateTag(id, name, color);
     const tags = db.getAllTags();
-    win?.webContents.send('load-tag-items', tags);
+    mainWindow?.webContents.send('load-tag-items', tags);
 });
 
 // 监听标签删除
@@ -885,7 +904,7 @@ ipcMain.handle('delete-tag', async (_event, id) => {
     const db = ClipboardDB.getInstance()
     db.deleteTag(id);
     const tags = db.getAllTags();
-    win?.webContents.send('load-tag-items', tags);
+    mainWindow?.webContents.send('load-tag-items', tags);
 });
 
 // 监听获取所有标签
@@ -918,15 +937,15 @@ function restartAPP() {
  */
 function closeOrHide() {
     if (Boolean(config.value.colsingHideToTaskbar)) {
-        const location: number[] | undefined = win?.getPosition()
+        const location: number[] | undefined = mainWindow?.getPosition()
         if (location) {
             x = location[0]
             y = location[1]
         }
-        win?.hide()
+        mainWindow?.hide()
         isHideWindow = true
     } else {
-        win?.close()
+        mainWindow?.close()
         app.quit()
     }
 }
@@ -938,7 +957,7 @@ let lastImage = clipboard.readImage().isEmpty() ? null : clipboard.readImage().t
 let clipboardTimer: string | number | NodeJS.Timeout | null | undefined = null;
 function watchClipboard() {
     // 首先检查窗口和渲染进程状态
-    if (!win || win.isDestroyed() || !win.webContents || win.webContents.isDestroyed()) {
+    if (!mainWindow || mainWindow.isDestroyed() || !mainWindow.webContents || mainWindow.webContents.isDestroyed()) {
         log.info('[主进程] 窗口或渲染进程不可用，跳过剪贴板检查');
         return;
     }
@@ -1002,8 +1021,8 @@ function watchClipboard() {
                 }
 
                 // 添加更严格的渲染进程状态检查
-                if (win && !win.isDestroyed()) {
-                    const webContents = win.webContents;
+                if (mainWindow && !mainWindow.isDestroyed()) {
+                    const webContents = mainWindow.webContents;
                     if (webContents && !webContents.isDestroyed()) {
                         // 确保渲染进程已完全加载
                         if (webContents.getProcessId() && !webContents.isLoading()) {
@@ -1018,7 +1037,7 @@ function watchClipboard() {
                                         log.error('[主进程] 检查存储大小时出错:', err);
                                     });
                                 }
-                                const webContents = win.webContents;
+                                const webContents = mainWindow.webContents;
                                 if (webContents && !webContents.isDestroyed()) {
                                     webContents.send('clipboard-updated');
                                 }
@@ -1063,9 +1082,9 @@ function watchClipboard() {
                         log.error('[主进程] 检查存储大小时出错:', err);
                     });
                 }
-                if (win && !win.isDestroyed()) {
+                if (mainWindow && !mainWindow.isDestroyed()) {
                     try {
-                        const webContents = win.webContents;
+                        const webContents = mainWindow.webContents;
                         if (webContents && !webContents.isDestroyed()) {
                             webContents.send('clipboard-updated');
                         }

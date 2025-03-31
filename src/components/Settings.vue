@@ -230,6 +230,21 @@ const closeRestartModal = () => {
   restartModalVisible.value = false;
 };
 
+const devtoolConfig = reactive({
+  isShow: false,
+  isDev: false
+});
+
+// 监听标签加载
+window.ipcRenderer.on('show-devtool', (_event, devtool) => {
+  Object.assign(devtoolConfig, devtool);
+});
+
+function updateDevtoolConfigShowStatus(checked: any, _e: Event) {
+  devtoolConfig.isShow = checked;
+  window.ipcRenderer.invoke('update-devtool-show', checked);
+}
+
 // 加载配置
 onMounted(() => {
   // 监听主进程发送的配置信息
@@ -311,6 +326,10 @@ onMounted(() => {
                 {{ option.label }}
               </Select.Option>
             </Select>
+          </div>
+          <div class="setting-item" v-if="!devtoolConfig.isDev">
+            <span class="setting-label">调试工具是否打开</span>
+            <Switch v-model:checked="devtoolConfig.isShow" @change="updateDevtoolConfigShowStatus" />
           </div>
         </div>
 

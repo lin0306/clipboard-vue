@@ -122,7 +122,7 @@ export default class UpdaterService {
 
         // 没有检查到更新
         autoUpdater.on('update-not-available', (_info) => {
-            log.info('当前已是最新版本');
+            log.info('当前已是最新版本，是否手动检查更新?', this.isManualCheck);
             this.isCheckingForUpdate = false;
 
             // 只有在手动检查更新时才显示通知
@@ -249,14 +249,18 @@ export default class UpdaterService {
             // 处理特定的GitHub release错误
             let errorMessage = error.message || this.language.unknown;
 
+            // 只有在手动检查更新时才显示通知
+            if (this.isManualCheck) {
+                new Notification({
+                    title: this.language.checkFailure,
+                    body: errorMessage,
+                    icon: nativeImage.createFromPath(path.join(process.env.VITE_PUBLIC, 'logo.png')),
+                    silent: false
+                }).show();
 
-            // 使用Electron原生的Notification API显示系统级提示，告知用户更新文件配置问题
-            new Notification({
-                title: this.language.checkFailure,
-                body: errorMessage,
-                icon: nativeImage.createFromPath(path.join(process.env.VITE_PUBLIC, 'logo.png')),
-                silent: false
-            }).show();
+                // 重置手动检查标志
+                this.isManualCheck = false;
+            }
 
             return false;
         } finally {

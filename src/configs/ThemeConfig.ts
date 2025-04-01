@@ -149,10 +149,22 @@ window.ipcRenderer.on('init-themes', (_event, theme) => {
   }
   // 如果主题上下文已创建，则更新主题
   if (globalThemeContext) {
-    globalThemeContext.setTheme(theme);
+    globalThemeContext.setTheme(theme, false);
   }
 });
 
+// 修改了主题，其他页面同步修改
+window.ipcRenderer.on('load-themes', (_event, theme) => {
+  console.log('[渲染进程] 接收项目初始化主题颜色:', theme);
+  if(currentThemeId === theme) {
+    console.log('[渲染进程] 主题id相同，不更新主题')
+    return;
+  }
+  // 如果主题上下文已创建，则更新主题
+  if (globalThemeContext) {
+    globalThemeContext.setTheme(theme, true);
+  }
+});
 
 // 创建主题上下文
 export function createThemeContext() {
@@ -169,11 +181,13 @@ export function createThemeContext() {
   const themeColors = reactive({ ...currentThemeItem.value.colors });
 
   // 设置主题的方法
-  const setTheme = (themeId: string) => {
+  const setTheme = (themeId: string, isLoad: boolean = false) => {
     console.log('[主题切换] 切换的主题id', themeId);
     const theme = themes.find(t => t.id === themeId);
-    // 发送IPC消息，通知主题更新了，需要更新配置文件
-    window.ipcRenderer.invoke('update-themes', themeId)
+    if(!isLoad) {
+      // 发送IPC消息，通知主题更新了，需要更新配置文件
+      window.ipcRenderer.invoke('update-themes', themeId)
+    }
     console.log('[主题切换] 切换的主题：', theme)
     if (theme) {
       // 创建一个新的主题对象，确保响应式更新

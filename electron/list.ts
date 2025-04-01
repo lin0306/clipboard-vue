@@ -15,7 +15,7 @@ export default class ClipboardListService {
     public isOpenAboutDevTools = false;
     public x: number | undefined = undefined;
     public y: number | undefined = undefined;
-    public window: BrowserWindow;
+    public static window: BrowserWindow;
 
     // 监听剪贴板变化
     private lastText = clipboard.readText();
@@ -23,15 +23,15 @@ export default class ClipboardListService {
     // private lastFiles: string[] = [];
     private clipboardTimer: string | number | NodeJS.Timeout | null | undefined = null;
 
-    constructor(window: BrowserWindow) {
-        this.window = window;
+    constructor() {
         // 注册IPC事件处理
         this.registerIpcHandlers();
     }
 
     public static getInstance(window: BrowserWindow): ClipboardListService {
         if (!ClipboardListService.instance) {
-            ClipboardListService.instance = new ClipboardListService(window);
+            ClipboardListService.window = window;
+            ClipboardListService.instance = new ClipboardListService();
         }
         return ClipboardListService.instance;
     }
@@ -45,8 +45,8 @@ export default class ClipboardListService {
     }
 
     /**
-   * 注册IPC事件处理
-   */
+     * 注册IPC事件处理
+     */
     private registerIpcHandlers() {
 
         // 监听清空剪贴板
@@ -71,6 +71,12 @@ export default class ClipboardListService {
             const config = getSettings();
             config.theme = theme;
             updateSettings(config);
+            const existingWindows = BrowserWindow.getAllWindows();
+            if (existingWindows.length > 0) {
+                existingWindows.forEach((win) => {
+                    win.webContents.send('load-themes', theme);
+                });
+            }
             return true;
         });
 
@@ -180,19 +186,18 @@ export default class ClipboardListService {
         }
     }
 
-
     /**
      * 关闭或隐藏主窗口
      */
     closeOrHide() {
         const config = getSettings();
         if (Boolean(config.colsingHideToTaskbar)) {
-            const location: number[] | undefined = this.window?.getPosition()
+            const location: number[] | undefined = ClipboardListService.window?.getPosition()
             if (location) {
                 this.x = location[0]
                 this.y = location[1]
             }
-            this.window?.hide()
+            ClipboardListService.window?.hide()
             this.isHideWindow = true
         } else {
             window?.close()
@@ -202,7 +207,9 @@ export default class ClipboardListService {
 
     watchClipboard(maxItemSize: number, tempPath: string) {
         // 首先检查窗口和渲染进程状态
-        if (!this.window || this.window.isDestroyed() || !this.window.webContents || this.window.webContents.isDestroyed()) {
+        if (!ClipboardListService.window 
+            || ClipboardListService.window.isDestroyed() 
+            || !ClipboardListService.window.webContents || ClipboardListService.window.webContents.isDestroyed()) {
             log.info('[主进程] 窗口或渲染进程不可用，跳过剪贴板检查');
             return;
         }
@@ -266,8 +273,8 @@ export default class ClipboardListService {
                     }
 
                     // 添加更严格的渲染进程状态检查
-                    if (this.window && !this.window.isDestroyed()) {
-                        const webContents = this.window.webContents;
+                    if (ClipboardListService.window && !ClipboardListService.window.isDestroyed()) {
+                        const webContents = ClipboardListService.window.webContents;
                         if (webContents && !webContents.isDestroyed()) {
                             // 确保渲染进程已完全加载
                             if (webContents.getProcessId() && !webContents.isLoading()) {
@@ -282,7 +289,7 @@ export default class ClipboardListService {
                                             log.error('[主进程] 检查存储大小时出错:', err);
                                         });
                                     }
-                                    const webContents = this.window.webContents;
+                                    const webContents = ClipboardListService.window.webContents;
                                     if (webContents && !webContents.isDestroyed()) {
                                         webContents.send('clipboard-updated');
                                     }
@@ -327,9 +334,9 @@ export default class ClipboardListService {
                             log.error('[主进程] 检查存储大小时出错:', err);
                         });
                     }
-                    if (this.window && !this.window.isDestroyed()) {
+                    if (ClipboardListService.window && !ClipboardListService.window.isDestroyed()) {
                         try {
-                            const webContents = this.window.webContents;
+                            const webContents = ClipboardListService.window.webContents;
                             if (webContents && !webContents.isDestroyed()) {
                                 webContents.send('clipboard-updated');
                             }
@@ -437,8 +444,8 @@ export default class ClipboardListService {
             //                         db?.addItem(fileName, 'file', finalPath);
 
             //                         // 通知渲染进程
-            //                         if (this.window && !this.window.isDestroyed()) {
-            //                             const webContents = this.window.webContents;
+            //                         if (ClipboardListService.window && !ClipboardListService.window.isDestroyed()) {
+            //                             const webContents = ClipboardListService.window.webContents;
             //                             if (webContents && !webContents.isDestroyed()) {
             //                                 webContents.send('clipboard-updated');
             //                             }

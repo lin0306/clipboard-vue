@@ -41337,16 +41337,16 @@ var main_1 = main$2;
 const log = /* @__PURE__ */ getDefaultExportFromCjs(main_1);
 log.initialize();
 let __dirname$4 = path$E.dirname(node_url.fileURLToPath(typeof document === "undefined" ? require("url").pathToFileURL(__filename).href : _documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === "SCRIPT" && _documentCurrentScript.src || new URL("main.js", document.baseURI).href));
-const env$4 = process.env.NODE_ENV;
-if (env$4 !== "development") {
+const env$5 = process.env.NODE_ENV;
+if (env$5 !== "development") {
   __dirname$4 = __dirname$4.replace("\\app.asar\\dist-electron", "");
 }
 let logPath = path$E.join(__dirname$4, "../logs");
 log.info("[日志配置] 日志文件位置：", logPath);
 log.transports.file.resolvePathFn = () => path$E.join(logPath, "main.log");
 let __dirname$3 = path$E.dirname(node_url.fileURLToPath(typeof document === "undefined" ? require("url").pathToFileURL(__filename).href : _documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === "SCRIPT" && _documentCurrentScript.src || new URL("main.js", document.baseURI).href));
-const env$3 = process.env.NODE_ENV;
-if (env$3 !== "development") {
+const env$4 = process.env.NODE_ENV;
+if (env$4 !== "development") {
   __dirname$3 = __dirname$3.replace("\\app.asar\\dist-electron", "");
 }
 const settingsFileName = "settings.conf";
@@ -41389,7 +41389,7 @@ function getTempPath() {
 }
 function getConfigDir() {
   let configDir;
-  if (env$3 === "development") {
+  if (env$4 === "development") {
     configDir = path$E.join(__dirname$3, "../config");
   } else {
     configDir = path$E.join(__dirname$3, "./config");
@@ -41677,8 +41677,8 @@ const _BackupManager = class _BackupManager {
 __publicField(_BackupManager, "instance");
 let BackupManager = _BackupManager;
 let __dirname$2 = path$E.dirname(node_url.fileURLToPath(typeof document === "undefined" ? require("url").pathToFileURL(__filename).href : _documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === "SCRIPT" && _documentCurrentScript.src || new URL("main.js", document.baseURI).href));
-const env$2 = process.env.NODE_ENV;
-if (env$2 !== "development") {
+const env$3 = process.env.NODE_ENV;
+if (env$3 !== "development") {
   __dirname$2 = __dirname$2.replace("\\app.asar\\dist-electron", "");
 }
 const _ClipboardDB = class _ClipboardDB {
@@ -42516,7 +42516,7 @@ function hasProperty(object2, path2) {
 }
 const homedir = os$5.homedir();
 const tmpdir = os$5.tmpdir();
-const { env: env$1 } = process$1;
+const { env: env$2 } = process$1;
 const macos = (name) => {
   const library = path$E.join(homedir, "Library");
   return {
@@ -42528,8 +42528,8 @@ const macos = (name) => {
   };
 };
 const windows = (name) => {
-  const appData = env$1.APPDATA || path$E.join(homedir, "AppData", "Roaming");
-  const localAppData = env$1.LOCALAPPDATA || path$E.join(homedir, "AppData", "Local");
+  const appData = env$2.APPDATA || path$E.join(homedir, "AppData", "Roaming");
+  const localAppData = env$2.LOCALAPPDATA || path$E.join(homedir, "AppData", "Local");
   return {
     // Data/config/cache/log are invented by me as Windows isn't opinionated about this
     data: path$E.join(localAppData, name, "Data"),
@@ -42542,11 +42542,11 @@ const windows = (name) => {
 const linux = (name) => {
   const username = path$E.basename(homedir);
   return {
-    data: path$E.join(env$1.XDG_DATA_HOME || path$E.join(homedir, ".local", "share"), name),
-    config: path$E.join(env$1.XDG_CONFIG_HOME || path$E.join(homedir, ".config"), name),
-    cache: path$E.join(env$1.XDG_CACHE_HOME || path$E.join(homedir, ".cache"), name),
+    data: path$E.join(env$2.XDG_DATA_HOME || path$E.join(homedir, ".local", "share"), name),
+    config: path$E.join(env$2.XDG_CONFIG_HOME || path$E.join(homedir, ".config"), name),
+    cache: path$E.join(env$2.XDG_CACHE_HOME || path$E.join(homedir, ".cache"), name),
     // https://wiki.debian.org/XDGBaseDirectorySpecification#state
-    log: path$E.join(env$1.XDG_STATE_HOME || path$E.join(homedir, ".local", "state"), name),
+    log: path$E.join(env$2.XDG_STATE_HOME || path$E.join(homedir, ".local", "state"), name),
     temp: path$E.join(tmpdir, username, name)
   };
 };
@@ -64177,7 +64177,7 @@ __publicField(_UpdaterService, "instance");
 __publicField(_UpdaterService, "language");
 let UpdaterService = _UpdaterService;
 const _ClipboardListService = class _ClipboardListService {
-  constructor(window2) {
+  constructor() {
     // 单例实例
     __publicField(this, "isFixedMainWindow", false);
     // 是否固定窗口大小
@@ -64188,18 +64188,17 @@ const _ClipboardListService = class _ClipboardListService {
     __publicField(this, "isOpenAboutDevTools", false);
     __publicField(this, "x");
     __publicField(this, "y");
-    __publicField(this, "window");
     // 监听剪贴板变化
     __publicField(this, "lastText", electron$1.clipboard.readText());
     __publicField(this, "lastImage", electron$1.clipboard.readImage().isEmpty() ? null : electron$1.clipboard.readImage().toPNG());
     // private lastFiles: string[] = [];
     __publicField(this, "clipboardTimer", null);
-    this.window = window2;
     this.registerIpcHandlers();
   }
   static getInstance(window2) {
     if (!_ClipboardListService.instance) {
-      _ClipboardListService.instance = new _ClipboardListService(window2);
+      _ClipboardListService.window = window2;
+      _ClipboardListService.instance = new _ClipboardListService();
     }
     return _ClipboardListService.instance;
   }
@@ -64210,8 +64209,8 @@ const _ClipboardListService = class _ClipboardListService {
     this.clipboardTimer = null;
   }
   /**
-  * 注册IPC事件处理
-  */
+   * 注册IPC事件处理
+   */
   registerIpcHandlers() {
     electron$1.ipcMain.handle("clear-items", async () => {
       const db = ClipboardDB.getInstance();
@@ -64229,6 +64228,12 @@ const _ClipboardListService = class _ClipboardListService {
       const config = getSettings();
       config.theme = theme;
       updateSettings(config);
+      const existingWindows = electron$1.BrowserWindow.getAllWindows();
+      if (existingWindows.length > 0) {
+        existingWindows.forEach((win) => {
+          win.webContents.send("load-themes", theme);
+        });
+      }
       return true;
     });
     electron$1.ipcMain.handle("top-item", async (_event, id2) => {
@@ -64307,12 +64312,12 @@ const _ClipboardListService = class _ClipboardListService {
     var _a2, _b;
     const config = getSettings();
     if (Boolean(config.colsingHideToTaskbar)) {
-      const location = (_a2 = this.window) == null ? void 0 : _a2.getPosition();
+      const location = (_a2 = _ClipboardListService.window) == null ? void 0 : _a2.getPosition();
       if (location) {
         this.x = location[0];
         this.y = location[1];
       }
-      (_b = this.window) == null ? void 0 : _b.hide();
+      (_b = _ClipboardListService.window) == null ? void 0 : _b.hide();
       this.isHideWindow = true;
     } else {
       window == null ? void 0 : window.close();
@@ -64320,7 +64325,7 @@ const _ClipboardListService = class _ClipboardListService {
     }
   }
   watchClipboard(maxItemSize, tempPath) {
-    if (!this.window || this.window.isDestroyed() || !this.window.webContents || this.window.webContents.isDestroyed()) {
+    if (!_ClipboardListService.window || _ClipboardListService.window.isDestroyed() || !_ClipboardListService.window.webContents || _ClipboardListService.window.webContents.isDestroyed()) {
       log.info("[主进程] 窗口或渲染进程不可用，跳过剪贴板检查");
       return;
     }
@@ -64369,8 +64374,8 @@ const _ClipboardListService = class _ClipboardListService {
             fs$n.writeFileSync(imagePath, currentImageBuffer);
             log.info("[主进程] 图片已保存到临时目录:", imagePath);
           }
-          if (this.window && !this.window.isDestroyed()) {
-            const webContents = this.window.webContents;
+          if (_ClipboardListService.window && !_ClipboardListService.window.isDestroyed()) {
+            const webContents = _ClipboardListService.window.webContents;
             if (webContents && !webContents.isDestroyed()) {
               if (webContents.getProcessId() && !webContents.isLoading()) {
                 try {
@@ -64382,7 +64387,7 @@ const _ClipboardListService = class _ClipboardListService {
                       log.error("[主进程] 检查存储大小时出错:", err);
                     });
                   }
-                  const webContents2 = this.window.webContents;
+                  const webContents2 = _ClipboardListService.window.webContents;
                   if (webContents2 && !webContents2.isDestroyed()) {
                     webContents2.send("clipboard-updated");
                   }
@@ -64421,9 +64426,9 @@ const _ClipboardListService = class _ClipboardListService {
               log.error("[主进程] 检查存储大小时出错:", err);
             });
           }
-          if (this.window && !this.window.isDestroyed()) {
+          if (_ClipboardListService.window && !_ClipboardListService.window.isDestroyed()) {
             try {
-              const webContents = this.window.webContents;
+              const webContents = _ClipboardListService.window.webContents;
               if (webContents && !webContents.isDestroyed()) {
                 webContents.send("clipboard-updated");
               }
@@ -64442,7 +64447,105 @@ const _ClipboardListService = class _ClipboardListService {
   }
 };
 __publicField(_ClipboardListService, "instance");
+__publicField(_ClipboardListService, "window");
 let ClipboardListService = _ClipboardListService;
+const env$1 = process.env.NODE_ENV;
+const _SettingsService = class _SettingsService {
+  constructor() {
+    this.registerIpcHandlers();
+  }
+  static getInstance() {
+    if (!_SettingsService.instance) {
+      _SettingsService.instance = new _SettingsService();
+    }
+    return _SettingsService.instance;
+  }
+  /**
+  * 注册IPC事件处理
+  */
+  registerIpcHandlers() {
+    electron$1.ipcMain.handle("update-config", async (_event, conf) => {
+      log.info("[主进程] 更新配置", conf);
+      updateSettings(conf);
+      return true;
+    });
+    electron$1.ipcMain.handle("update-shortcut-keys", async (_event, config) => {
+      var _a2;
+      log.info("[主进程] 更新快捷键配置", config);
+      updateShortcutKeys(config);
+      (_a2 = ClipboardListService.window) == null ? void 0 : _a2.webContents.send("load-shortcut-keys", JSON.stringify(config));
+      return true;
+    });
+    electron$1.ipcMain.handle("update-devtool-show", async (_event, isShow) => {
+      _SettingsService.devtoolConfig.isShow = isShow;
+      const existingWindows = electron$1.BrowserWindow.getAllWindows();
+      if (existingWindows.length > 0) {
+        existingWindows.forEach((win) => {
+          win.webContents.send("show-devtool", JSON.stringify(_SettingsService.devtoolConfig));
+        });
+      }
+    });
+  }
+};
+__publicField(_SettingsService, "instance");
+// 单例实例
+__publicField(_SettingsService, "devtoolConfig", {
+  isDev: env$1 === "development",
+  //    isDev: false,
+  isShow: false
+});
+let SettingsService = _SettingsService;
+const _TagsService = class _TagsService {
+  // 单例实例
+  constructor() {
+    this.registerIpcHandlers();
+  }
+  static getInstance() {
+    if (!_TagsService.instance) {
+      _TagsService.instance = new _TagsService();
+    }
+    return _TagsService.instance;
+  }
+  /**
+   * 注册IPC事件处理
+   */
+  registerIpcHandlers() {
+    electron$1.ipcMain.handle("add-tag", async (_event, name, color) => {
+      var _a2;
+      log.info("[主进程] 标签添加", name, color);
+      const db = ClipboardDB.getInstance();
+      db == null ? void 0 : db.addTag(name, color);
+      const tags = db == null ? void 0 : db.getAllTags();
+      (_a2 = ClipboardListService.window) == null ? void 0 : _a2.webContents.send("load-tag-items", JSON.stringify(tags));
+    });
+    electron$1.ipcMain.handle("update-tag", async (_event, id2, name, color) => {
+      var _a2;
+      log.info("[主进程] 更新标签", id2, name, color);
+      const db = ClipboardDB.getInstance();
+      db == null ? void 0 : db.updateTag(id2, name, color);
+      const tags = db == null ? void 0 : db.getAllTags();
+      (_a2 = ClipboardListService.window) == null ? void 0 : _a2.webContents.send("load-tag-items", JSON.stringify(tags));
+    });
+    electron$1.ipcMain.handle("delete-tag", async (_event, id2) => {
+      var _a2;
+      log.info("[主进程] 删除标签", id2);
+      const db = ClipboardDB.getInstance();
+      db == null ? void 0 : db.deleteTag(id2);
+      const tags = db == null ? void 0 : db.getAllTags();
+      (_a2 = ClipboardListService.window) == null ? void 0 : _a2.webContents.send("load-tag-items", JSON.stringify(tags));
+    });
+    electron$1.ipcMain.handle("get-all-tags", async () => {
+      log.info("[主进程] 获取所有标签");
+      const db = ClipboardDB.getInstance();
+      return db == null ? void 0 : db.getAllTags();
+    });
+    electron$1.ipcMain.on("open-external-link", (_event, url) => {
+      electron$1.shell.openExternal(url);
+    });
+  }
+};
+__publicField(_TagsService, "instance");
+let TagsService = _TagsService;
 process.env["ELECTRON_DISABLE_SECURITY_WARNINGS"] = "true";
 try {
   const userSettings = getSettings();
@@ -64472,11 +64575,6 @@ if (process.platform === "win32") {
 }
 let wakeUpRoutineShortcut;
 let clipboardListService;
-const devtoolConfig = {
-  isDev: env === "development",
-  //    isDev: false,
-  isShow: false
-};
 function createListWindow() {
   const existingWindows = electron$1.BrowserWindow.getAllWindows();
   const window2 = existingWindows.find((win) => win.uniqueId === "main-window");
@@ -64561,7 +64659,7 @@ function createListWindow() {
     mainWindow == null ? void 0 : mainWindow.webContents.send("load-tag-items", JSON.stringify(tags));
     mainWindow == null ? void 0 : mainWindow.webContents.send("load-shortcut-keys", JSON.stringify(shortcutKeys));
     mainWindow == null ? void 0 : mainWindow.webContents.send("load-settings", JSON.stringify(config));
-    mainWindow == null ? void 0 : mainWindow.webContents.send("show-devtool", JSON.stringify(devtoolConfig));
+    mainWindow == null ? void 0 : mainWindow.webContents.send("show-devtool", JSON.stringify(SettingsService.devtoolConfig));
     log.info("[主进程] 窗口加载完成，开始监听剪贴板");
     clipboardListService.watchClipboard(config.maxItemSize, config.tempPath);
   });
@@ -64639,10 +64737,11 @@ function createSettingsWindow() {
     },
     icon: path$E.join(process.env.VITE_PUBLIC, "logo.png"),
     transparent: false,
-    parent: clipboardListService.window
+    parent: ClipboardListService.window
   });
   settingsWindow.center();
   settingsWindow.uniqueId = "settings-window";
+  SettingsService.getInstance();
   if (VITE_DEV_SERVER_URL) {
     settingsWindow.loadURL(VITE_DEV_SERVER_URL);
   } else {
@@ -64652,7 +64751,7 @@ function createSettingsWindow() {
     settingsWindow == null ? void 0 : settingsWindow.webContents.send("window-type", "settings");
     settingsWindow == null ? void 0 : settingsWindow.webContents.send("load-config", JSON.stringify(getSettings()));
     settingsWindow == null ? void 0 : settingsWindow.webContents.send("load-shortcut-keys", JSON.stringify(getShortcutKeys()));
-    settingsWindow == null ? void 0 : settingsWindow.webContents.send("show-devtool", JSON.stringify(devtoolConfig));
+    settingsWindow == null ? void 0 : settingsWindow.webContents.send("show-devtool", JSON.stringify(SettingsService.devtoolConfig));
   });
   settingsWindow.on("closed", () => {
     const existingWindows2 = electron$1.BrowserWindow.getAllWindows();
@@ -64698,10 +64797,11 @@ function createTagsWindow() {
     },
     icon: path$E.join(process.env.VITE_PUBLIC, "logo.png"),
     transparent: false,
-    parent: clipboardListService.window
+    parent: ClipboardListService.window
   });
   tagsWindow.center();
   tagsWindow.uniqueId = "tags-window";
+  TagsService.getInstance();
   if (VITE_DEV_SERVER_URL) {
     tagsWindow.loadURL(VITE_DEV_SERVER_URL);
   } else {
@@ -64709,7 +64809,7 @@ function createTagsWindow() {
   }
   tagsWindow.webContents.on("did-finish-load", () => {
     tagsWindow == null ? void 0 : tagsWindow.webContents.send("window-type", "tags");
-    tagsWindow == null ? void 0 : tagsWindow.webContents.send("show-devtool", JSON.stringify(devtoolConfig));
+    tagsWindow == null ? void 0 : tagsWindow.webContents.send("show-devtool", JSON.stringify(SettingsService.devtoolConfig));
   });
   tagsWindow.on("closed", () => {
     const existingWindows2 = electron$1.BrowserWindow.getAllWindows();
@@ -64765,7 +64865,7 @@ function createUpdateWindow() {
   }
   newUpdateWindow.webContents.on("did-finish-load", () => {
     newUpdateWindow == null ? void 0 : newUpdateWindow.webContents.send("window-type", "update");
-    newUpdateWindow == null ? void 0 : newUpdateWindow.webContents.send("show-devtool", JSON.stringify(devtoolConfig));
+    newUpdateWindow == null ? void 0 : newUpdateWindow.webContents.send("show-devtool", JSON.stringify(SettingsService.devtoolConfig));
   });
   newUpdateWindow.on("closed", () => {
     const existingWindows2 = electron$1.BrowserWindow.getAllWindows();
@@ -64824,7 +64924,7 @@ function createRestoreWindow(theme, languages) {
   }
   restoreWindow.webContents.on("did-finish-load", () => {
     restoreWindow.webContents.send("window-type", "restore");
-    restoreWindow.webContents.send("show-devtool", JSON.stringify(devtoolConfig));
+    restoreWindow.webContents.send("show-devtool", JSON.stringify(SettingsService.devtoolConfig));
     restoreWindow.webContents.send("init-themes", theme);
     restoreWindow.webContents.send("init-language", languages);
   });
@@ -64862,7 +64962,7 @@ function createAboutWindow() {
     },
     icon: path$E.join(process.env.VITE_PUBLIC, "logo.png"),
     transparent: false,
-    parent: clipboardListService.window
+    parent: ClipboardListService.window
   });
   aboutWindow.center();
   aboutWindow.uniqueId = "about-window";
@@ -64876,7 +64976,7 @@ function createAboutWindow() {
     const image = electron$1.nativeImage.createFromPath(path$E.join(process.env.VITE_PUBLIC, "logo.png"));
     const imageBase64 = `data:image/png;base64,${image.resize({ quality: "good" }).toPNG().toString("base64")}`;
     aboutWindow == null ? void 0 : aboutWindow.webContents.send("load-logo", imageBase64);
-    aboutWindow == null ? void 0 : aboutWindow.webContents.send("show-devtool", JSON.stringify(devtoolConfig));
+    aboutWindow == null ? void 0 : aboutWindow.webContents.send("show-devtool", JSON.stringify(SettingsService.devtoolConfig));
   });
   aboutWindow.on("closed", () => {
     const existingWindows2 = electron$1.BrowserWindow.getAllWindows();
@@ -65027,59 +65127,6 @@ async function initWindow() {
     createListWindow();
   }
 }
-electron$1.ipcMain.handle("update-config", async (_event, conf) => {
-  log.info("[主进程] 更新配置", conf);
-  updateSettings(conf);
-  return true;
-});
-electron$1.ipcMain.handle("update-shortcut-keys", async (_event, config) => {
-  var _a2;
-  log.info("[主进程] 更新快捷键配置", config);
-  updateShortcutKeys(config);
-  (_a2 = clipboardListService.window) == null ? void 0 : _a2.webContents.send("load-shortcut-keys", JSON.stringify(config));
-  return true;
-});
-electron$1.ipcMain.handle("update-devtool-show", async (_event, isShow) => {
-  devtoolConfig.isShow = isShow;
-  const existingWindows = electron$1.BrowserWindow.getAllWindows();
-  if (existingWindows.length > 0) {
-    existingWindows.forEach((win) => {
-      win.webContents.send("show-devtool", JSON.stringify(devtoolConfig));
-    });
-  }
-});
-electron$1.ipcMain.handle("add-tag", async (_event, name, color) => {
-  var _a2;
-  log.info("[主进程] 标签添加", name, color);
-  const db = ClipboardDB.getInstance();
-  db == null ? void 0 : db.addTag(name, color);
-  const tags = db == null ? void 0 : db.getAllTags();
-  (_a2 = clipboardListService.window) == null ? void 0 : _a2.webContents.send("load-tag-items", JSON.stringify(tags));
-});
-electron$1.ipcMain.handle("update-tag", async (_event, id2, name, color) => {
-  var _a2;
-  log.info("[主进程] 更新标签", id2, name, color);
-  const db = ClipboardDB.getInstance();
-  db == null ? void 0 : db.updateTag(id2, name, color);
-  const tags = db == null ? void 0 : db.getAllTags();
-  (_a2 = clipboardListService.window) == null ? void 0 : _a2.webContents.send("load-tag-items", JSON.stringify(tags));
-});
-electron$1.ipcMain.handle("delete-tag", async (_event, id2) => {
-  var _a2;
-  log.info("[主进程] 删除标签", id2);
-  const db = ClipboardDB.getInstance();
-  db == null ? void 0 : db.deleteTag(id2);
-  const tags = db == null ? void 0 : db.getAllTags();
-  (_a2 = clipboardListService.window) == null ? void 0 : _a2.webContents.send("load-tag-items", JSON.stringify(tags));
-});
-electron$1.ipcMain.handle("get-all-tags", async () => {
-  log.info("[主进程] 获取所有标签");
-  const db = ClipboardDB.getInstance();
-  return db == null ? void 0 : db.getAllTags();
-});
-electron$1.ipcMain.on("open-external-link", (_event, url) => {
-  electron$1.shell.openExternal(url);
-});
 function restartAPP() {
   electron$1.BrowserWindow.getAllWindows().forEach((window2) => {
     if (!window2.isDestroyed()) {

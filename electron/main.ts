@@ -2,13 +2,15 @@ import { app, BrowserWindow, ipcMain, Menu, nativeImage, screen, shell, Tray } f
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import BackupManager from './BackupManager.js'
-import { getSettings, getShortcutKeys, getTempPath, updateSettings, updateShortcutKeys } from './FileManager.js'
+import { getSettings, getShortcutKeys, getTempPath, updateSettings } from './FileManager.js'
 import ClipboardDB from './db.js'
 import { getHardwareAccelerationDialogText, getTrayText } from './languages.js'
 import log from './log.js'
 import ShortcutManager from './shortcutManager.js'
 import UpdaterService from './updater.js'
 import ClipboardListService from './list.js'
+import SettingsService from './settings.js'
+import TagsService from './tags.js'
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
 
 // 在应用启动前读取设置并应用硬件加速设置
@@ -58,11 +60,10 @@ if (process.platform === 'win32') {
 
 let wakeUpRoutineShortcut: ShortcutManager; // 唤醒程序快捷键
 let clipboardListService: ClipboardListService;
-const devtoolConfig: any = {
-    isDev: env === 'development',
-    //    isDev: false,
-    isShow: false,
-}
+// @ts-ignore
+let settingsService: SettingsService;
+// @ts-ignore
+let tagsService: TagsService;
 
 // 创建剪贴板列表窗口
 function createListWindow() {
@@ -182,7 +183,7 @@ function createListWindow() {
         mainWindow?.webContents.send('load-tag-items', JSON.stringify(tags));
         mainWindow?.webContents.send('load-shortcut-keys', JSON.stringify(shortcutKeys));
         mainWindow?.webContents.send('load-settings', JSON.stringify(config));
-        mainWindow?.webContents.send('show-devtool', JSON.stringify(devtoolConfig));
+        mainWindow?.webContents.send('show-devtool', JSON.stringify(SettingsService.devtoolConfig));
         // 启动剪贴板监听
         log.info('[主进程] 窗口加载完成，开始监听剪贴板');
         clipboardListService.watchClipboard(config.maxItemSize, config.tempPath);
@@ -294,7 +295,7 @@ function createSettingsWindow() {
         },
         icon: path.join(process.env.VITE_PUBLIC, 'logo.png'),
         transparent: false,
-        parent: clipboardListService.window,
+        parent: ClipboardListService.window,
     });
 
     // 窗口居中显示
@@ -303,6 +304,7 @@ function createSettingsWindow() {
     // @ts-ignore
     settingsWindow.uniqueId = 'settings-window';
 
+    settingsService = SettingsService.getInstance();
     if (VITE_DEV_SERVER_URL) {
         settingsWindow.loadURL(VITE_DEV_SERVER_URL)
     } else {
@@ -318,7 +320,7 @@ function createSettingsWindow() {
         settingsWindow?.webContents.send('window-type', 'settings');
         settingsWindow?.webContents.send('load-config', JSON.stringify(getSettings()));
         settingsWindow?.webContents.send('load-shortcut-keys', JSON.stringify(getShortcutKeys()));
-        settingsWindow?.webContents.send('show-devtool', JSON.stringify(devtoolConfig));
+        settingsWindow?.webContents.send('show-devtool', JSON.stringify(SettingsService.devtoolConfig));
     });
 
     // 当窗口关闭时，移除事件监听器
@@ -378,7 +380,7 @@ function createTagsWindow() {
         },
         icon: path.join(process.env.VITE_PUBLIC, 'logo.png'),
         transparent: false,
-        parent: clipboardListService.window,
+        parent: ClipboardListService.window,
     });
 
     // 窗口居中显示
@@ -386,6 +388,8 @@ function createTagsWindow() {
 
     // @ts-ignore
     tagsWindow.uniqueId = 'tags-window';
+
+    tagsService = TagsService.getInstance();
 
     if (VITE_DEV_SERVER_URL) {
         tagsWindow.loadURL(VITE_DEV_SERVER_URL)
@@ -400,7 +404,7 @@ function createTagsWindow() {
     // 在页面加载完成后发送主题设置
     tagsWindow.webContents.on('did-finish-load', () => {
         tagsWindow?.webContents.send('window-type', 'tags');
-        tagsWindow?.webContents.send('show-devtool', JSON.stringify(devtoolConfig));
+        tagsWindow?.webContents.send('show-devtool', JSON.stringify(SettingsService.devtoolConfig));
     });
 
     // 当窗口关闭时，移除事件监听器
@@ -480,7 +484,7 @@ export function createUpdateWindow() {
     // 在页面加载完成后发送窗口类型
     newUpdateWindow.webContents.on('did-finish-load', () => {
         newUpdateWindow?.webContents.send('window-type', 'update');
-        newUpdateWindow?.webContents.send('show-devtool', JSON.stringify(devtoolConfig));
+        newUpdateWindow?.webContents.send('show-devtool', JSON.stringify(SettingsService.devtoolConfig));
     });
 
     // 当窗口关闭时，移除事件监听器
@@ -563,7 +567,7 @@ export function createRestoreWindow(theme: string, languages: string) {
     // 在页面加载完成后发送窗口类型
     restoreWindow.webContents.on('did-finish-load', () => {
         restoreWindow.webContents.send('window-type', 'restore');
-        restoreWindow.webContents.send('show-devtool', JSON.stringify(devtoolConfig));
+        restoreWindow.webContents.send('show-devtool', JSON.stringify(SettingsService.devtoolConfig));
         restoreWindow.webContents.send('init-themes', theme);
         restoreWindow.webContents.send('init-language', languages);
     });
@@ -611,7 +615,7 @@ function createAboutWindow() {
         },
         icon: path.join(process.env.VITE_PUBLIC, 'logo.png'),
         transparent: false,
-        parent: clipboardListService.window,
+        parent: ClipboardListService.window,
     });
 
     // 窗口居中显示
@@ -636,7 +640,7 @@ function createAboutWindow() {
         const image = nativeImage.createFromPath(path.join(process.env.VITE_PUBLIC, 'logo.png'));
         const imageBase64 = `data:image/png;base64,${image.resize({ quality: 'good' }).toPNG().toString('base64')}`;
         aboutWindow?.webContents.send('load-logo', imageBase64);
-        aboutWindow?.webContents.send('show-devtool', JSON.stringify(devtoolConfig));
+        aboutWindow?.webContents.send('show-devtool', JSON.stringify(SettingsService.devtoolConfig));
     });
 
     // 当窗口关闭时，移除事件监听器
@@ -848,78 +852,6 @@ async function initWindow() {
 
     }
 }
-
-// 设置页面IPC通信配置 start
-
-// 监听配置文件更新
-ipcMain.handle('update-config', async (_event, conf) => {
-    log.info('[主进程] 更新配置', conf);
-    updateSettings(conf);
-    return true;
-});
-
-// 监听快捷键配置更新
-ipcMain.handle('update-shortcut-keys', async (_event, config) => {
-    log.info('[主进程] 更新快捷键配置', config);
-    updateShortcutKeys(config);
-    clipboardListService.window?.webContents.send('load-shortcut-keys', JSON.stringify(config));
-    return true;
-}); 
-
-// 监听修改开发者工具显示状态
-ipcMain.handle('update-devtool-show', async (_event, isShow) => {
-    devtoolConfig.isShow = isShow;
-    const existingWindows = BrowserWindow.getAllWindows();
-    if (existingWindows.length > 0) {
-        existingWindows.forEach((win) => {
-            win.webContents.send('show-devtool', JSON.stringify(devtoolConfig));
-        }); 
-    }
-});
-
-// 设置页面IPC通信配置 end
-
-// 标签页面IPC通信配置 start
-
-// 监听剪贴板列表内容删除
-ipcMain.handle('add-tag', async (_event, name, color) => {
-    log.info('[主进程] 标签添加', name, color);
-    const db = ClipboardDB.getInstance()
-    db?.addTag(name, color);
-    const tags = db?.getAllTags();
-    clipboardListService.window?.webContents.send('load-tag-items', JSON.stringify(tags));
-});
-
-// 监听标签修改
-ipcMain.handle('update-tag', async (_event, id, name, color) => {
-    log.info('[主进程] 更新标签', id, name, color);
-    const db = ClipboardDB.getInstance()
-    db?.updateTag(id, name, color);
-    const tags = db?.getAllTags();
-    clipboardListService.window?.webContents.send('load-tag-items', JSON.stringify(tags));
-});
-
-// 监听标签删除
-ipcMain.handle('delete-tag', async (_event, id) => {
-    log.info('[主进程] 删除标签', id);
-    const db = ClipboardDB.getInstance()
-    db?.deleteTag(id);
-    const tags = db?.getAllTags();
-    clipboardListService.window?.webContents.send('load-tag-items', JSON.stringify(tags));
-});
-
-// 监听获取所有标签
-ipcMain.handle('get-all-tags', async () => {
-    log.info('[主进程] 获取所有标签');
-    const db = ClipboardDB.getInstance()
-    return db?.getAllTags();
-});
-
-ipcMain.on('open-external-link', (_event, url) => {
-    shell.openExternal(url);
-});
-
-// 标签页面IPC通信配置 end
 
 function restartAPP() {
     // 关闭所有窗口

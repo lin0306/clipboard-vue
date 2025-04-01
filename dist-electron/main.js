@@ -65089,11 +65089,6 @@ function restartAPP() {
   electron$1.app.relaunch();
   electron$1.app.exit(0);
 }
-Object.defineProperty(electron$1.app, "isPackaged", {
-  get() {
-    return true;
-  }
-});
 exports.MAIN_DIST = MAIN_DIST;
 exports.RENDERER_DIST = RENDERER_DIST;
 exports.VITE_DEV_SERVER_URL = VITE_DEV_SERVER_URL;

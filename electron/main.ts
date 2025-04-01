@@ -1,7 +1,6 @@
 import { app, BrowserWindow, ipcMain, Menu, nativeImage, screen, shell, Tray } from 'electron'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { computed } from 'vue'
 import BackupManager from './BackupManager.js'
 import { getSettings, getShortcutKeys, getTempPath, updateSettings, updateShortcutKeys } from './FileManager.js'
 import ClipboardDB from './db.js'
@@ -10,7 +9,6 @@ import log from './log.js'
 import ShortcutManager from './shortcutManager.js'
 import UpdaterService from './updater.js'
 import ClipboardListService from './list.js'
-import { get } from 'node:http'
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
 
 // 在应用启动前读取设置并应用硬件加速设置
@@ -934,9 +932,3 @@ function restartAPP() {
     app.relaunch()
     app.exit(0)
 }
-
-Object.defineProperty(app, 'isPackaged', {
-    get() {
-        return true;
-    }
-})

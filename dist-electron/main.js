@@ -41409,14 +41409,22 @@ if (env$2 !== "development") {
   __dirname$2 = __dirname$2.replace("\\app.asar\\dist-electron", "");
 }
 const _ClipboardDB = class _ClipboardDB {
-  // SQLite数据库连接
+  // 是否初始化
   /**
-   * 私有构造函数，初始化数据库连接和表结构
-   * 实现单例模式，确保只有一个数据库连接实例
-   */
+       * 静态方法，获取数据库实例
+       * 实现单例模式，确保整个应用中只有一个数据库连接
+       * @returns {ClipboardDB} 数据库实例
+  
+      /**
+       * 私有构造函数，初始化数据库连接和表结构
+       * 实现单例模式，确保只有一个数据库连接实例
+       */
   constructor() {
     // 单例实例
     __publicField(this, "db");
+    if (!_ClipboardDB.isInit) {
+      return;
+    }
     log.info("[数据库进程] 数据库初始化");
     const dbFolder = getDBPath();
     log.info("[数据库进程] 数据文件存储文件夹位置：", dbFolder);
@@ -41434,7 +41442,14 @@ const _ClipboardDB = class _ClipboardDB {
    * 实现单例模式，确保整个应用中只有一个数据库连接
    * @returns {ClipboardDB} 数据库实例
    */
-  static getInstance() {
+  static getInstance(isInit = true) {
+    if (!isInit) {
+      _ClipboardDB.isInit = false;
+      return;
+    }
+    if (!_ClipboardDB.isInit) {
+      return;
+    }
     if (!_ClipboardDB.instance) {
       _ClipboardDB.instance = new _ClipboardDB();
     }
@@ -41445,7 +41460,7 @@ const _ClipboardDB = class _ClipboardDB {
    * 创建剪贴板条目表、标签表和关联表
    */
   initTables() {
-    this.db.exec(`
+    this.getDB().exec(`
                     CREATE TABLE IF NOT EXISTS clipboard_items (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         content TEXT NOT NULL,
@@ -41456,7 +41471,7 @@ const _ClipboardDB = class _ClipboardDB {
                         file_path TEXT
                     )
                 `);
-    this.db.exec(`
+    this.getDB().exec(`
                     CREATE TABLE IF NOT EXISTS tags (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         name TEXT NOT NULL UNIQUE,
@@ -41464,7 +41479,7 @@ const _ClipboardDB = class _ClipboardDB {
                         created_at INTEGER NOT NULL
                     )
                 `);
-    this.db.exec(`
+    this.getDB().exec(`
                     CREATE TABLE IF NOT EXISTS item_tags (
                         item_id INTEGER,
                         tag_id INTEGER,
@@ -41474,12 +41489,15 @@ const _ClipboardDB = class _ClipboardDB {
                     )
                 `);
   }
+  getDB() {
+    return this.db;
+  }
   /**
    * 关闭数据库连接
    * 在应用退出前调用，确保资源正确释放
    */
   close() {
-    this.db.close();
+    this.getDB().close();
   }
   /**
    * 添加剪贴板条目
@@ -41491,10 +41509,10 @@ const _ClipboardDB = class _ClipboardDB {
   addItem(content2, type2 = "text", filePath) {
     log.info("[数据库进程] 剪贴板内容添加开始", [content2, type2, filePath]);
     try {
-      this.db.transaction(() => {
+      this.getDB().transaction(() => {
         if (type2 === "text") {
           log.info("[数据库进程] 查询相同文本内容的旧记录");
-          const row = this.db.prepare("SELECT id FROM clipboard_items WHERE content = ? AND type = ?").get(content2, type2);
+          const row = this.getDB().prepare("SELECT id FROM clipboard_items WHERE content = ? AND type = ?").get(content2, type2);
           if (row) {
             this.updateItemTime(row.id, Date.now());
             log.info("[数据库进程] 有查询到相同文本内容的记录，覆盖复制时间");
@@ -41502,7 +41520,7 @@ const _ClipboardDB = class _ClipboardDB {
           }
         } else if (filePath) {
           log.info("[数据库进程] 查询相同文件路径的旧记录");
-          const row = this.db.prepare("SELECT id FROM clipboard_items WHERE type = ? AND file_path = ?").get(type2, filePath);
+          const row = this.getDB().prepare("SELECT id FROM clipboard_items WHERE type = ? AND file_path = ?").get(type2, filePath);
           if (row) {
             this.updateItemTime(row.id, Date.now());
             log.info("[数据库进程] 有查询到相同文件内容的记录，覆盖复制时间");
@@ -41510,7 +41528,7 @@ const _ClipboardDB = class _ClipboardDB {
           }
         }
         log.info("[数据库进程] 准备插入新的剪贴板记录");
-        this.db.prepare("INSERT INTO clipboard_items (content, copy_time, type, file_path) VALUES (?, ?, ?, ?)").run(content2, Date.now(), type2, filePath);
+        this.getDB().prepare("INSERT INTO clipboard_items (content, copy_time, type, file_path) VALUES (?, ?, ?, ?)").run(content2, Date.now(), type2, filePath);
       })();
       log.info("[数据库进程] 剪贴板内容添加成功");
     } catch (err) {
@@ -41529,14 +41547,14 @@ const _ClipboardDB = class _ClipboardDB {
       const config2 = getSettings();
       const maxHistoryItems = config2.maxHistoryItems || 2e3;
       const autoCleanupDays = config2.autoCleanupDays || 30;
-      this.db.transaction(() => {
+      this.getDB().transaction(() => {
         if (autoCleanupDays > 0) {
           const cutoffTime = Date.now() - autoCleanupDays * 24 * 60 * 60 * 1e3;
           log.info(`[数据库进程] 清理${autoCleanupDays}天前的剪贴板记录`);
-          const oldFileItems = this.db.prepare(
+          const oldFileItems = this.getDB().prepare(
             "SELECT id, file_path FROM clipboard_items WHERE is_topped = 0 AND copy_time < ? AND file_path IS NOT NULL"
           ).all(cutoffTime);
-          const result = this.db.prepare(
+          const result = this.getDB().prepare(
             "DELETE FROM clipboard_items WHERE is_topped = 0 AND copy_time < ?"
           ).run(cutoffTime);
           if (result.changes > 0) {
@@ -41556,16 +41574,16 @@ const _ClipboardDB = class _ClipboardDB {
             log.info(`[数据库进程] 已清理${deleteFileCnt}条过期文件记录`);
           }
         }
-        const totalCount = this.db.prepare("SELECT COUNT(*) as count FROM clipboard_items").get();
+        const totalCount = this.getDB().prepare("SELECT COUNT(*) as count FROM clipboard_items").get();
         if (totalCount.count >= maxHistoryItems) {
           log.info(`[数据库进程] 历史记录数量(${totalCount.count})已达到上限(${maxHistoryItems})，删除最早的非置顶记录`);
           const deleteCount = totalCount.count - maxHistoryItems + 1;
-          const oldImageItems = this.db.prepare(
+          const oldImageItems = this.getDB().prepare(
             `SELECT id, file_path FROM clipboard_items 
                              WHERE type = 'image' AND is_topped = 0 AND file_path IS NOT NULL 
                              ORDER BY copy_time ASC LIMIT ?`
           ).all(deleteCount);
-          const result = this.db.prepare(
+          const result = this.getDB().prepare(
             `DELETE FROM clipboard_items 
                              WHERE id IN (SELECT id FROM clipboard_items 
                                          WHERE is_topped = 0 
@@ -41599,7 +41617,7 @@ const _ClipboardDB = class _ClipboardDB {
    * @returns {any} 条目信息
    */
   getItemById(id2) {
-    return this.db.prepare("SELECT * FROM clipboard_items WHERE id =?").get(id2);
+    return this.getDB().prepare("SELECT * FROM clipboard_items WHERE id =?").get(id2);
   }
   /**
    * 获取所有剪贴板条目
@@ -41607,7 +41625,7 @@ const _ClipboardDB = class _ClipboardDB {
    * @returns {Array} 剪贴板条目数组
    */
   getAllItems() {
-    return this.db.prepare("SELECT * FROM clipboard_items ORDER BY is_topped DESC, CASE WHEN is_topped = 1 THEN top_time ELSE copy_time END DESC").all();
+    return this.getDB().prepare("SELECT * FROM clipboard_items ORDER BY is_topped DESC, CASE WHEN is_topped = 1 THEN top_time ELSE copy_time END DESC").all();
   }
   /**
    * 根据标签名获取剪贴板条目
@@ -41615,7 +41633,7 @@ const _ClipboardDB = class _ClipboardDB {
    * @returns {Array} 符合条件的剪贴板条目数组
    */
   getItemsByTag(tagName) {
-    return this.db.prepare("SELECT ci.* FROM clipboard_items ci INNER JOIN item_tags it ON ci.id = it.item_id INNER JOIN tags t ON it.tag_id = t.id WHERE t.name = ? ORDER BY ci.is_topped DESC, CASE WHEN ci.is_topped = 1 THEN ci.top_time ELSE ci.copy_time END DESC").all(tagName);
+    return this.getDB().prepare("SELECT ci.* FROM clipboard_items ci INNER JOIN item_tags it ON ci.id = it.item_id INNER JOIN tags t ON it.tag_id = t.id WHERE t.name = ? ORDER BY ci.is_topped DESC, CASE WHEN ci.is_topped = 1 THEN ci.top_time ELSE ci.copy_time END DESC").all(tagName);
   }
   /**
    * 删除剪贴板条目
@@ -41624,7 +41642,7 @@ const _ClipboardDB = class _ClipboardDB {
    */
   deleteItem(id2) {
     try {
-      const row = this.db.prepare("SELECT type, file_path FROM clipboard_items WHERE id = ?").get(id2);
+      const row = this.getDB().prepare("SELECT type, file_path FROM clipboard_items WHERE id = ?").get(id2);
       log.info("[数据库进程] 要删除的内容信息:", row);
       if (row && row.file_path) {
         try {
@@ -41633,7 +41651,7 @@ const _ClipboardDB = class _ClipboardDB {
           console.error("删除临时图片文件失败:", unlinkError);
         }
       }
-      this.db.prepare("DELETE FROM clipboard_items WHERE id = ?").run(id2);
+      this.getDB().prepare("DELETE FROM clipboard_items WHERE id = ?").run(id2);
       log.info("[数据库进程] 剪贴板内容删除成功");
     } catch (err) {
       throw err;
@@ -41650,7 +41668,7 @@ const _ClipboardDB = class _ClipboardDB {
         const config2 = getSettings();
         const tempDir = config2.tempPath;
         log.info("[数据库进程] 正在获取所有图片记录...");
-        const rows = this.db.prepare("SELECT type, file_path FROM clipboard_items WHERE file_path IS NOT NULL").all();
+        const rows = this.getDB().prepare("SELECT type, file_path FROM clipboard_items WHERE file_path IS NOT NULL").all();
         log.info("[数据库进程] 开始删除文件...");
         for (const row of rows) {
           if (row.file_path) {
@@ -41663,7 +41681,7 @@ const _ClipboardDB = class _ClipboardDB {
           }
         }
         log.info("[数据库进程] 正在清空数据库记录...");
-        this.db.prepare("DELETE FROM clipboard_items").run();
+        this.getDB().prepare("DELETE FROM clipboard_items").run();
         if (!fs$n.existsSync(tempDir)) {
           log.info("[数据库进程] 正在创建临时目录...");
           fs$n.mkdirSync(tempDir, { recursive: true, mode: 511 });
@@ -41683,7 +41701,7 @@ const _ClipboardDB = class _ClipboardDB {
    * @param {boolean} isTopped 是否置顶
    */
   toggleTop(id2, isTopped) {
-    this.db.prepare("UPDATE clipboard_items SET is_topped = ?, top_time = ? WHERE id = ?").run(isTopped ? 1 : 0, isTopped ? Date.now() : null, id2);
+    this.getDB().prepare("UPDATE clipboard_items SET is_topped = ?, top_time = ? WHERE id = ?").run(isTopped ? 1 : 0, isTopped ? Date.now() : null, id2);
   }
   /**
    * 搜索剪贴板内容
@@ -41727,9 +41745,9 @@ const _ClipboardDB = class _ClipboardDB {
     const offset = (page - 1) * pageSize;
     itemsSql += " LIMIT ? OFFSET ?";
     itemsParams.push(pageSize, offset);
-    const countResult = this.db.prepare(countSql).get(countParams);
+    const countResult = this.getDB().prepare(countSql).get(countParams);
     const total = countResult.total;
-    const items2 = this.db.prepare(itemsSql).all(itemsParams);
+    const items2 = this.getDB().prepare(itemsSql).all(itemsParams);
     for (const item of items2) {
       try {
         item.tags = item.tags_json ? JSON.parse(item.tags_json) : [];
@@ -41747,7 +41765,7 @@ const _ClipboardDB = class _ClipboardDB {
    * @param {number} newTime 新的复制时间
    */
   updateItemTime(id2, newTime) {
-    this.db.prepare("UPDATE clipboard_items SET copy_time = ? WHERE id = ?").run(newTime, id2);
+    this.getDB().prepare("UPDATE clipboard_items SET copy_time = ? WHERE id = ?").run(newTime, id2);
   }
   /**
    * 检查和管理存储大小
@@ -41773,7 +41791,7 @@ const _ClipboardDB = class _ClipboardDB {
       log.info(`[数据库进程] 当前存储大小: ${totalSize / (1024 * 1024)}MB, 最大限制: ${maxStorageSizeMB}MB`);
       if (totalSize > maxStorageSizeBytes) {
         log.info(`[数据库进程] 存储大小超过限制，开始清理`);
-        const fileItems = this.db.prepare(
+        const fileItems = this.getDB().prepare(
           "SELECT id, file_path, copy_time FROM clipboard_items WHERE is_topped = 0 AND file_path IS NOT NULL ORDER BY copy_time ASC"
         ).all();
         let deletedSize = 0;
@@ -41787,7 +41805,7 @@ const _ClipboardDB = class _ClipboardDB {
               const stats = fs$n.statSync(item.file_path);
               const fileSize = stats.size;
               fs$n.unlinkSync(item.file_path);
-              this.db.prepare("DELETE FROM clipboard_items WHERE id = ?").run(item.id);
+              this.getDB().prepare("DELETE FROM clipboard_items WHERE id = ?").run(item.id);
               deletedSize += fileSize;
               deletedCount++;
               log.info(`[数据库进程] 已删除文件: ${item.file_path}, 大小: ${fileSize / (1024 * 1024)}MB`);
@@ -41809,14 +41827,14 @@ const _ClipboardDB = class _ClipboardDB {
    * @param {string} color 标签颜色
    */
   addTag(name, color) {
-    this.db.prepare("INSERT INTO tags (name, color, created_at) VALUES (?, ?, ?)").run(name, color, Date.now());
+    this.getDB().prepare("INSERT INTO tags (name, color, created_at) VALUES (?, ?, ?)").run(name, color, Date.now());
   }
   /**
    * 删除标签
    * @param {number} id 标签ID
    */
   deleteTag(id2) {
-    this.db.prepare("DELETE FROM tags WHERE id = ?").run(id2);
+    this.getDB().prepare("DELETE FROM tags WHERE id = ?").run(id2);
   }
   /**
    * 更新标签
@@ -41825,14 +41843,14 @@ const _ClipboardDB = class _ClipboardDB {
    * @param {string} color 标签颜色
    */
   updateTag(id2, name, color) {
-    this.db.prepare("UPDATE tags SET name = ?, color = ? WHERE id = ?").run(name, color, id2);
+    this.getDB().prepare("UPDATE tags SET name = ?, color = ? WHERE id = ?").run(name, color, id2);
   }
   /**
    * 获取所有标签
    * @returns {Array} 标签数组，按创建时间升序排列
    */
   getAllTags() {
-    return this.db.prepare("SELECT * FROM tags ORDER BY created_at ASC").all();
+    return this.getDB().prepare("SELECT * FROM tags ORDER BY created_at ASC").all();
   }
   /**
    * 剪贴板条目绑定标签
@@ -41840,7 +41858,7 @@ const _ClipboardDB = class _ClipboardDB {
    * @param {number} tagId 标签ID
    */
   addItemTag(itemId, tagId) {
-    this.db.prepare("INSERT INTO item_tags (item_id, tag_id) VALUES (?, ?)").run(itemId, tagId);
+    this.getDB().prepare("INSERT INTO item_tags (item_id, tag_id) VALUES (?, ?)").run(itemId, tagId);
   }
   /**
    * 移除剪贴板条目的标签
@@ -41848,7 +41866,7 @@ const _ClipboardDB = class _ClipboardDB {
    * @param {number} tagId 标签ID
    */
   removeItemTag(itemId, tagId) {
-    this.db.prepare("DELETE FROM item_tags WHERE item_id = ? AND tag_id = ?").run(itemId, tagId);
+    this.getDB().prepare("DELETE FROM item_tags WHERE item_id = ? AND tag_id = ?").run(itemId, tagId);
   }
   /**
    * 获取剪贴板条目的所有标签
@@ -41856,7 +41874,7 @@ const _ClipboardDB = class _ClipboardDB {
    * @returns {Array} 标签数组
    */
   getItemTags(itemId) {
-    return this.db.prepare("SELECT t.* FROM tags t INNER JOIN item_tags it ON t.id = it.tag_id WHERE it.item_id = ?").all(itemId);
+    return this.getDB().prepare("SELECT t.* FROM tags t INNER JOIN item_tags it ON t.id = it.tag_id WHERE it.item_id = ?").all(itemId);
   }
   /**
    * 将剪贴板条目绑定到标签
@@ -41866,19 +41884,21 @@ const _ClipboardDB = class _ClipboardDB {
    * @throws {Error} 当标签不存在时抛出错误
    */
   bindItemToTag(itemId, tagId) {
-    const tag = this.db.prepare("SELECT id FROM tags WHERE id = ?").get(tagId);
+    const tag = this.getDB().prepare("SELECT id FROM tags WHERE id = ?").get(tagId);
     if (!tag) {
       throw new Error("标签不存在");
     }
-    const bindInfo = this.db.prepare("SELECT * FROM item_tags WHERE item_id = ? AND tag_id = ?").get(itemId, tag.id);
+    const bindInfo = this.getDB().prepare("SELECT * FROM item_tags WHERE item_id = ? AND tag_id = ?").get(itemId, tag.id);
     if (bindInfo) {
       log.info("[数据库进程] 标签已绑定");
       return;
     }
-    this.db.prepare("INSERT OR IGNORE INTO item_tags (item_id, tag_id) VALUES (?, ?)").run(itemId, tag.id);
+    this.getDB().prepare("INSERT OR IGNORE INTO item_tags (item_id, tag_id) VALUES (?, ?)").run(itemId, tag.id);
   }
 };
 __publicField(_ClipboardDB, "instance");
+// SQLite数据库连接
+__publicField(_ClipboardDB, "isInit", true);
 let ClipboardDB = _ClipboardDB;
 class ShortcutManager {
   constructor(mainWindow2, showHotkey) {
@@ -63397,7 +63417,84 @@ class ElectronStore extends Conf {
     }
   }
 }
-class BackupManager {
+const chineseTexts = {
+  tray: {
+    settings: "偏好设置",
+    checkUpdate: "检查更新",
+    about: "关于",
+    restart: "重新启动",
+    exit: "退出",
+    clipboardTooltip: "我的剪贴板",
+    disableHardwareAcceleration: "禁用硬件加速"
+  },
+  update: {
+    checking: "检查更新",
+    upToDateText: "当前已是最新版本",
+    checkFailure: "检查更新失败",
+    unknown: "未知错误"
+  },
+  hardwareAcceleration: {
+    title: "需要重启",
+    message: "禁用硬件加速设置已更改，需要重启应用才能生效。",
+    restartNow: "现在重启",
+    restartLater: "稍后重启"
+  }
+};
+const englishTexts = {
+  tray: {
+    settings: "Preferences",
+    checkUpdate: "Check for Updates",
+    about: "About",
+    restart: "Restart",
+    exit: "Exit",
+    clipboardTooltip: "My Clipboard",
+    disableHardwareAcceleration: "Disable Hardware Acceleration"
+  },
+  update: {
+    checking: "Checking for updates",
+    upToDateText: "You are using the latest version",
+    checkFailure: "Check for updates failed",
+    unknown: "Unknown error"
+  },
+  hardwareAcceleration: {
+    title: "Restart Required",
+    message: "Hardware acceleration setting has been changed. Application needs to restart to apply changes.",
+    restartNow: "Restart Now",
+    restartLater: "Restart Later"
+  }
+};
+function getTrayText(language) {
+  switch (language) {
+    case "chinese":
+      return chineseTexts.tray;
+    case "english":
+      return englishTexts.tray;
+    default:
+      return chineseTexts.tray;
+  }
+}
+function getUpdateText(language) {
+  switch (language) {
+    case "chinese":
+      return chineseTexts.update;
+    case "english":
+      return englishTexts.update;
+    default:
+      return chineseTexts.update;
+  }
+}
+function getHardwareAccelerationDialogText(language) {
+  switch (language) {
+    case "chinese":
+      return chineseTexts.hardwareAcceleration;
+    case "english":
+      return englishTexts.hardwareAcceleration;
+    default:
+      return chineseTexts.hardwareAcceleration;
+  }
+}
+const _BackupManager = class _BackupManager {
+  // 单例实例
   constructor() {
     __publicField(this, "backupDir");
     __publicField(this, "dataDir");
@@ -63411,6 +63508,18 @@ class BackupManager {
     this.tempDir = getTempPath();
     this.configDir = getConfigDir();
     log.info("[备份管理器] 初始化，备份目录:", this.backupDir);
+    this.registerIpcHandlers();
+  }
+  /**
+   * 获取数据库实例的静态方法
+   * 实现单例模式，确保整个应用中只有一个数据库连接
+   * @returns {ClipboardDB} 数据库实例
+   */
+  static getInstance() {
+    if (!_BackupManager.instance) {
+      _BackupManager.instance = new _BackupManager();
+    }
+    return _BackupManager.instance;
   }
   /**
    * 设置进度回调函数
@@ -63621,85 +63730,48 @@ class BackupManager {
       window2.webContents.send("backup-status", { progress, status });
     }
   }
-}
-const chineseTexts = {
-  tray: {
-    settings: "偏好设置",
-    checkUpdate: "检查更新",
-    about: "关于",
-    restart: "重新启动",
-    exit: "退出",
-    clipboardTooltip: "我的剪贴板",
-    disableHardwareAcceleration: "禁用硬件加速"
-  },
-  update: {
-    checking: "检查更新",
-    upToDateText: "当前已是最新版本",
-    checkFailure: "检查更新失败",
-    unknown: "未知错误"
-  },
-  hardwareAcceleration: {
-    title: "需要重启",
-    message: "禁用硬件加速设置已更改，需要重启应用才能生效。",
-    restartNow: "现在重启",
-    restartLater: "稍后重启"
+  /**
+   * 注册IPC事件处理
+   */
+  registerIpcHandlers() {
+    require$$1$5.ipcMain.handle("start-restore", async () => {
+      return this.restoreUserData();
+    });
+    require$$1$5.ipcMain.handle("remove-backup", async () => {
+      log.info("[主进程] 删除备份文件");
+      const backupManager = _BackupManager.getInstance();
+      if (!backupManager) {
+        log.error("[主进程] 备份管理器实例不存在");
+        return false;
+      }
+      const result = await backupManager.deleteBackup();
+      log.info("[主进程] 删除备份文件结果:", result);
+      return result;
+    });
+  }
+  /**
+  * 恢复用户数据
+  * @returns 恢复是否成功
+  */
+  async restoreUserData() {
+    const backupManager = _BackupManager.getInstance();
+    if (!backupManager) {
+      log.error("备份管理器未初始化");
+      return false;
+    }
+    const existingWindows = require$$1$5.BrowserWindow.getAllWindows();
+    const restoreWindow = existingWindows.find((win) => win.uniqueId === "restore-window");
+    backupManager.setProgressCallback((progress, status) => {
+      if (restoreWindow && !restoreWindow.isDestroyed()) {
+        restoreWindow.webContents.send("backup-status", { progress, status });
+      }
+    });
+    return await backupManager.restoreBackup();
   }
 };
-const englishTexts = {
-  tray: {
-    settings: "Preferences",
-    checkUpdate: "Check for Updates",
-    about: "About",
-    restart: "Restart",
-    exit: "Exit",
-    clipboardTooltip: "My Clipboard",
-    disableHardwareAcceleration: "Disable Hardware Acceleration"
-  },
-  update: {
-    checking: "Checking for updates",
-    upToDateText: "You are using the latest version",
-    checkFailure: "Check for updates failed",
-    unknown: "Unknown error"
-  },
-  hardwareAcceleration: {
-    title: "Restart Required",
-    message: "Hardware acceleration setting has been changed. Application needs to restart to apply changes.",
-    restartNow: "Restart Now",
-    restartLater: "Restart Later"
-  }
-};
-function getTrayText(language) {
-  switch (language) {
-    case "chinese":
-      return chineseTexts.tray;
-    case "english":
-      return englishTexts.tray;
-    default:
-      return chineseTexts.tray;
-  }
-}
-function getUpdateText(language) {
-  switch (language) {
-    case "chinese":
-      return chineseTexts.update;
-    case "english":
-      return englishTexts.update;
-    default:
-      return chineseTexts.update;
-  }
-}
-function getHardwareAccelerationDialogText(language) {
-  switch (language) {
-    case "chinese":
-      return chineseTexts.hardwareAcceleration;
-    case "english":
-      return englishTexts.hardwareAcceleration;
-    default:
-      return chineseTexts.hardwareAcceleration;
-  }
-}
+__publicField(_BackupManager, "instance");
+let BackupManager = _BackupManager;
 let updaterService = null;
-const backupManager = new BackupManager();
 if (process.env.NODE_ENV === "development") {
   main$1.autoUpdater.updateConfigPath = require$$1$2.join(__dirname, "../dev-update.yml");
   main$1.autoUpdater.forceDevUpdateConfig = true;
@@ -63715,9 +63787,6 @@ function initUpdaterService(language) {
 }
 function getUpdaterService() {
   return updaterService;
-}
-function getBackupManager() {
-  return backupManager;
 }
 class UpdaterService {
   // 用于存储更新配置的Store实例
@@ -63839,11 +63908,11 @@ class UpdaterService {
           backupCompleted: success
         });
         if (success) {
-          const backupManager2 = getBackupManager();
-          if (backupManager2) {
+          const backupManager = BackupManager.getInstance();
+          if (backupManager) {
             const existingWindows = require$$1$5.BrowserWindow.getAllWindows();
             const updateWindow = existingWindows.find((win) => win.uniqueId === "update-window");
-            backupManager2.setProgressCallback((progress, status) => {
+            backupManager.setProgressCallback((progress, status) => {
               if (updateWindow && !updateWindow.isDestroyed()) {
                 log.info("发送备份完成消息:", progress, status);
                 updateWindow.webContents.send("backup-status", { progress, status });
@@ -63906,9 +63975,9 @@ class UpdaterService {
     require$$1$5.ipcMain.handle("cancel-backup", async () => {
       log.info("用户取消备份");
       try {
-        const backupManager2 = getBackupManager();
-        if (backupManager2) {
-          await backupManager2.cleanBackupFiles();
+        const backupManager = BackupManager.getInstance();
+        if (backupManager) {
+          await backupManager.cleanBackupFiles();
         }
         this.isBackupCompleted = false;
         this.sendStatusToWindow("download-error", { error: "用户取消了备份" });
@@ -63941,16 +64010,6 @@ class UpdaterService {
       log.info("[主进程] 更新限制时间已保存");
       return true;
     });
-    require$$1$5.ipcMain.handle("start-restore", async () => {
-      return this.restoreUserData();
-    });
-    require$$1$5.ipcMain.handle("skip-restore", async () => {
-      const backupManager2 = getBackupManager();
-      if (backupManager2) {
-        return backupManager2.deleteBackup();
-      }
-      return false;
-    });
   }
   /**
    * 向渲染进程发送更新状态
@@ -63968,14 +64027,14 @@ class UpdaterService {
    * @returns 备份是否成功
    */
   async backupUserData() {
-    const backupManager2 = getBackupManager();
-    if (!backupManager2) {
+    const backupManager = BackupManager.getInstance();
+    if (!backupManager) {
       log.error("备份管理器未初始化");
       return false;
     }
     const existingWindows = require$$1$5.BrowserWindow.getAllWindows();
     const updateWindow = existingWindows.find((win) => win.uniqueId === "update-window");
-    backupManager2.setProgressCallback((progress, status) => {
+    backupManager.setProgressCallback((progress, status) => {
       if (updateWindow && !updateWindow.isDestroyed()) {
         log.info(`发送备份进度: ${progress}%, 状态: ${status}`);
         updateWindow.webContents.send("backup-status", { progress, status });
@@ -63984,26 +64043,7 @@ class UpdaterService {
         }
       }
     });
-    return await backupManager2.createBackup();
-  }
-  /**
-   * 恢复用户数据
-   * @returns 恢复是否成功
-   */
-  async restoreUserData() {
-    const backupManager2 = getBackupManager();
-    if (!backupManager2) {
-      log.error("备份管理器未初始化");
-      return false;
-    }
-    const existingWindows = require$$1$5.BrowserWindow.getAllWindows();
-    const restoreWindow = existingWindows.find((win) => win.uniqueId === "restore-window");
-    backupManager2.setProgressCallback((progress, status) => {
-      if (restoreWindow && !restoreWindow.isDestroyed()) {
-        restoreWindow.webContents.send("backup-status", { progress, status });
-      }
-    });
-    return await backupManager2.restoreBackup();
+    return await backupManager.createBackup();
   }
   /**
    * 检查更新
@@ -64247,7 +64287,7 @@ function createMainWindow() {
     mainWindow == null ? void 0 : mainWindow.webContents.send("init-themes", savedTheme);
     mainWindow == null ? void 0 : mainWindow.webContents.send("init-language", savedLanguage);
     const db = ClipboardDB.getInstance();
-    const tags = db.getAllTags();
+    const tags = db == null ? void 0 : db.getAllTags();
     mainWindow == null ? void 0 : mainWindow.webContents.send("load-tag-items", tags);
     mainWindow == null ? void 0 : mainWindow.webContents.send("load-shortcut-keys", shortcutKeys.value);
     mainWindow == null ? void 0 : mainWindow.webContents.send("load-settings", config.value);
@@ -64489,8 +64529,8 @@ function createRestoreWindow(theme, languages) {
     return;
   }
   const restoreWindow = new require$$1$5.BrowserWindow({
-    width: 500,
-    height: 400,
+    width: 400,
+    height: 500,
     frame: false,
     resizable: false,
     webPreferences: {
@@ -64675,7 +64715,7 @@ function createTray(win) {
 require$$1$5.app.on("window-all-closed", () => {
   log.info("[主进程] 所有窗口已关闭");
   const db = ClipboardDB.getInstance();
-  db.close();
+  db == null ? void 0 : db.close();
   if (process.platform === "darwin") {
     log.info("[主进程] macOS 平台，应用保持活动状态");
     require$$1$5.app.quit();
@@ -64686,14 +64726,7 @@ if (!gotTheLock) {
   require$$1$5.app.quit();
 } else {
   require$$1$5.Menu.setApplicationMenu(null);
-  require$$1$5.app.whenReady().then(async () => {
-    try {
-      const db = ClipboardDB.getInstance();
-      await db.checkStorageSize();
-      log.info("[主进程] 应用启动时的存储检查和清理完成");
-    } catch (error2) {
-      log.error("[主进程] 应用启动时的存储检查和清理失败:", error2);
-    }
+  require$$1$5.app.whenReady().then(() => {
     initWindow();
     require$$1$5.app.on("activate", () => {
       if (require$$1$5.BrowserWindow.getAllWindows().length === 0) {
@@ -64702,25 +64735,33 @@ if (!gotTheLock) {
     });
   });
 }
-function initWindow() {
-  const backupManager2 = getBackupManager();
-  if (backupManager2 && backupManager2.hasBackup()) {
+async function initWindow() {
+  const backupManager = BackupManager.getInstance();
+  if (backupManager && backupManager.hasBackup()) {
     log.info("[主进程] 检测到备份文件，打开恢复窗口");
-    const config2 = backupManager2.getBackupConfig();
+    ClipboardDB.getInstance(false);
+    const config2 = backupManager.getBackupConfig();
     createRestoreWindow(config2.theme, config2.languages);
   } else {
+    try {
+      const db = ClipboardDB.getInstance();
+      await (db == null ? void 0 : db.checkStorageSize());
+      log.info("[主进程] 应用启动时的存储检查和清理完成");
+    } catch (error2) {
+      log.error("[主进程] 应用启动时的存储检查和清理失败:", error2);
+    }
     createMainWindow();
   }
 }
 require$$1$5.ipcMain.handle("clear-items", async () => {
   const db = ClipboardDB.getInstance();
-  db.clearAll();
+  db == null ? void 0 : db.clearAll();
   return true;
 });
 require$$1$5.ipcMain.handle("search-items-paged", async (_event, content2, tagId, page, pageSize) => {
   log.info("[主进程] 获取剪贴板数据(分页)，查询条件", content2, tagId, page, pageSize);
   const db = ClipboardDB.getInstance();
-  const result = db.searchItemsPaged(content2, tagId, page, pageSize);
+  const result = db == null ? void 0 : db.searchItemsPaged(content2, tagId, page, pageSize);
   return result;
 });
 require$$1$5.ipcMain.handle("update-themes", async (_event, theme) => {
@@ -64732,22 +64773,22 @@ require$$1$5.ipcMain.handle("update-themes", async (_event, theme) => {
 require$$1$5.ipcMain.handle("top-item", async (_event, id2) => {
   log.info("[主进程] 剪贴板内容置顶", id2);
   const db = ClipboardDB.getInstance();
-  db.toggleTop(id2, true);
+  db == null ? void 0 : db.toggleTop(id2, true);
 });
 require$$1$5.ipcMain.handle("untop-item", async (_event, id2) => {
   log.info("[主进程] 剪贴板内容取消置顶", id2);
   const db = ClipboardDB.getInstance();
-  db.toggleTop(id2, false);
+  db == null ? void 0 : db.toggleTop(id2, false);
 });
 require$$1$5.ipcMain.handle("remove-item", async (_event, id2) => {
   log.info("[主进程] 剪贴板内容删除", id2);
   const db = ClipboardDB.getInstance();
-  db.deleteItem(id2);
+  db == null ? void 0 : db.deleteItem(id2);
 });
 require$$1$5.ipcMain.handle("item-bind-tag", async (_event, itemId, tagId) => {
   log.info("[主进程] 内容和标签绑定", itemId, tagId);
   const db = ClipboardDB.getInstance();
-  db.bindItemToTag(itemId, tagId);
+  db == null ? void 0 : db.bindItemToTag(itemId, tagId);
 });
 require$$1$5.ipcMain.handle("get-image-base64", async (_event, imagePath) => {
   try {
@@ -64766,9 +64807,9 @@ require$$1$5.ipcMain.handle("item-copy", async (_event, id2) => {
   log.info("[主进程] 将内容复制到系统剪贴板，id:", id2);
   try {
     const db = ClipboardDB.getInstance();
-    const item = db.getItemById(id2);
+    const item = db == null ? void 0 : db.getItemById(id2);
     if (item) {
-      db.updateItemTime(id2, Date.now());
+      db == null ? void 0 : db.updateItemTime(id2, Date.now());
       if (item.type === "image") {
         const image = require$$1$5.nativeImage.createFromPath(item.file_path);
         require$$1$5.clipboard.writeImage(image);
@@ -64813,28 +64854,28 @@ require$$1$5.ipcMain.handle("update-devtool-show", async (_event, isShow) => {
 require$$1$5.ipcMain.handle("add-tag", async (_event, name, color) => {
   log.info("[主进程] 标签添加", name, color);
   const db = ClipboardDB.getInstance();
-  db.addTag(name, color);
-  const tags = db.getAllTags();
+  db == null ? void 0 : db.addTag(name, color);
+  const tags = db == null ? void 0 : db.getAllTags();
   mainWindow == null ? void 0 : mainWindow.webContents.send("load-tag-items", tags);
 });
 require$$1$5.ipcMain.handle("update-tag", async (_event, id2, name, color) => {
   log.info("[主进程] 更新标签", id2, name, color);
   const db = ClipboardDB.getInstance();
-  db.updateTag(id2, name, color);
-  const tags = db.getAllTags();
+  db == null ? void 0 : db.updateTag(id2, name, color);
+  const tags = db == null ? void 0 : db.getAllTags();
   mainWindow == null ? void 0 : mainWindow.webContents.send("load-tag-items", tags);
 });
 require$$1$5.ipcMain.handle("delete-tag", async (_event, id2) => {
   log.info("[主进程] 删除标签", id2);
   const db = ClipboardDB.getInstance();
-  db.deleteTag(id2);
-  const tags = db.getAllTags();
+  db == null ? void 0 : db.deleteTag(id2);
+  const tags = db == null ? void 0 : db.getAllTags();
   mainWindow == null ? void 0 : mainWindow.webContents.send("load-tag-items", tags);
 });
 require$$1$5.ipcMain.handle("get-all-tags", async () => {
   log.info("[主进程] 获取所有标签");
   const db = ClipboardDB.getInstance();
-  return db.getAllTags();
+  return db == null ? void 0 : db.getAllTags();
 });
 require$$1$5.ipcMain.on("open-external-link", (_event, url) => {
   require$$1$5.shell.openExternal(url);
@@ -64927,10 +64968,10 @@ function watchClipboard() {
             if (webContents.getProcessId() && !webContents.isLoading()) {
               try {
                 const db = ClipboardDB.getInstance();
-                db.addItem(path$E.basename(imagePath), "image", imagePath);
-                db.asyncClearingExpiredData();
+                db == null ? void 0 : db.addItem(path$E.basename(imagePath), "image", imagePath);
+                db == null ? void 0 : db.asyncClearingExpiredData();
                 if (Math.random() < 0.1) {
-                  db.checkStorageSize().catch((err) => {
+                  db == null ? void 0 : db.checkStorageSize().catch((err) => {
                     log.error("[主进程] 检查存储大小时出错:", err);
                   });
                 }
@@ -64966,10 +65007,10 @@ function watchClipboard() {
       if (isWithinSizeLimit) {
         lastText = currentText;
         const db = ClipboardDB.getInstance();
-        db.addItem(currentText, "text", null);
-        db.asyncClearingExpiredData();
+        db == null ? void 0 : db.addItem(currentText, "text", null);
+        db == null ? void 0 : db.asyncClearingExpiredData();
         if (Math.random() < 0.1) {
-          db.checkStorageSize().catch((err) => {
+          db == null ? void 0 : db.checkStorageSize().catch((err) => {
             log.error("[主进程] 检查存储大小时出错:", err);
           });
         }

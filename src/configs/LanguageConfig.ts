@@ -140,10 +140,15 @@ export interface PageConfig {
     restore: {
         title: string;
         description: string;
-        startBtn: string;
-        skipBtn: string;
         readyText: string;
         startingText: string;
+        restartCountdown: string;
+        setp1: string;
+        setp2: string;
+        setp3: string;
+        setp4: string;
+        restoreSuccess: string;
+        toRestart: string;
     }
 }
 
@@ -270,11 +275,16 @@ export const zhCN: LanguageConfig = {
         },
         restore: {
             title: '数据恢复',
-            description: '检测到上次更新后的备份数据，是否要恢复？',
-            startBtn: '开始恢复',
-            skipBtn: '跳过恢复',
+            description: '检测到上次更新后的备份数据，正在自动恢复中...',
             readyText: '准备恢复数据',
             startingText: '开始恢复数据',
+            restartCountdown: ' 秒后重新启动程序 ~',
+            setp1: '恢复备份文件',
+            setp2: '恢复备份数据',
+            setp3: '恢复用户配置',
+            setp4: '删除备份文件',
+            restoreSuccess: '恢复完成，准备删除备份文件',
+            toRestart: '备份文件已删除，即将重启程序',
         }
     },
 }
@@ -402,11 +412,16 @@ export const enUS: LanguageConfig = {
         },
         restore: {
             title: 'Data Recovery',
-            description: 'Backup data from the last update detected. Do you want to restore?',
-            startBtn: 'Start Recovery',
-            skipBtn: 'Skip Recovery',
-            readyText: 'Preparing to restore data',
-            startingText: 'Starting data recovery'
+            description: 'Detected backup data from previous update, starting automatic recovery...',
+            readyText: 'Ready to restore data',
+            startingText: 'Starting to restore data',
+            restartCountdown:'seconds to restart program ~',
+            setp1: 'Restore backup file',
+            setp2: 'Restore backup data',
+            setp3: 'Restore user configuration',
+            setp4: 'Delete backup file',
+            restoreSuccess: 'Recovery completed, preparing to delete backup file',
+            toRestart: 'Backup file deleted, restarting program in',
         }
     }
 }

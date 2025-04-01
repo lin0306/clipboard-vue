@@ -3,7 +3,7 @@
  * 负责在更新时备份用户数据，以及在更新后恢复数据
  */
 
-import { BrowserWindow } from 'electron';
+import { BrowserWindow, ipcMain } from 'electron';
 import fs from 'fs-extra';
 import os from 'os';
 import path from 'path';
@@ -18,6 +18,7 @@ export default class BackupManager {
     private backupInProgress: boolean = false;
     private restoreInProgress: boolean = false;
     private progressCallback: ((progress: number, status: string) => void) | null = null;
+    private static instance: BackupManager; // 单例实例
 
     constructor() {
         // 备份文件夹路径 - 使用系统临时目录
@@ -28,6 +29,21 @@ export default class BackupManager {
         this.configDir = getConfigDir();
 
         log.info('[备份管理器] 初始化，备份目录:', this.backupDir);
+
+        // 注册IPC事件处理
+        this.registerIpcHandlers();
+    }
+
+    /**
+     * 获取数据库实例的静态方法
+     * 实现单例模式，确保整个应用中只有一个数据库连接
+     * @returns {ClipboardDB} 数据库实例
+     */
+    public static getInstance(): BackupManager {
+        if (!BackupManager.instance) {
+            BackupManager.instance = new BackupManager();
+        }
+        return BackupManager.instance;
     }
 
     /**
@@ -291,5 +307,59 @@ export default class BackupManager {
         if (window && !window.isDestroyed()) {
             window.webContents.send('backup-status', { progress, status });
         }
+    }
+
+    /**
+     * 注册IPC事件处理
+     */
+    private registerIpcHandlers() {
+        // 开始恢复备份
+        ipcMain.handle('start-restore', async () => {
+            return this.restoreUserData();
+        });
+
+        // 删除备份文件
+        ipcMain.handle('remove-backup', async () => {
+            log.info('[主进程] 删除备份文件');
+
+            // 获取备份管理器实例
+            const backupManager = BackupManager.getInstance();
+            if (!backupManager) {
+                log.error('[主进程] 备份管理器实例不存在');
+                return false;
+            }
+
+            // 删除备份文件
+            const result = await backupManager.deleteBackup();
+            log.info('[主进程] 删除备份文件结果:', result);
+            return result;
+        });
+    }
+
+    /**
+    * 恢复用户数据
+    * @returns 恢复是否成功
+    */
+    private async restoreUserData(): Promise<boolean> {
+        const backupManager = BackupManager.getInstance();
+        if (!backupManager) {
+            log.error('备份管理器未初始化');
+            return false;
+        }
+
+        // 获取恢复窗口
+        const existingWindows = BrowserWindow.getAllWindows();
+        // @ts-ignore
+        const restoreWindow = existingWindows.find(win => win.uniqueId === 'restore-window');
+
+        // 设置进度回调
+        backupManager.setProgressCallback((progress, status) => {
+            if (restoreWindow && !restoreWindow.isDestroyed()) {
+                restoreWindow.webContents.send('backup-status', { progress, status });
+            }
+        });
+
+        // 执行恢复
+        return await backupManager.restoreBackup();
     }
 }

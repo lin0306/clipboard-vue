@@ -7,19 +7,20 @@ import { getSettings, getShortcutKeys, getTempPath, updateSettings, updateShortc
 import ClipboardDB from './db.js'
 import log from './log.js'
 import ShortcutManager from './shortcutManager.js'
-import { getUpdaterService, initUpdaterService, getBackupManager } from './updater.js'
+import { getUpdaterService, initUpdaterService } from './updater.js'
 import { getTrayText, getHardwareAccelerationDialogText } from './languages.js'
+import BackupManager from './BackupManager.js'
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
 
 // 在应用启动前读取设置并应用硬件加速设置
 try {
-  const userSettings = getSettings();
-  if (userSettings && userSettings.disableHardwareAcceleration) {
-    log.info("[主进程] 读取到禁用硬件加速设置，将禁用硬件加速");
-    app.disableHardwareAcceleration();
-  }
+    const userSettings = getSettings();
+    if (userSettings && userSettings.disableHardwareAcceleration) {
+        log.info("[主进程] 读取到禁用硬件加速设置，将禁用硬件加速");
+        app.disableHardwareAcceleration();
+    }
 } catch (error) {
-  log.error("[主进程] 读取硬件加速设置失败:", error);
+    log.error("[主进程] 读取硬件加速设置失败:", error);
 }
 
 app.commandLine.appendSwitch('disable-http-cache'); // 禁用 HTTP 缓存
@@ -71,9 +72,9 @@ let y: number | undefined = undefined;
 let wakeUpRoutineShortcut: ShortcutManager; // 唤醒程序快捷键
 let isFixedMainWindow = false; // 是否固定窗口大小
 const devtoolConfig: any = {
-   isDev: env === 'development',
-//    isDev: false,
-   isShow: false, 
+    isDev: env === 'development',
+    //    isDev: false,
+    isShow: false,
 }
 
 const config: any = computed(() => getSettings());
@@ -181,7 +182,7 @@ function createMainWindow() {
         mainWindow?.webContents.send('init-themes', savedTheme);
         mainWindow?.webContents.send('init-language', savedLanguage);
         const db = ClipboardDB.getInstance()
-        const tags = db.getAllTags();
+        const tags = db?.getAllTags();
         mainWindow?.webContents.send('load-tag-items', tags);
         mainWindow?.webContents.send('load-shortcut-keys', shortcutKeys.value);
         mainWindow?.webContents.send('load-settings', config.value);
@@ -297,7 +298,7 @@ function createSettingsWindow() {
         transparent: false,
         parent: mainWindow,
     });
-    
+
     // 窗口居中显示
     settingsWindow.center();
 
@@ -381,7 +382,7 @@ function createTagsWindow() {
         transparent: false,
         parent: mainWindow,
     });
-    
+
     // 窗口居中显示
     tagsWindow.center();
 
@@ -462,7 +463,7 @@ export function createUpdateWindow() {
         icon: path.join(process.env.VITE_PUBLIC, 'logo.png'),
         transparent: false,
     });
-    
+
     // 窗口居中显示
     newUpdateWindow.center();
     // 自定义属性
@@ -537,8 +538,8 @@ export function createRestoreWindow(theme: string, languages: string) {
     }
 
     const restoreWindow = new BrowserWindow({
-        width: 500,
-        height: 400,
+        width: 400,
+        height: 500,
         frame: false,
         resizable: false,
         webPreferences: {
@@ -550,7 +551,7 @@ export function createRestoreWindow(theme: string, languages: string) {
         icon: path.join(process.env.VITE_PUBLIC, 'logo.png'),
         transparent: false,
     });
-    
+
     // 窗口居中显示
     restoreWindow.center();
 
@@ -616,7 +617,7 @@ function createAboutWindow() {
         transparent: false,
         parent: mainWindow,
     });
-    
+
     // 窗口居中显示
     aboutWindow.center();
 
@@ -681,12 +682,12 @@ function createTray(win: BrowserWindow) {
     if (isHideWindow) {
         return;
     }
-    
+
     // 获取当前语言设置
     const savedLanguage = config.value.languages || 'chinese';
     // 根据语言设置获取对应的菜单文本
     let menuTexts = getTrayText(savedLanguage);
-    
+
     const trayMenuTemplate: Electron.MenuItemConstructorOptions[] = [
         {
             label: menuTexts.settings,
@@ -712,10 +713,10 @@ function createTray(win: BrowserWindow) {
                 // 切换禁用硬件加速设置
                 config.value.disableHardwareAcceleration = !config.value.disableHardwareAcceleration;
                 updateSettings(config.value);
-                
+
                 // 获取当前语言的对话框文本
                 const hardwareAccelerationDialogText = getHardwareAccelerationDialogText(savedLanguage);
-                
+
                 // 显示重启确认对话框
                 const dialogOptions = {
                     type: 'info',
@@ -724,7 +725,7 @@ function createTray(win: BrowserWindow) {
                     message: hardwareAccelerationDialogText.message,
                     defaultId: 0
                 };
-                
+
                 const { dialog } = require('electron');
                 dialog.showMessageBox(dialogOptions).then((result: { response: number }) => {
                     if (result.response === 0) {
@@ -772,14 +773,14 @@ function createTray(win: BrowserWindow) {
     appTray.on('click', function () {
         win.show();
     });
-    
+
     // 监听语言变化，更新托盘菜单
     ipcMain.on('language-changed', (_event, newLanguage) => {
         log.info('[主进程] 收到语言变更通知，更新托盘菜单:', newLanguage);
         // 重新创建托盘菜单
         createTray(win);
     });
-    
+
     // 监听语言变化，更新托盘菜单
     ipcMain.on('language-changed', (_event, newLanguage) => {
         log.info('[主进程] 收到语言变更通知，更新托盘菜单:', newLanguage);
@@ -793,7 +794,7 @@ app.on('window-all-closed', () => {
     log.info('[主进程] 所有窗口已关闭')
     // 关闭数据库连接
     const db = ClipboardDB.getInstance()
-    db.close();
+    db?.close();
 
     // 在 macOS 上，应用程序通常在所有窗口关闭后仍保持活动状态
     // 直到用户使用 Cmd + Q 显式退出
@@ -811,16 +812,7 @@ if (!gotTheLock) {
 } else {
     Menu.setApplicationMenu(null)
     // 当 Electron 完成初始化并准备创建浏览器窗口时调用此方法
-    app.whenReady().then(async () => {
-        // 应用启动时执行一次存储检查和清理
-        try {
-            const db = ClipboardDB.getInstance();
-            await db.checkStorageSize();
-            log.info('[主进程] 应用启动时的存储检查和清理完成');
-        } catch (error) {
-            log.error('[主进程] 应用启动时的存储检查和清理失败:', error);
-        }
-
+    app.whenReady().then(() => {
         initWindow()
 
         // 仅 macOS 支持
@@ -835,15 +827,26 @@ if (!gotTheLock) {
 }
 
 // 初始化窗口
-function initWindow() {
+async function initWindow() {
     // 检查是否存在备份文件，如果存在则打开恢复窗口
-    const backupManager = getBackupManager();
+    const backupManager = BackupManager.getInstance();
     if (backupManager && backupManager.hasBackup()) {
         log.info('[主进程] 检测到备份文件，打开恢复窗口');
+        ClipboardDB.getInstance(false);
         const config = backupManager.getBackupConfig();
         createRestoreWindow(config.theme, config.languages);
-    } else{
+    } else {
+        // 应用启动时执行一次存储检查和清理
+        try {
+            const db = ClipboardDB.getInstance();
+            await db?.checkStorageSize();
+            log.info('[主进程] 应用启动时的存储检查和清理完成');
+        } catch (error) {
+            log.error('[主进程] 应用启动时的存储检查和清理失败:', error);
+        }
+
         createMainWindow();
+
     }
 }
 
@@ -852,7 +855,7 @@ function initWindow() {
 // 监听清空剪贴板
 ipcMain.handle('clear-items', async () => {
     const db = ClipboardDB.getInstance()
-    db.clearAll()
+    db?.clearAll()
     return true
 })
 
@@ -860,7 +863,7 @@ ipcMain.handle('clear-items', async () => {
 ipcMain.handle('search-items-paged', async (_event, content, tagId, page, pageSize) => {
     log.info('[主进程] 获取剪贴板数据(分页)，查询条件', content, tagId, page, pageSize);
     const db = ClipboardDB.getInstance()
-    const result = db.searchItemsPaged(content, tagId, page, pageSize);
+    const result = db?.searchItemsPaged(content, tagId, page, pageSize);
     // 标签信息已在SQL查询中获取，无需再次查询
     return result;
 });
@@ -877,28 +880,28 @@ ipcMain.handle('update-themes', async (_event, theme) => {
 ipcMain.handle('top-item', async (_event, id) => {
     log.info('[主进程] 剪贴板内容置顶', id);
     const db = ClipboardDB.getInstance()
-    db.toggleTop(id, true);
+    db?.toggleTop(id, true);
 });
 
 // 监听剪贴板列表内容取消置顶
 ipcMain.handle('untop-item', async (_event, id) => {
     log.info('[主进程] 剪贴板内容取消置顶', id);
     const db = ClipboardDB.getInstance()
-    db.toggleTop(id, false);
+    db?.toggleTop(id, false);
 });
 
 // 监听剪贴板列表内容删除
 ipcMain.handle('remove-item', async (_event, id) => {
     log.info('[主进程] 剪贴板内容删除', id);
     const db = ClipboardDB.getInstance()
-    db.deleteItem(id);
+    db?.deleteItem(id);
 });
 
 // 监听剪贴板列表内容绑定标签
 ipcMain.handle('item-bind-tag', async (_event, itemId, tagId) => {
     log.info('[主进程] 内容和标签绑定', itemId, tagId);
     const db = ClipboardDB.getInstance()
-    db.bindItemToTag(itemId, tagId);
+    db?.bindItemToTag(itemId, tagId);
 });
 
 // 获取图片的base64编码
@@ -921,9 +924,9 @@ ipcMain.handle('item-copy', async (_event, id: number) => {
     log.info('[主进程] 将内容复制到系统剪贴板，id:', id);
     try {
         const db = ClipboardDB.getInstance()
-        const item: any = db.getItemById(id);
+        const item: any = db?.getItemById(id);
         if (item) {
-            db.updateItemTime(id, Date.now());
+            db?.updateItemTime(id, Date.now());
             if (item.type === 'image') {
                 const image = nativeImage.createFromPath(item.file_path);
                 clipboard.writeImage(image);
@@ -1000,8 +1003,8 @@ ipcMain.handle('update-devtool-show', async (_event, isShow) => {
 ipcMain.handle('add-tag', async (_event, name, color) => {
     log.info('[主进程] 标签添加', name, color);
     const db = ClipboardDB.getInstance()
-    db.addTag(name, color);
-    const tags = db.getAllTags();
+    db?.addTag(name, color);
+    const tags = db?.getAllTags();
     mainWindow?.webContents.send('load-tag-items', tags);
 });
 
@@ -1009,8 +1012,8 @@ ipcMain.handle('add-tag', async (_event, name, color) => {
 ipcMain.handle('update-tag', async (_event, id, name, color) => {
     log.info('[主进程] 更新标签', id, name, color);
     const db = ClipboardDB.getInstance()
-    db.updateTag(id, name, color);
-    const tags = db.getAllTags();
+    db?.updateTag(id, name, color);
+    const tags = db?.getAllTags();
     mainWindow?.webContents.send('load-tag-items', tags);
 });
 
@@ -1018,8 +1021,8 @@ ipcMain.handle('update-tag', async (_event, id, name, color) => {
 ipcMain.handle('delete-tag', async (_event, id) => {
     log.info('[主进程] 删除标签', id);
     const db = ClipboardDB.getInstance()
-    db.deleteTag(id);
-    const tags = db.getAllTags();
+    db?.deleteTag(id);
+    const tags = db?.getAllTags();
     mainWindow?.webContents.send('load-tag-items', tags);
 });
 
@@ -1027,7 +1030,7 @@ ipcMain.handle('delete-tag', async (_event, id) => {
 ipcMain.handle('get-all-tags', async () => {
     log.info('[主进程] 获取所有标签');
     const db = ClipboardDB.getInstance()
-    return db.getAllTags();
+    return db?.getAllTags();
 });
 
 ipcMain.on('open-external-link', (_event, url) => {
@@ -1160,11 +1163,11 @@ function watchClipboard() {
                             try {
                                 // 复制的数据添加到数据库
                                 const db = ClipboardDB.getInstance()
-                                db.addItem(path.basename(imagePath), 'image', imagePath);
-                                db.asyncClearingExpiredData();
+                                db?.addItem(path.basename(imagePath), 'image', imagePath);
+                                db?.asyncClearingExpiredData();
                                 // 定期检查存储大小
                                 if (Math.random() < 0.1) { // 约10%的概率执行检查，避免每次都检查
-                                    db.checkStorageSize().catch(err => {
+                                    db?.checkStorageSize().catch(err => {
                                         log.error('[主进程] 检查存储大小时出错:', err);
                                     });
                                 }
@@ -1205,11 +1208,11 @@ function watchClipboard() {
                 lastText = currentText;
                 // 复制的数据添加到数据库
                 const db = ClipboardDB.getInstance()
-                db.addItem(currentText, 'text', null);
-                db.asyncClearingExpiredData();
+                db?.addItem(currentText, 'text', null);
+                db?.asyncClearingExpiredData();
                 // 定期检查存储大小
                 if (Math.random() < 0.1) { // 约10%的概率执行检查，避免每次都检查
-                    db.checkStorageSize().catch(err => {
+                    db?.checkStorageSize().catch(err => {
                         log.error('[主进程] 检查存储大小时出错:', err);
                     });
                 }

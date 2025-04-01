@@ -7,10 +7,10 @@ import { app, BrowserWindow, ipcMain, nativeImage, Notification } from 'electron
 import { autoUpdater } from 'electron-updater';
 import path from 'path';
 import Store from 'electron-store';
-import BackupManager from './BackupManager.js';
 import { getUpdateText, UpdateLanguageConfig } from './languages.js';
 import log from './log.js';
 import fs from 'fs-extra';
+import BackupManager from './BackupManager.js';
 
 /**
  * 主进程中初始化更新服务的代码
@@ -19,9 +19,6 @@ import fs from 'fs-extra';
 
 // 更新服务实例
 let updaterService: UpdaterService | null = null;
-
-// 备份管理器实例
-const backupManager: BackupManager = new BackupManager();
 
 // 本地开发时使用的更新配置文件路径
 if (process.env.NODE_ENV === 'development') {
@@ -52,13 +49,6 @@ export function initUpdaterService(language: string) {
  */
 export function getUpdaterService(): UpdaterService | null {
     return updaterService;
-}
-
-/**
- * 获取备份管理器实例
- */
-export function getBackupManager(): BackupManager | null {
-    return backupManager;
 }
 
 export default class UpdaterService {
@@ -222,7 +212,7 @@ export default class UpdaterService {
                 
                 // 如果备份成功，明确向渲染进程发送备份完成的消息
                 if (success) {
-                    const backupManager = getBackupManager();
+                    const backupManager = BackupManager.getInstance();
                     if (backupManager) {
                         // 获取更新窗口
                         const existingWindows = BrowserWindow.getAllWindows();
@@ -322,7 +312,7 @@ export default class UpdaterService {
             log.info('用户取消备份');
             try {
                 // 中断备份进程
-                const backupManager = getBackupManager();
+                const backupManager = BackupManager.getInstance();
                 if (backupManager) {
                     // 删除部分备份文件
                     await backupManager.cleanBackupFiles();
@@ -374,20 +364,6 @@ export default class UpdaterService {
             log.info('[主进程] 更新限制时间已保存');
             return true;
         });
-
-        // 开始恢复备份
-        ipcMain.handle('start-restore', async () => {
-            return this.restoreUserData();
-        });
-
-        // 跳过恢复备份
-        ipcMain.handle('skip-restore', async () => {
-            const backupManager = getBackupManager();
-            if (backupManager) {
-                return backupManager.deleteBackup();
-            }
-            return false;
-        });
     }
 
     /**
@@ -409,7 +385,7 @@ export default class UpdaterService {
      * @returns 备份是否成功
      */
     private async backupUserData(): Promise<boolean> {
-        const backupManager = getBackupManager();
+        const backupManager = BackupManager.getInstance();
         if (!backupManager) {
             log.error('备份管理器未初始化');
             return false;
@@ -435,33 +411,6 @@ export default class UpdaterService {
 
         // 执行备份
         return await backupManager.createBackup();
-    }
-
-    /**
-     * 恢复用户数据
-     * @returns 恢复是否成功
-     */
-    private async restoreUserData(): Promise<boolean> {
-        const backupManager = getBackupManager();
-        if (!backupManager) {
-            log.error('备份管理器未初始化');
-            return false;
-        }
-
-        // 获取恢复窗口
-        const existingWindows = BrowserWindow.getAllWindows();
-        // @ts-ignore
-        const restoreWindow = existingWindows.find(win => win.uniqueId === 'restore-window');
-
-        // 设置进度回调
-        backupManager.setProgressCallback((progress, status) => {
-            if (restoreWindow && !restoreWindow.isDestroyed()) {
-                restoreWindow.webContents.send('backup-status', { progress, status });
-            }
-        });
-
-        // 执行恢复
-        return await backupManager.restoreBackup();
     }
 
     /**

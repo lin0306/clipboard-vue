@@ -25,13 +25,21 @@ if (env !== 'development') {
  */
 class ClipboardDB {
     private static instance: ClipboardDB; // 单例实例
-    private db: Database.Database; // SQLite数据库连接
+    private db: Database.Database | undefined; // SQLite数据库连接
+    private static isInit: boolean = true; // 是否初始化
+    /**
+     * 静态方法，获取数据库实例
+     * 实现单例模式，确保整个应用中只有一个数据库连接
+     * @returns {ClipboardDB} 数据库实例
 
     /**
      * 私有构造函数，初始化数据库连接和表结构
      * 实现单例模式，确保只有一个数据库连接实例
      */
     private constructor() {
+        if (!ClipboardDB.isInit) {
+            return;
+        }
         log.info("[数据库进程] 数据库初始化");
         const dbFolder = getDBPath();
         log.info("[数据库进程] 数据文件存储文件夹位置：", dbFolder);
@@ -50,7 +58,15 @@ class ClipboardDB {
      * 实现单例模式，确保整个应用中只有一个数据库连接
      * @returns {ClipboardDB} 数据库实例
      */
-    public static getInstance(): ClipboardDB {
+    public static getInstance(isInit: boolean = true): ClipboardDB | undefined {
+        if (!isInit) {
+            ClipboardDB.isInit = false;
+            return;
+        }
+        if (!ClipboardDB.isInit) {
+            return;
+        }
+        
         if (!ClipboardDB.instance) {
             ClipboardDB.instance = new ClipboardDB();
         }
@@ -63,7 +79,7 @@ class ClipboardDB {
      */
     private initTables() {
         // 创建剪贴板条目表
-        this.db.exec(`
+        this.getDB().exec(`
                     CREATE TABLE IF NOT EXISTS clipboard_items (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         content TEXT NOT NULL,
@@ -76,7 +92,7 @@ class ClipboardDB {
                 `);
 
         // 创建标签表
-        this.db.exec(`
+        this.getDB().exec(`
                     CREATE TABLE IF NOT EXISTS tags (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         name TEXT NOT NULL UNIQUE,
@@ -86,7 +102,7 @@ class ClipboardDB {
                 `);
 
         // 创建剪贴板条目和标签的关联表
-        this.db.exec(`
+        this.getDB().exec(`
                     CREATE TABLE IF NOT EXISTS item_tags (
                         item_id INTEGER,
                         tag_id INTEGER,
@@ -97,12 +113,16 @@ class ClipboardDB {
                 `);
     }
 
+    private getDB(): Database.Database {
+        return this.db as Database.Database;
+    }
+
     /**
      * 关闭数据库连接
      * 在应用退出前调用，确保资源正确释放
      */
     close() {
-        this.db.close();
+        this.getDB().close();
     }
 
     /**
@@ -116,11 +136,11 @@ class ClipboardDB {
         log.info("[数据库进程] 剪贴板内容添加开始", [content, type, filePath]);
 
         try {
-            this.db.transaction(() => {
+            this.getDB().transaction(() => {
                 // 覆盖相同内容的旧记录的复制时间
                 if (type === 'text') {
                     log.info("[数据库进程] 查询相同文本内容的旧记录");
-                    const row = this.db.prepare('SELECT id FROM clipboard_items WHERE content = ? AND type = ?').get(content, type) as { id: number };
+                    const row = this.getDB().prepare('SELECT id FROM clipboard_items WHERE content = ? AND type = ?').get(content, type) as { id: number };
                     if (row) {
                         this.updateItemTime(row.id, Date.now());
                         log.info("[数据库进程] 有查询到相同文本内容的记录，覆盖复制时间");
@@ -128,7 +148,7 @@ class ClipboardDB {
                     }
                 } else if (filePath) {
                     log.info("[数据库进程] 查询相同文件路径的旧记录");
-                    const row = this.db.prepare('SELECT id FROM clipboard_items WHERE type = ? AND file_path = ?').get(type, filePath) as { id: number };
+                    const row = this.getDB().prepare('SELECT id FROM clipboard_items WHERE type = ? AND file_path = ?').get(type, filePath) as { id: number };
                     if (row) {
                         this.updateItemTime(row.id, Date.now());
                         log.info("[数据库进程] 有查询到相同文件内容的记录，覆盖复制时间");
@@ -137,7 +157,7 @@ class ClipboardDB {
                 }
 
                 log.info("[数据库进程] 准备插入新的剪贴板记录");
-                this.db.prepare('INSERT INTO clipboard_items (content, copy_time, type, file_path) VALUES (?, ?, ?, ?)').run(content, Date.now(), type, filePath);
+                this.getDB().prepare('INSERT INTO clipboard_items (content, copy_time, type, file_path) VALUES (?, ?, ?, ?)').run(content, Date.now(), type, filePath);
             })();
             log.info("[数据库进程] 剪贴板内容添加成功");
         } catch (err) {
@@ -159,19 +179,19 @@ class ClipboardDB {
             const maxHistoryItems = config.maxHistoryItems || 2000;
             const autoCleanupDays = config.autoCleanupDays || 30;
 
-            this.db.transaction(() => {
+            this.getDB().transaction(() => {
                 // 自动清理过期项目
                 if (autoCleanupDays > 0) {
                     const cutoffTime = Date.now() - (autoCleanupDays * 24 * 60 * 60 * 1000);
                     log.info(`[数据库进程] 清理${autoCleanupDays}天前的剪贴板记录`);
 
                     // 获取要删除的文件文件路径
-                    const oldFileItems = this.db.prepare(
+                    const oldFileItems = this.getDB().prepare(
                         'SELECT id, file_path FROM clipboard_items WHERE is_topped = 0 AND copy_time < ? AND file_path IS NOT NULL'
                     ).all(cutoffTime) as { id: number, file_path: string }[];
 
                     // 删除过期的非置顶项目
-                    const result = this.db.prepare(
+                    const result = this.getDB().prepare(
                         'DELETE FROM clipboard_items WHERE is_topped = 0 AND copy_time < ?'
                     ).run(cutoffTime);
 
@@ -196,7 +216,7 @@ class ClipboardDB {
                 }
 
                 // 检查历史记录数量是否超过限制
-                const totalCount = this.db.prepare('SELECT COUNT(*) as count FROM clipboard_items').get() as { count: number };
+                const totalCount = this.getDB().prepare('SELECT COUNT(*) as count FROM clipboard_items').get() as { count: number };
                 if (totalCount.count >= maxHistoryItems) {
                     log.info(`[数据库进程] 历史记录数量(${totalCount.count})已达到上限(${maxHistoryItems})，删除最早的非置顶记录`);
 
@@ -204,14 +224,14 @@ class ClipboardDB {
                     const deleteCount = totalCount.count - maxHistoryItems + 1; // +1 为即将添加的新记录腾出空间
 
                     // 获取要删除的图片文件路径
-                    const oldImageItems = this.db.prepare(
+                    const oldImageItems = this.getDB().prepare(
                         `SELECT id, file_path FROM clipboard_items 
                              WHERE type = 'image' AND is_topped = 0 AND file_path IS NOT NULL 
                              ORDER BY copy_time ASC LIMIT ?`
                     ).all(deleteCount) as { id: number, file_path: string }[];
 
                     // 删除最早的非置顶记录
-                    const result = this.db.prepare(
+                    const result = this.getDB().prepare(
                         `DELETE FROM clipboard_items 
                              WHERE id IN (SELECT id FROM clipboard_items 
                                          WHERE is_topped = 0 
@@ -249,7 +269,7 @@ class ClipboardDB {
      * @returns {any} 条目信息
      */
     getItemById(id: number): any {
-        return this.db.prepare('SELECT * FROM clipboard_items WHERE id =?').get(id);
+        return this.getDB().prepare('SELECT * FROM clipboard_items WHERE id =?').get(id);
     }
 
     /**
@@ -258,7 +278,7 @@ class ClipboardDB {
      * @returns {Array} 剪贴板条目数组
      */
     getAllItems(): Array<any> {
-        return this.db.prepare('SELECT * FROM clipboard_items ORDER BY is_topped DESC, CASE WHEN is_topped = 1 THEN top_time ELSE copy_time END DESC').all();
+        return this.getDB().prepare('SELECT * FROM clipboard_items ORDER BY is_topped DESC, CASE WHEN is_topped = 1 THEN top_time ELSE copy_time END DESC').all();
     }
 
     /**
@@ -267,7 +287,7 @@ class ClipboardDB {
      * @returns {Array} 符合条件的剪贴板条目数组
      */
     getItemsByTag(tagName: string): Array<any> {
-        return this.db.prepare('SELECT ci.* FROM clipboard_items ci ' +
+        return this.getDB().prepare('SELECT ci.* FROM clipboard_items ci ' +
             'INNER JOIN item_tags it ON ci.id = it.item_id ' +
             'INNER JOIN tags t ON it.tag_id = t.id ' +
             'WHERE t.name = ? ' +
@@ -283,7 +303,7 @@ class ClipboardDB {
     deleteItem(id: number) {
         try {
             // 先获取要删除的内容信息
-            const row = this.db.prepare('SELECT type, file_path FROM clipboard_items WHERE id = ?').get(id) as { type: string, file_path: string } | undefined;
+            const row = this.getDB().prepare('SELECT type, file_path FROM clipboard_items WHERE id = ?').get(id) as { type: string, file_path: string } | undefined;
             log.info('[数据库进程] 要删除的内容信息:', row);
             // 如果是图片类型，删除对应的临时文件
             if (row && row.file_path) {
@@ -295,7 +315,7 @@ class ClipboardDB {
             }
 
             // 删除数据库记录
-            this.db.prepare('DELETE FROM clipboard_items WHERE id = ?').run(id);
+            this.getDB().prepare('DELETE FROM clipboard_items WHERE id = ?').run(id);
             log.info('[数据库进程] 剪贴板内容删除成功');
         } catch (err) {
             throw err;
@@ -316,7 +336,7 @@ class ClipboardDB {
 
                 // 先获取所有图片类型的记录
                 log.info('[数据库进程] 正在获取所有图片记录...');
-                const rows = this.db.prepare('SELECT type, file_path FROM clipboard_items WHERE file_path IS NOT NULL').all() as { type: string, file_path: string }[];
+                const rows = this.getDB().prepare('SELECT type, file_path FROM clipboard_items WHERE file_path IS NOT NULL').all() as { type: string, file_path: string }[];
 
                 // 删除所有图片文件
                 log.info('[数据库进程] 开始删除文件...');
@@ -333,7 +353,7 @@ class ClipboardDB {
 
                 // 清空数据库记录
                 log.info('[数据库进程] 正在清空数据库记录...');
-                this.db.prepare('DELETE FROM clipboard_items').run();
+                this.getDB().prepare('DELETE FROM clipboard_items').run();
 
                 // 确保temp目录存在
                 if (!fs.existsSync(tempDir)) {
@@ -357,7 +377,7 @@ class ClipboardDB {
      * @param {boolean} isTopped 是否置顶
      */
     toggleTop(id: number, isTopped: boolean) {
-        this.db.prepare('UPDATE clipboard_items SET is_topped = ?, top_time = ? WHERE id = ?').run(isTopped ? 1 : 0, isTopped ? Date.now() : null, id);
+        this.getDB().prepare('UPDATE clipboard_items SET is_topped = ?, top_time = ? WHERE id = ?').run(isTopped ? 1 : 0, isTopped ? Date.now() : null, id);
     }
 
     /**
@@ -425,11 +445,11 @@ class ClipboardDB {
         itemsParams.push(pageSize, offset);
 
         // 获取总条数
-        const countResult = this.db.prepare(countSql).get(countParams) as { total: number };
+        const countResult = this.getDB().prepare(countSql).get(countParams) as { total: number };
         const total = countResult.total;
 
         // 获取符合条件的剪贴板条目
-        const items = this.db.prepare(itemsSql).all(itemsParams) as any[];
+        const items = this.getDB().prepare(itemsSql).all(itemsParams) as any[];
 
         // 处理JSON字符串为JavaScript对象
         for (const item of items) {
@@ -451,7 +471,7 @@ class ClipboardDB {
      * @param {number} newTime 新的复制时间
      */
     updateItemTime(id: number, newTime: number) {
-        this.db.prepare('UPDATE clipboard_items SET copy_time = ? WHERE id = ?').run(newTime, id);
+        this.getDB().prepare('UPDATE clipboard_items SET copy_time = ? WHERE id = ?').run(newTime, id);
     }
 
     /**
@@ -487,7 +507,7 @@ class ClipboardDB {
                 log.info(`[数据库进程] 存储大小超过限制，开始清理`);
 
                 // 获取所有图片条目，按时间排序
-                const fileItems = this.db.prepare(
+                const fileItems = this.getDB().prepare(
                     'SELECT id, file_path, copy_time FROM clipboard_items WHERE is_topped = 0 AND file_path IS NOT NULL ORDER BY copy_time ASC'
                 ).all() as { id: number, file_path: string, copy_time: number }[];
 
@@ -507,7 +527,7 @@ class ClipboardDB {
                             // 删除文件
                             fs.unlinkSync(item.file_path);
                             // 删除数据库记录
-                            this.db.prepare('DELETE FROM clipboard_items WHERE id = ?').run(item.id);
+                            this.getDB().prepare('DELETE FROM clipboard_items WHERE id = ?').run(item.id);
 
                             deletedSize += fileSize;
                             deletedCount++;
@@ -532,7 +552,7 @@ class ClipboardDB {
      * @param {string} color 标签颜色
      */
     addTag(name: string, color: string) {
-        this.db.prepare('INSERT INTO tags (name, color, created_at) VALUES (?, ?, ?)').run(name, color, Date.now());
+        this.getDB().prepare('INSERT INTO tags (name, color, created_at) VALUES (?, ?, ?)').run(name, color, Date.now());
     }
 
     /**
@@ -540,7 +560,7 @@ class ClipboardDB {
      * @param {number} id 标签ID
      */
     deleteTag(id: number) {
-        this.db.prepare('DELETE FROM tags WHERE id = ?').run(id);
+        this.getDB().prepare('DELETE FROM tags WHERE id = ?').run(id);
     }
 
     /**
@@ -550,7 +570,7 @@ class ClipboardDB {
      * @param {string} color 标签颜色
      */
     updateTag(id: number, name: string, color: string) {
-        this.db.prepare('UPDATE tags SET name = ?, color = ? WHERE id = ?').run(name, color, id);
+        this.getDB().prepare('UPDATE tags SET name = ?, color = ? WHERE id = ?').run(name, color, id);
     }
 
     /**
@@ -558,7 +578,7 @@ class ClipboardDB {
      * @returns {Array} 标签数组，按创建时间升序排列
      */
     getAllTags(): Array<any> {
-        return this.db.prepare('SELECT * FROM tags ORDER BY created_at ASC').all();
+        return this.getDB().prepare('SELECT * FROM tags ORDER BY created_at ASC').all();
     }
 
     /**
@@ -567,7 +587,7 @@ class ClipboardDB {
      * @param {number} tagId 标签ID
      */
     addItemTag(itemId: number, tagId: number) {
-        this.db.prepare('INSERT INTO item_tags (item_id, tag_id) VALUES (?, ?)').run(itemId, tagId);
+        this.getDB().prepare('INSERT INTO item_tags (item_id, tag_id) VALUES (?, ?)').run(itemId, tagId);
     }
 
     /**
@@ -576,7 +596,7 @@ class ClipboardDB {
      * @param {number} tagId 标签ID
      */
     removeItemTag(itemId: number, tagId: number) {
-        this.db.prepare('DELETE FROM item_tags WHERE item_id = ? AND tag_id = ?').run(itemId, tagId);
+        this.getDB().prepare('DELETE FROM item_tags WHERE item_id = ? AND tag_id = ?').run(itemId, tagId);
     }
 
     /**
@@ -585,7 +605,7 @@ class ClipboardDB {
      * @returns {Array} 标签数组
      */
     getItemTags(itemId: number): Array<any> {
-        return this.db.prepare('SELECT t.* FROM tags t INNER JOIN item_tags it ON t.id = it.tag_id WHERE it.item_id = ?').all(itemId);
+        return this.getDB().prepare('SELECT t.* FROM tags t INNER JOIN item_tags it ON t.id = it.tag_id WHERE it.item_id = ?').all(itemId);
     }
 
     /**
@@ -597,18 +617,18 @@ class ClipboardDB {
      */
     bindItemToTag(itemId: number, tagId: any) {
         // 验证标签是否存在
-        const tag = this.db.prepare('SELECT id FROM tags WHERE id = ?').get(tagId) as { id: number } | undefined;
+        const tag = this.getDB().prepare('SELECT id FROM tags WHERE id = ?').get(tagId) as { id: number } | undefined;
         if (!tag) {
             throw new Error('标签不存在');
         }
         // 检查标签是否已经绑定
-        const bindInfo = this.db.prepare('SELECT * FROM item_tags WHERE item_id = ? AND tag_id = ?').get(itemId, tag.id);
+        const bindInfo = this.getDB().prepare('SELECT * FROM item_tags WHERE item_id = ? AND tag_id = ?').get(itemId, tag.id);
         if (bindInfo) {
             log.info('[数据库进程] 标签已绑定');
             return;
         }
         // 标签未绑定，执行绑定操作
-        this.db.prepare('INSERT OR IGNORE INTO item_tags (item_id, tag_id) VALUES (?, ?)').run(itemId, tag.id);
+        this.getDB().prepare('INSERT OR IGNORE INTO item_tags (item_id, tag_id) VALUES (?, ?)').run(itemId, tag.id);
     }
 }
 

@@ -36,7 +36,7 @@ window.ipcRenderer.on('load-logo', (_event, logoPath) => {
     loggPath.value = logoPath;
 });
 </script>
-<style>
+<style scoped>
 .about-container {
     display: flex;
     flex-direction: column;

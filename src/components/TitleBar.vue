@@ -83,7 +83,7 @@ function openDevTool(devTool: string | undefined) {
     }
 }
 </script>
-<style>
+<style scoped>
 /* 标题栏样式 */
 #title-bar {
     height: 25px;

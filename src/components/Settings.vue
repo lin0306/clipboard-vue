@@ -241,7 +241,7 @@ const devtoolConfig = reactive({
 
 // 监听标签加载
 window.ipcRenderer.on('show-devtool', (_event, devtool) => {
-  Object.assign(devtoolConfig, devtool);
+  Object.assign(devtoolConfig, JSON.parse(devtool));
 });
 
 function updateDevtoolConfigShowStatus(checked: any, _e: Event) {
@@ -254,16 +254,16 @@ onMounted(() => {
   // 监听主进程发送的配置信息
   window.ipcRenderer.on('load-config', (_event, config) => {
     console.log('接收到通用设置配置:', config);
-    Object.assign(originalConfig, config);
-    Object.assign(currentConfig, config);
+    Object.assign(originalConfig, JSON.parse(config));
+    Object.assign(currentConfig, JSON.parse(config));
   });
 
   // 监听快捷键配置加载
   window.ipcRenderer.on('load-shortcut-keys', (_event, config) => {
     console.log('[渲染进程] 接收到快捷键配置', config);
     // 使用深拷贝而不是引用赋值，确保originalShortcutKeys和currentShortcutKeys是独立的对象
-    Object.assign(originalShortcutKeys, JSON.parse(JSON.stringify(config)));
-    Object.assign(currentShortcutKeys, JSON.parse(JSON.stringify(config)));
+    Object.assign(originalShortcutKeys, JSON.parse(config));
+    Object.assign(currentShortcutKeys, JSON.parse(config));
   });
 });
 </script>

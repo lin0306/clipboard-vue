@@ -23,7 +23,7 @@ const shortcutKeyConfig = ref<any>(null);
 // 读取配置文件信息
 export function getSettings() {
     if (settings.value) {
-        return JSON.parse(JSON.stringify(settings.value));
+        return settings.value;
     }
     const configPath = getConfigPath(settingsFileName);
     const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
@@ -41,7 +41,7 @@ export function updateSettings(config: any) {
 // 读取快捷键配置文件信息
 export function getShortcutKeys() {
     if (shortcutKeyConfig.value) {
-        return JSON.parse(JSON.stringify(shortcutKeyConfig.value));
+        return shortcutKeyConfig.value;
     }
     const configPath = getConfigPath(shortcutKeyFileName);
     const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));

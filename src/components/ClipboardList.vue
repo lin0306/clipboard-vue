@@ -466,17 +466,17 @@ window.ipcRenderer.on('clipboard-updated', () => {
 
 // 监听标签加载
 window.ipcRenderer.on('load-tag-items', (_event, tags) => {
-  TagItems.value = tags;
+  TagItems.value = JSON.parse(tags);
 });
 
 // 监听快捷键配置加载
 window.ipcRenderer.on('load-shortcut-keys', (_event, config) => {
-  shortcutKeyConfig.value = config;
+  shortcutKeyConfig.value = JSON.parse(config);
 });
 
 // 监听快捷键配置加载
 window.ipcRenderer.on('load-settings', (_event, config) => {
-  settingsConfig.value = config;
+  settingsConfig.value = JSON.parse(config);
 });
 
 // 点击外部关闭下拉菜单

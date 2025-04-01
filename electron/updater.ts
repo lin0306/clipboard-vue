@@ -4,51 +4,23 @@
  */
 
 import { app, BrowserWindow, ipcMain, nativeImage, Notification } from 'electron';
-import { autoUpdater } from 'electron-updater';
-import path from 'path';
 import Store from 'electron-store';
+import { autoUpdater } from 'electron-updater';
+import fs from 'fs-extra';
+import path from 'path';
+import BackupManager from './BackupManager.js';
 import { getUpdateText, UpdateLanguageConfig } from './languages.js';
 import log from './log.js';
-import fs from 'fs-extra';
-import BackupManager from './BackupManager.js';
 
 /**
  * 主进程中初始化更新服务的代码
  * 需要在main.ts中导入并使用
  */
 
-// 更新服务实例
-let updaterService: UpdaterService | null = null;
-
 // 本地开发时使用的更新配置文件路径
 if (process.env.NODE_ENV === 'development') {
     autoUpdater.updateConfigPath = path.join(__dirname, "../dev-update.yml");
     autoUpdater.forceDevUpdateConfig = true;
-}
-
-/**
- * 初始化更新服务
- * @param mainWindow 主窗口实例
- */
-export function initUpdaterService(language: string) {
-    try {
-        // 创建更新服务实例
-        updaterService = new UpdaterService(language);
-
-        // 启动自动更新检查，默认每60分钟检查一次
-        updaterService.startAutoUpdateCheck(60);
-
-        log.info('[主进程] 更新服务初始化成功');
-    } catch (error) {
-        log.error('[主进程] 更新服务初始化失败:', error);
-    }
-}
-
-/**
- * 获取更新服务实例
- */
-export function getUpdaterService(): UpdaterService | null {
-    return updaterService;
 }
 
 export default class UpdaterService {
@@ -59,17 +31,19 @@ export default class UpdaterService {
     private language: UpdateLanguageConfig;
     private updateLimitTime: number | null | undefined; // 更新限制时间
     private updateStore: Store; // 用于存储更新配置的Store实例
+    private static instance: UpdaterService; // 单例实例
+    private static language: string; // 单例模式的语言
 
     constructor(language: string) {
         this.language = getUpdateText(language);
         log.info('[主进程] 更新服务初始化', language);
-        
+
         // 创建更新配置存储实例
         this.updateStore = new Store({
             name: 'update-config',  // 不含扩展名的文件名
             cwd: app.getPath('userData'),  // 存储在应用的userData目录下
         });
-        
+
         // 从Store中读取更新限制时间
         const updateConfig = this.updateStore.store as { updateLimitTime?: string };
         if (updateConfig.updateLimitTime) {
@@ -89,6 +63,33 @@ export default class UpdaterService {
 
         // 注册IPC事件处理
         this.registerIpcHandlers();
+    }
+
+    public static getInstance(language: string | undefined = undefined): UpdaterService {
+        if (!UpdaterService.instance) {
+            if (language) {
+                UpdaterService.instance = new UpdaterService(language);
+                return UpdaterService.instance;
+            }
+            UpdaterService.instance = new UpdaterService(UpdaterService.language);
+        }
+        UpdaterService.language = language ? language : 'chinese';
+        return UpdaterService.instance;
+    }
+
+    /**
+ * 初始化更新服务
+ * @param mainWindow 主窗口实例
+ */
+    initUpdaterService() {
+        try {
+            // 启动自动更新检查，默认每60分钟检查一次
+            this.startAutoUpdateCheck(60);
+
+            log.info('[主进程] 更新服务初始化成功');
+        } catch (error) {
+            log.error('[主进程] 更新服务初始化失败:', error);
+        }
     }
 
     /**
@@ -135,7 +136,7 @@ export default class UpdaterService {
                     releaseNotes: releaseNotes
                 });
             }, 1000);
-            
+
             // 打开更新窗口而不是显示弹窗
             const { createUpdateWindow } = require('./main');
             createUpdateWindow();
@@ -171,21 +172,21 @@ export default class UpdaterService {
                 transferred: progressObj.transferred || 0,
                 delta: progressObj.delta || 0
             };
-            
+
             // 确保percent值是有效数字
             if (isNaN(progressData.percent)) {
                 progressData.percent = 0;
             }
-            
+
             log.info('下载进度:', progressData.percent.toFixed(2) + '%',
                 '速度:', (progressData.bytesPerSecond / 1024).toFixed(2) + 'KB/s',
                 '已下载:', (progressData.transferred / 1024 / 1024).toFixed(2) + 'MB',
                 '总大小:', (progressData.total / 1024 / 1024).toFixed(2) + 'MB');
-                
+
             log.info('发送到前端的进度数据:', JSON.stringify(progressData));
             this.sendStatusToWindow('download-progress', progressData);
         });
-        
+
         // 更新取消事件
         autoUpdater.on('update-cancelled', (info) => {
             log.info('更新已取消:', info);
@@ -209,7 +210,7 @@ export default class UpdaterService {
                     releaseNotes: info.releaseNotes,
                     backupCompleted: success
                 });
-                
+
                 // 如果备份成功，明确向渲染进程发送备份完成的消息
                 if (success) {
                     const backupManager = BackupManager.getInstance();
@@ -218,7 +219,7 @@ export default class UpdaterService {
                         const existingWindows = BrowserWindow.getAllWindows();
                         // @ts-ignore
                         const updateWindow = existingWindows.find(win => win.uniqueId === 'update-window');
-                        
+
                         // 发送100%的备份进度
                         backupManager.setProgressCallback((progress, status) => {
                             // 确保100%的进度消息被发送
@@ -227,11 +228,11 @@ export default class UpdaterService {
                                 updateWindow.webContents.send('backup-status', { progress, status });
                             }
                         });
-                        
+
                         // 确保最终备份进度100%被发送
                         if (updateWindow && !updateWindow.isDestroyed()) {
-                            updateWindow.webContents.send('backup-status', { 
-                                progress: 100, 
+                            updateWindow.webContents.send('backup-status', {
+                                progress: 100,
                                 status: '备份完成'
                             });
                         }
@@ -248,13 +249,13 @@ export default class UpdaterService {
     private resetAutoUpdater() {
         // 清除所有事件监听器
         autoUpdater.removeAllListeners();
-        
+
         // 重置配置
         autoUpdater.logger = log;
         autoUpdater.autoDownload = false;
         autoUpdater.autoInstallOnAppQuit = true;
         autoUpdater.allowPrerelease = true;
-        
+
         // 恢复本地开发配置（如果有）
         if (process.env.NODE_ENV === 'development') {
             autoUpdater.updateConfigPath = path.join(__dirname, "../dev-update.yml");
@@ -262,10 +263,10 @@ export default class UpdaterService {
         } else {
             autoUpdater.forceDevUpdateConfig = false;
         }
-        
+
         // 重新注册事件
         this.initAutoUpdateEvents();
-        
+
         log.info('autoUpdater 已完全重置');
     }
 
@@ -289,16 +290,16 @@ export default class UpdaterService {
             try {
                 // 1. 先通知前端下载已取消
                 this.sendStatusToWindow('download-error', { error: '用户取消了下载' });
-                
+
                 // 2. 清理下载文件夹
                 this.cleanDownloadFiles();
-                
+
                 // 3. 重置内部状态
                 this.isBackupCompleted = false;
-                
+
                 // 4. 彻底重置 autoUpdater
                 this.resetAutoUpdater();
-                
+
                 log.info('下载已彻底取消，临时文件已清理，下载进程已终止');
                 return true;
             } catch (error) {
@@ -317,16 +318,16 @@ export default class UpdaterService {
                     // 删除部分备份文件
                     await backupManager.cleanBackupFiles();
                 }
-                
+
                 // 重置内部状态
                 this.isBackupCompleted = false;
-                
+
                 // 通知前端备份已取消
                 this.sendStatusToWindow('download-error', { error: '用户取消了备份' });
-                
+
                 // 彻底重置 autoUpdater 以确保没有残留的下载或事件
                 this.resetAutoUpdater();
-                
+
                 log.info('备份已取消，备份文件已清理，状态已重置');
                 return true;
             } catch (error) {
@@ -401,7 +402,7 @@ export default class UpdaterService {
             if (updateWindow && !updateWindow.isDestroyed()) {
                 log.info(`发送备份进度: ${progress}%, 状态: ${status}`);
                 updateWindow.webContents.send('backup-status', { progress, status });
-                
+
                 // 当备份完成时，明确设置isBackingUp为false
                 if (progress === 100) {
                     this.isBackupCompleted = true;
@@ -473,23 +474,23 @@ export default class UpdaterService {
     public async downloadUpdate(): Promise<boolean> {
         try {
             // 发送开始下载的状态
-            this.sendStatusToWindow('download-started', { 
+            this.sendStatusToWindow('download-started', {
                 percent: 0,
                 bytesPerSecond: 0,
                 total: 0,
                 transferred: 0
             });
-            
+
             // 延迟100毫秒再发送一次，确保渲染进程能够接收到状态更新
             setTimeout(() => {
-                this.sendStatusToWindow('download-started', { 
+                this.sendStatusToWindow('download-started', {
                     percent: 0,
                     bytesPerSecond: 0,
                     total: 0,
                     transferred: 0
                 });
             }, 100);
-            
+
             log.info('开始下载更新...');
             await autoUpdater.downloadUpdate();
             return true;
@@ -545,14 +546,14 @@ export default class UpdaterService {
                 log.info('清理下载缓存:', updaterCachePath);
                 fs.removeSync(updaterCachePath);
             }
-            
+
             // 获取electron-updater默认的下载文件夹
             const downloadPath = path.join(app.getPath('temp'), 'electron-updater');
             if (fs.existsSync(downloadPath)) {
                 log.info('清理下载文件夹:', downloadPath);
                 fs.removeSync(downloadPath);
             }
-            
+
             return true;
         } catch (error) {
             log.error('清理下载文件失败:', error);

@@ -34,11 +34,6 @@ export default class BackupManager {
         this.registerIpcHandlers();
     }
 
-    /**
-     * 获取数据库实例的静态方法
-     * 实现单例模式，确保整个应用中只有一个数据库连接
-     * @returns {ClipboardDB} 数据库实例
-     */
     public static getInstance(): BackupManager {
         if (!BackupManager.instance) {
             BackupManager.instance = new BackupManager();

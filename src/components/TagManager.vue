@@ -166,7 +166,7 @@ onMounted(() => {
 
     // 监听标签更新事件
     window.ipcRenderer.on('load-tag-items', (_event, tags) => {
-        tagItems.value = tags
+        tagItems.value = JSON.parse(tags)
     })
 })
 </script>

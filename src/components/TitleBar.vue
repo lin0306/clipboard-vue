@@ -46,10 +46,11 @@ const isShow = ref(false);
 
 // 监听标签加载
 window.ipcRenderer.on('show-devtool', (_event, devtoolConfig) => {
-    if (devtoolConfig.isDev) {
+    const data = JSON.parse(devtoolConfig);
+    if (data.isDev) {
         isShow.value = true;
     } else {
-        isShow.value = devtoolConfig.isShow;
+        isShow.value = data.isShow;
     }
 });
 

@@ -1,6 +1,6 @@
 import { ipcMain, shell } from "electron";
-import ClipboardDB from "./db";
-import log from "./log";
+import ClipboardDB from "../db/databases";
+import log from "../configs/log";
 import ClipboardListService from "./list";
 
 export default class TagsService {

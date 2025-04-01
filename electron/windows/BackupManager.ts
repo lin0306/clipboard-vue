@@ -7,8 +7,8 @@ import { BrowserWindow, ipcMain } from 'electron';
 import fs from 'fs-extra';
 import os from 'os';
 import path from 'path';
-import { getConfigDir, getDBPath, getTempPath, settingsFileName } from './FileManager.js';
-import log from './log.js';
+import { getConfigDir, getDBPath, getTempPath, settingsFileName } from '../configs/FileManager.js';
+import log from '../configs/log.ts';
 
 export default class BackupManager {
     private backupDir: string;

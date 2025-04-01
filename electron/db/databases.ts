@@ -6,8 +6,8 @@ import Database from 'better-sqlite3';
 import fs from 'fs-extra';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { getDBPath, getSettings } from './FileManager.js';
-import log from './log.js';
+import { getDBPath, getSettings } from '../configs/FileManager.js';
+import log from '../configs/log.ts';
 
 // 获取当前文件的目录路径
 let __dirname = path.dirname(fileURLToPath(import.meta.url));

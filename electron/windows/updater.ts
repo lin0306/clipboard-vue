@@ -9,8 +9,8 @@ import { autoUpdater } from 'electron-updater';
 import fs from 'fs-extra';
 import path from 'path';
 import BackupManager from './BackupManager.js';
-import { getUpdateText, UpdateLanguageConfig } from './languages.js';
-import log from './log.js';
+import { getUpdateText, UpdateLanguageConfig } from '../configs/languages.js';
+import log from '../configs/log.ts';
 
 /**
  * 主进程中初始化更新服务的代码

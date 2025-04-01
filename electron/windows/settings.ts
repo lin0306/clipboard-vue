@@ -1,6 +1,6 @@
 import { BrowserWindow, ipcMain } from "electron";
-import { updateSettings, updateShortcutKeys } from "./FileManager";
-import log from "./log";
+import { updateSettings, updateShortcutKeys } from "../configs/FileManager";
+import log from "../configs/log";
 import ClipboardListService from "./list";
 
 const env = process.env.NODE_ENV;

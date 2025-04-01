@@ -5,7 +5,7 @@ import fs from 'fs-extra'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { ref } from 'vue'
-import log from './log.js'
+import log from './log.ts'
 
 let __dirname = path.dirname(fileURLToPath(import.meta.url))
 

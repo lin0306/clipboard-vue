@@ -1,9 +1,9 @@
 import { app, BrowserWindow, clipboard, ipcMain, nativeImage } from "electron";
 import fs from 'fs-extra';
 import path from "path";
-import ClipboardDB from "./db";
-import { getSettings, getTempPath, updateSettings } from "./FileManager";
-import log from "./log";
+import ClipboardDB from "../db/databases";
+import { getSettings, getTempPath, updateSettings } from "../configs/FileManager";
+import log from "../configs/log";
 
 export default class ClipboardListService {
     private static instance: ClipboardListService; // 单例实例

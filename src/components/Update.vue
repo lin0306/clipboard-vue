@@ -318,7 +318,7 @@ function openGitHubReleases() {
 .update-content {
     flex: 1;
     padding: 20px;
-    margin-bottom: 60px;
+    margin-bottom: 100px;
     /* 为标题栏留出空间 */
     overflow-y: auto;
 }

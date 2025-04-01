@@ -4,13 +4,13 @@
  */
 
 import { app, BrowserWindow, ipcMain, nativeImage, Notification } from 'electron';
-import Store from 'electron-store';
 import { autoUpdater } from 'electron-updater';
 import fs from 'fs-extra';
 import path from 'path';
 import BackupManager from './BackupManager.js';
 import { getUpdateText, UpdateLanguageConfig } from '../configs/languages.js';
 import log from '../configs/log.ts';
+import StoreManager from '../configs/StoreManager.ts';
 
 /**
  * 主进程中初始化更新服务的代码
@@ -29,8 +29,8 @@ export default class UpdaterService {
     private isManualCheck = false; // 标记是否为手动检查更新
     private isBackupCompleted = false; // 标记是否已完成备份
     private language: UpdateLanguageConfig;
-    private updateLimitTime: number | null | undefined; // 更新限制时间
-    private updateStore: Store; // 用于存储更新配置的Store实例
+    private updateLimitTime: number | undefined; // 更新限制时间
+    private storeManager: StoreManager; // Store管理器实例
     private static instance: UpdaterService; // 单例实例
     private static language: string; // 单例模式的语言
 
@@ -38,16 +38,19 @@ export default class UpdaterService {
         this.language = getUpdateText(language);
         log.info('[主进程] 更新服务初始化', language);
 
-        // 创建更新配置存储实例
-        this.updateStore = new Store({
-            name: 'update-config',  // 不含扩展名的文件名
-            cwd: app.getPath('userData'),  // 存储在应用的userData目录下
-        });
-
-        // 从Store中读取更新限制时间
-        const updateConfig = this.updateStore.store as { updateLimitTime?: string };
-        if (updateConfig.updateLimitTime) {
-            this.updateLimitTime = Number(updateConfig.updateLimitTime);
+        // 获取Store管理器实例
+        this.storeManager = StoreManager.getInstance();
+        
+        // 从Store管理器中获取更新限制时间
+        this.updateLimitTime = this.storeManager.getUpdateLimitTime();
+        
+        // 检查是否是首次启动，如果是则标记为已启动
+        if (this.storeManager.isFirstLaunch()) {
+            log.info('[主进程] 检测到首次启动应用');
+            this.storeManager.markAsLaunched();
+        } else if (this.storeManager.isNewVersionFirstLaunch()) {
+            log.info('[主进程] 检测到新版本首次启动');
+            this.storeManager.updateLastLaunchVersion();
         }
 
         // 配置自动更新
@@ -360,8 +363,8 @@ export default class UpdaterService {
             now.setDate(now.getDate() + days);
             this.updateLimitTime = now.getTime();
 
-            // 保存到Store
-            this.updateStore.store = { updateLimitTime: this.updateLimitTime.toString() };
+            // 保存到Store管理器
+            this.storeManager.setUpdateLimitTime(this.updateLimitTime);
             log.info('[主进程] 更新限制时间已保存');
             return true;
         });
@@ -429,10 +432,10 @@ export default class UpdaterService {
                 log.info('更新限制时间未到，不进行更新检查');
                 return false;
             } else {
-                // 时间已到，清除更新限制并删除配置文件
-                log.info('更新限制时间已到，清除限制并删除配置文件');
+                // 时间已到，清除更新限制
+                log.info('更新限制时间已到，清除限制');
                 this.updateLimitTime = undefined;
-                this.updateStore.clear();
+                this.storeManager.clearUpdateLimitTime();
                 log.info('[主进程] 更新配置已清空');
             }
         }

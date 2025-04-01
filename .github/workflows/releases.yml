@@ -72,8 +72,12 @@ jobs:
           sudo rm -rf /Library/Developer/CommandLineTools
           sudo rm -rf /Applications/Xcode.app
           sudo rm -rf /usr/local/lib/node_modules
-          rm -rf ~/Library/Developer
-          rm -rf /usr/local/Homebrew
+          sudo rm -rf /Library/Caches/*
+          sudo rm -rf /System/Library/Caches/*
+          sudo rm -rf ~/Library/Developer || rm -rf ~/Library/Developer
+          sudo rm -rf ~/Library/Caches/* || rm -rf ~/Library/Caches/*
+          sudo rm -rf /usr/local/Homebrew || rm -rf /usr/local/Homebrew
+          rm -rf ~/.cache
           df -h
         shell: bash
         
@@ -85,6 +89,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_IDENTITY_AUTO_DISCOVERY: false
           USE_HARD_LINKS: false
+          DEBUG_DMG_SIZE: true
+          DMG_MAX_SIZE: "250m"
           
       - name: Build for Windows
         if: matrix.os == 'windows-latest'

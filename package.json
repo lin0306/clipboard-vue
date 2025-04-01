@@ -103,7 +103,9 @@
         "width": 540,
         "height": 380
       },
-      "sign": false
+      "sign": false,
+      "writeUpdateInfo": false,
+      "format": "UDZO"
     },
     "win": {
       "icon": "public/logo.ico",

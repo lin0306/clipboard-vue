@@ -128,6 +128,8 @@ function createListWindow() {
         y: y,
         transparent: false
     })
+    // 默认不显示窗口
+    mainWindow.hide();
 
     // @ts-ignore
     mainWindow.uniqueId = 'main-window';

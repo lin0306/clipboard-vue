@@ -76,7 +76,6 @@ export default defineConfig(({ command, mode }) => {
           // 手动分块策略
           manualChunks: {
             'vue-vendor': ['vue'],
-            'ant-design': ['ant-design-vue', '@ant-design/icons-vue'],
             'db-related': ['better-sqlite3', 'bindings', 'file-uri-to-path'],
             'utils': ['colord', 'electron-log'],
           },
@@ -99,7 +98,7 @@ export default defineConfig(({ command, mode }) => {
     },
     // 优化依赖预构建
     optimizeDeps: {
-      include: ['vue', 'ant-design-vue', '@ant-design/icons-vue'],
+      include: ['vue'],
     }
   }
 })

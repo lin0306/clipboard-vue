@@ -64642,9 +64642,6 @@ const _TagsService = class _TagsService {
       const db = ClipboardDB.getInstance();
       return db == null ? void 0 : db.getAllTags();
     });
-    require$$1$5.ipcMain.on("open-external-link", (_event, url) => {
-      require$$1$5.shell.openExternal(url);
-    });
   }
 };
 __publicField(_TagsService, "instance");
@@ -65240,6 +65237,9 @@ function restartAPP() {
   require$$1$5.app.relaunch();
   require$$1$5.app.exit(0);
 }
+require$$1$5.ipcMain.on("open-external-link", (_event, url) => {
+  require$$1$5.shell.openExternal(url);
+});
 exports.MAIN_DIST = MAIN_DIST;
 exports.RENDERER_DIST = RENDERER_DIST;
 exports.VITE_DEV_SERVER_URL = VITE_DEV_SERVER_URL;

@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, Menu, nativeImage, screen, Tray } from 'electron'
+import { app, BrowserWindow, ipcMain, Menu, nativeImage, screen, shell, Tray } from 'electron'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import BackupManager from './windows/BackupManager.js'
@@ -866,3 +866,7 @@ function restartAPP() {
     app.relaunch()
     app.exit(0)
 }
+
+ipcMain.on('open-external-link', (_event, url) => {
+    shell.openExternal(url);
+});

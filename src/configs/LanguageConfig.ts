@@ -1,11 +1,11 @@
-import zh_CN from 'ant-design-vue/es/locale/zh_CN';
-import En_US from 'ant-design-vue/es/locale/en_US';
 import { inject, InjectionKey, provide, reactive, ref } from 'vue';
+import { zhCN, dateZhCN, enUS, dateEnUS } from 'naive-ui';
 
 export interface LanguageConfig {
     id: string;
     name: string;
     locale: any;
+    dateLocale: any;
     type: PageConfig;
 }
 
@@ -153,10 +153,11 @@ export interface PageConfig {
 }
 
 // 简体中文配置
-export const zhCN: LanguageConfig = {
+export const chinese: LanguageConfig = {
     id: 'chinese',
     name: '简体中文',
-    locale: zh_CN,
+    locale: zhCN,
+    dateLocale: dateZhCN,
     type: {
         settings: {
             title: '设置',
@@ -290,10 +291,11 @@ export const zhCN: LanguageConfig = {
 }
 
 // 英文配置
-export const enUS: LanguageConfig = {
+export const english: LanguageConfig = {
     id: 'english',
     name: 'English',
-    locale: En_US,
+    locale: enUS,
+    dateLocale: dateEnUS,
     type: {
         settings: {
             title: 'Settings',
@@ -427,12 +429,12 @@ export const enUS: LanguageConfig = {
 }
 
 export const languages: LanguageConfig[] = [
-    zhCN,
-    enUS,
+    chinese,
+    english,
 ]
 
 export function getLanguageById(id: string): LanguageConfig {
-    return languages.find(language => language.id === id) || zhCN;
+    return languages.find(language => language.id === id) || chinese;
 }
 
 
@@ -467,7 +469,7 @@ export function createLanguageContext() {
     const savedLanguageId = localStorageLanguageId || 'chinese';
     currentLanguageId = savedLanguageId;
     // 使用ref使currentLanguageItem成为响应式引用
-    const currentLanguageItem = ref<LanguageConfig>(languages.find(l => l.id === savedLanguageId) || zhCN);
+    const currentLanguageItem = ref<LanguageConfig>(languages.find(l => l.id === savedLanguageId) || chinese);
     console.log('[渲染进程] 初始化语言上下文，当前的语言：', currentLanguageItem.value)
 
     // 创建一个新的文本对象，避免数据被覆盖，使用reactive使其成为响应式对象
@@ -516,8 +518,8 @@ export function useLanguage() {
     if (!language) {
         console.warn('useLanguage() 在LanguageProvider外部被调用，返回默认语言');
         // 返回基于zhCN的默认语言对象
-        const defaultLanguageItem = ref<LanguageConfig>(zhCN);
-        const defaultLanguageTexts = reactive({ ...zhCN.type });
+        const defaultLanguageItem = ref<LanguageConfig>(chinese);
+        const defaultLanguageTexts = reactive({ ...chinese.type });
 
         // 创建一个默认的setLanguage函数，它会在控制台输出警告但不执行任何操作
         const defaultSetLanguage = (_languageId: string) => {

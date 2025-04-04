@@ -56,9 +56,5 @@ export default class TagsService {
             const db = ClipboardDB.getInstance()
             return db?.getAllTags();
         });
-
-        ipcMain.on('open-external-link', (_event, url) => {
-            shell.openExternal(url);
-        });
     }
 }

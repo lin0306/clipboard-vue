@@ -1,15 +1,18 @@
 <script lang="ts" setup>
 import { Chrome } from '@ckpack/vue-color'
-import { message } from 'ant-design-vue'
 import { onMounted, reactive, ref } from 'vue'
 import { useLanguage } from '../configs/LanguageConfig'
 import titleBar from './TitleBar.vue'
 import TrashIcon from '../assets/icons/TrashIcon.vue'
+import SearchIcon from '../assets/icons/SearchIcon.vue'
 import LeftArrowIcon from '../assets/icons/LeftArrowIcon.vue'
 import AddIcon from '../assets/icons/AddIcon.vue'
+import { useMessage } from 'naive-ui'
 
 // 获取语言和主题配置
 const { languageTexts } = useLanguage()
+
+const message = useMessage();
 
 // 标签列表数据
 const tagItems = ref<any[]>([])
@@ -182,13 +185,21 @@ onMounted(() => {
                 <div class="tag-list-panel" :class="{ 'tag-list-panel-narrow': isPanelVisible }">
                     <!-- 搜索框 -->
                     <div class="tag-list-header">
-                        <a-input-search v-model:value="searchText" :placeholder="languageTexts.list.searchHint"
-                            style="width: 100%" @search="filterTags" />
+                        <n-input-group>
+                            <n-input v-model:value="searchText"
+                                :placeholder="languageTexts.list.searchHint" clearable @keydown.enter="filterTags" />
+                            <n-button type="primary" ghost @click="filterTags">
+                                <!-- 搜索 -->
+                                <n-icon size="20">
+                                    <SearchIcon />
+                                </n-icon>
+                            </n-button>
+                        </n-input-group>
                     </div>
 
                     <!-- 标签列表 -->
                     <div class="tag-list-container">
-                        <a-empty v-if="tagItems.length === 0" />
+                        <n-empty v-if="tagItems.length === 0" />
                         <div v-else class="tag-list">
                             <div v-for="tag in tagItems" :key="tag.id" class="tag-item"
                                 :class="{ 'tag-item-active': selectedTagId === tag.id }" @click="selectTag(tag)"
@@ -217,7 +228,7 @@ onMounted(() => {
                 <!-- 右侧详情/编辑面板 -->
                 <div class="tag-detail-panel" :class="{ 'panel-visible': isPanelVisible }">
                     <div class="panel-header">
-                        <h3>{{ isEditMode ? languageTexts.tags.addTitle : languageTexts.tags.editTitle }}</h3>
+                        <h3>{{ isEditMode ? languageTexts.tags.editTitle : languageTexts.tags.addTitle }}</h3>
                         <div>
                             <AddIcon class="add-btn" v-if="isEditMode" @click="openAddForm" />
                         </div>
@@ -227,19 +238,19 @@ onMounted(() => {
                         <div class="tag-form">
                             <div class="form-item">
                                 <label>{{ languageTexts.tags.tagName }}</label>
-                                <a-input v-model:value="editState.tagName"
+                                <n-input v-model:value="editState.tagName"
                                     :placeholder="languageTexts.tags.tagNameHint" />
                             </div>
                             <div class="form-item">
                                 <label>{{ languageTexts.tags.tagColor }}</label>
                                 <div class="color-picker-container">
-                                    <Chrome v-model="tagColor" />
+                                    <Chrome v-model="tagColor"/>
                                 </div>
                             </div>
 
                             <div class="form-actions">
-                                <a-button @click="hidePanel">{{ languageTexts.tags.cancelBtn }}</a-button>
-                                <a-button type="primary" @click="addTag">{{ languageTexts.tags.saveBtn }}</a-button>
+                                <n-button @click="hidePanel">{{ languageTexts.tags.cancelBtn }}</n-button>
+                                <n-button type="primary" @click="addTag">{{ languageTexts.tags.saveBtn }}</n-button>
                             </div>
                         </div>
                     </div>
@@ -464,7 +475,7 @@ onMounted(() => {
 
 .panel-content {
     padding: 8px 16px;
-    height: calc(100% - 52px);
+    height: calc(100% - 130px);
     overflow-y: auto;
 }
 
@@ -491,7 +502,13 @@ onMounted(() => {
     display: flex;
     justify-content: flex-end;
     gap: 12px;
-    margin-top: 10px;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    padding: 10px;
+    background-color: var(--theme-background);
+    border-top: 1px solid var(--theme-border);
+    width: 100%;
 }
 
 .add-btn {

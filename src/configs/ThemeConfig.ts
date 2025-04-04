@@ -9,20 +9,36 @@ export interface ThemeConfig {
 }
 
 export interface ThemeConfigColors {
-  primary: string;
-  secondary: string;
-  background: string;
-  text: string;
-  border: string;
-  titleBarBackground: string;
-  titleBarIconColor: string;
-  navBackground: string;
-  cardBackground: string;
-  hoverBackground: string;
-  divider: string;
-  tagColor: string;
-  scrollBarColor: string;
-  scrollBarColorHover: string;
+  primary: string;                    // 主色调
+  secondary: string;                  // 次色调
+  background: string;                 // 背景色
+  text: string;                       // 文字色
+  border: string;                     // 边框色
+  titleBarBackground: string;         // 标题栏背景色
+  titleBarIconColor: string;          // 标题栏图标色
+  navBackground: string;              // 导航栏背景色  
+  cardBackground: string;             // 卡片背景色
+  hoverBackground: string;            // 悬浮背景色
+  divider: string;                    // 分割线色
+  tagColor: string;                   // 标签色
+  tagTextColor: string;               // 标签文字色
+  scrollBarColor: string;             // 滚动条色
+  scrollBarColorHover: string;        // 滚动条悬浮色
+  menuItemBackground: string;         // 菜单项背景色
+  menuItemHover: string;              // 菜单项悬浮色
+  menuItemTextColor: string;          // 菜单项文字色
+  menuItemTextActive: string;         // 菜单项选中项文字色
+  menuItemTextHover: string;          // 菜单项悬浮文字色
+  switchRailColor: string;            // 开关关闭状态下的轨道色
+  switchRailColorActive: string;      // 开关选中状态下的轨道色
+  switchButtonColor: string;          // 开关按钮色
+  dialogTitleTextColor: string;       // 对话框标题文字色
+  dialogTextColor: string;            // 对话框文字色
+  dialogColor: string;                // 对话框背景色
+  dialogIconColor: string;            // 对话框图标色
+  dialogCloseIconColor: string;       // 对话框关闭图标色
+  dialogCloseIconColorHover: string;  // 对话框关闭图标悬浮图标色
+  dialogCloseColorHover: string;      // 对话框关闭按钮悬浮背景色
 }
 
 // 默认主题 - 灰阶色调
@@ -42,8 +58,24 @@ export const lightTheme: ThemeConfig = {
     hoverBackground: 'rgba(240,240,240,1)',
     divider: 'rgba(230,230,230,1)',
     tagColor: 'rgba(90,90,90,0.3)',
+    tagTextColor: 'rgba(51,51,51,1)',
     scrollBarColor: 'rgba(144, 147, 153, 0.3)',
     scrollBarColorHover: 'rgba(144, 147, 153, 0.5)',
+    menuItemBackground: 'rgba(248,248,248,1)',
+    menuItemHover: 'rgba(240,240,240,1)',
+    menuItemTextColor: 'rgba(51,51,51,1)',
+    menuItemTextActive: 'rgba(51,51,51,1)',
+    menuItemTextHover: 'rgba(51,51,51,1)',
+    switchRailColor: 'rgba(144, 147, 153, 0.3)',
+    switchRailColorActive: 'rgba(144, 147, 153, 0.5)',
+    switchButtonColor: 'rgba(255,255,255,1)',
+    dialogTitleTextColor: 'rgba(51,51,51,1)',
+    dialogTextColor: 'rgba(51,51,51,1)',
+    dialogColor: 'rgba(255,255,255,1)',
+    dialogIconColor: 'rgba(51,51,51,1)',
+    dialogCloseIconColor: 'rgba(51,51,51,1)',
+    dialogCloseIconColorHover: 'rgba(144, 147, 153, 0.5)',
+    dialogCloseColorHover: 'rgba(144, 147, 153, 0.5)',
   },
 };
 
@@ -64,8 +96,24 @@ export const darkTheme: ThemeConfig = {
     hoverBackground: 'rgba(45,45,45,1)',
     divider: 'rgba(55,55,55,1)',
     tagColor: 'rgba(160,160,160,0.2)',
+    tagTextColor: 'rgba(230,230,230,1)',
     scrollBarColor: 'rgba(255, 255, 255, 0.3)',
     scrollBarColorHover: 'rgba(144, 147, 153, 0.5)',
+    menuItemBackground: 'rgba(28,28,28,1)',
+    menuItemHover: 'rgba(45,45,45,1)',
+    menuItemTextColor: 'rgba(230,230,230,1)',
+    menuItemTextActive: 'rgba(230,230,230,1)',
+    menuItemTextHover: 'rgba(230,230,230,1)',
+    switchRailColor: 'rgba(144, 147, 153, 0.3)',
+    switchRailColorActive: 'rgba(144, 147, 153, 0.5)',
+    switchButtonColor: 'rgba(255,255,255,1)',
+    dialogTitleTextColor: 'rgba(230,230,230,1)',
+    dialogTextColor: 'rgba(230,230,230,1)',
+    dialogColor: 'rgba(35,35,35,1)',
+    dialogIconColor: 'rgba(230,230,230,1)',
+    dialogCloseIconColor: 'rgba(230,230,230,1)',
+    dialogCloseIconColorHover: 'rgba(144, 147, 153, 0.5)',
+    dialogCloseColorHover: 'rgba(144, 147, 153, 0.5)',
   },
 };
 
@@ -85,9 +133,25 @@ export const blueTheme: ThemeConfig = {
     cardBackground: 'rgba(255,255,255,1)',
     hoverBackground: 'rgba(230,240,250,1)',
     divider: 'rgba(200,220,240,1)',
-    tagColor: 'rgba(41,98,255,0.36)',
+    tagColor: 'rgba(200,220,240,1)',
+    tagTextColor: 'rgba(24,51,93,1)',
     scrollBarColor: 'rgba(127, 148, 192, 0.54)',
     scrollBarColorHover: 'rgba(49, 61, 84, 0.5)',
+    menuItemBackground: 'rgba(245,250,255,1)',
+    menuItemHover: 'rgba(230,240,250,1)',
+    menuItemTextColor: 'rgba(24,51,93,1)',
+    menuItemTextActive: 'rgba(24,51,93,1)',
+    menuItemTextHover: 'rgba(24,51,93,1)',
+    switchRailColor: 'rgba(200,220,240,1)',
+    switchRailColorActive: 'rgba(127, 148, 192, 0.54)',
+    switchButtonColor: 'rgba(87, 106, 146, 0.54)',
+    dialogTitleTextColor: 'rgba(24,51,93,1)',
+    dialogTextColor: 'rgba(24,51,93,1)',
+    dialogColor: 'rgba(255,255,255,1)',
+    dialogIconColor: 'rgba(24,51,93,1)',
+    dialogCloseIconColor: 'rgba(24,51,93,1)',
+    dialogCloseIconColorHover: 'rgb(40, 83, 153)',
+    dialogCloseColorHover: 'rgba(127, 148, 192, 0.54)',
   },
 };
 
@@ -107,9 +171,25 @@ export const pinkTheme: ThemeConfig = {
     cardBackground: 'rgba(255,255,255,1)',
     hoverBackground: 'rgba(248,230,240,1)',
     divider: 'rgba(240,210,225,1)',
-    tagColor: 'rgba(219,112,147,0.5)',
+    tagColor: 'rgba(240,210,225,1)',
+    tagTextColor: 'rgba(153,51,102,1)',
     scrollBarColor: 'rgba(214, 157, 206, 0.38)',
     scrollBarColorHover: 'rgba(153, 100, 140, 0.5)',
+    menuItemBackground: 'rgba(252,242,248,1)',
+    menuItemHover: 'rgba(248,230,240,1)',
+    menuItemTextColor: 'rgba(153,51,102,1)',
+    menuItemTextActive: 'rgba(153,51,102,1)',
+    menuItemTextHover: 'rgba(153,51,102,1)',
+    switchRailColor: 'rgb(249, 219, 234)',
+    switchRailColorActive: 'rgba(211, 122, 200, 0.38)',
+    switchButtonColor: 'rgba(156, 100, 149, 0.38)',
+    dialogTitleTextColor: 'rgba(153,51,102,1)',
+    dialogTextColor: 'rgba(153,51,102,1)',
+    dialogColor: 'rgba(255,255,255,1)',
+    dialogIconColor: 'rgba(153,51,102,1)',
+    dialogCloseIconColor: 'rgba(153,51,102,1)',
+    dialogCloseIconColorHover: 'rgb(198, 65, 132)',
+    dialogCloseColorHover: 'rgba(211, 122, 200, 0.38)',
   },
 };
 

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import { ConfigProvider } from 'ant-design-vue';
-import { theme } from 'ant-design-vue';
+import { GlobalThemeOverrides, NConfigProvider, NMessageProvider } from 'naive-ui';
 
 import { createThemeContext } from './configs/ThemeConfig';
 import { createLanguageContext } from './configs/LanguageConfig.ts';
@@ -14,24 +13,133 @@ import Update from './components/Update.vue'
 import Restore from './components/Restore.vue'
 
 // 创建主题上下文
-const { currentTheme } = createThemeContext();
+const { themeColors } = createThemeContext();
 const { currentLanguage } = createLanguageContext();
 
-// 计算Ant Design Vue的主题配置
-const antdTheme = computed(() => {
-  const isDark = currentTheme.value.id === 'dark';
+const theme = computed(() => {
   return {
-    token: {
-      colorPrimary: currentTheme.value.colors.primary,
-      colorBgBase: currentTheme.value.colors.background,
-      colorTextBase: currentTheme.value.colors.text,
-      borderRadius: 4,
+    common: {
+      primaryColor: themeColors.primary,
+      primaryColorHover: themeColors.primary,
+      primaryColorPressed: themeColors.primary,
     },
-    algorithm: isDark ? theme.darkAlgorithm : theme.defaultAlgorithm,
-  };
+    Button: {
+      textColor: themeColors.text,
+      textColorDisabled: `${themeColors.text}80`,
+    },
+    Input: {
+      color: themeColors.cardBackground,
+      colorFocus: themeColors.cardBackground,
+      colorHover: themeColors.primary,
+      colorDisabled: themeColors.cardBackground,
+      borderHover: themeColors.primary,
+      borderFocus: themeColors.primary,
+      borderDisabled: themeColors.border,
+      textColor: themeColors.text,
+      textColorDisabled: `${themeColors.text}80`,
+      placeholderColor: `${themeColors.text}80`,
+      placeholderColorDisabled: `${themeColors.text}50`
+    },
+    Tag: {
+      colorBordered: themeColors.tagColor, // 背景色
+      textColor: themeColors.tagTextColor, // 文字颜色
+      border: `0px solid ${themeColors.primary}`, // 边框
+      fontWeightStrong: 400 // 字体粗细
+    },
+    Select: {
+      color: themeColors.cardBackground,
+      colorActive: themeColors.cardBackground,
+      colorDisabled: `${themeColors.cardBackground}80`,
+      textColor: themeColors.text,
+      textColorDisabled: `${themeColors.text}80`,
+      placeholderColor: `${themeColors.text}80`,
+      placeholderColorDisabled: `${themeColors.text}50`,
+      border: themeColors.border,
+      borderHover: themeColors.primary,
+      borderActive: themeColors.primary,
+      borderFocus: themeColors.primary,
+      borderDisabled: themeColors.border,
+      boxShadowFocus: `0 0 0 2px ${themeColors.primary}20`,
+      menuColor: themeColors.cardBackground,
+      menuBoxShadow: '0 3px 6px -4px rgba(0, 0, 0, .12), 0 6px 16px 0 rgba(0, 0, 0, .08), 0 9px 28px 8px rgba(0, 0, 0, .05)',
+      menuDividerColor: themeColors.divider,
+      menuHeight: '200px',
+      menuBorderRadius: '4px',
+      menuBoxShadowPopoverInner: '0 3px 6px -4px rgba(0, 0, 0, .12), 0 6px 16px 0 rgba(0, 0, 0, .08), 0 9px 28px 8px rgba(0, 0, 0, .05)',
+      optionHeight: '36px',
+      optionFontSize: '14px',
+      optionColor: themeColors.cardBackground,
+      optionColorPressed: themeColors.cardBackground,
+      optionColorActive: `${themeColors.primary}20`,
+      optionColorHover: `${themeColors.primary}10`,
+      optionTextColor: themeColors.text,
+      optionTextColorPressed: themeColors.primary,
+      optionTextColorDisabled: `${themeColors.text}40`,
+      optionTextColorActive: themeColors.primary,
+      optionTextColorHover: themeColors.primary,
+      optionOpacityDisabled: '0.6',
+      loadingColor: themeColors.primary,
+      peers: {
+        InternalSelection: {
+          textColor: themeColors.text,
+          textColorDisabled: `${themeColors.text}80`,
+          color: themeColors.cardBackground,
+          colorActive: themeColors.cardBackground,
+          colorDisabled: `${themeColors.cardBackground}80`,
+          borderHover: themeColors.primary,
+          borderActive: themeColors.primary,
+          borderFocus: themeColors.primary,
+          borderDisabled: themeColors.border,
+          caretColor: themeColors.primary,
+          placeholderColor: `${themeColors.text}80`,
+          placeholderColorDisabled: `${themeColors.text}50`,
+          boxShadowFocus: `0 0 0 2px ${themeColors.primary}20`
+        },
+        InternalSelectMenu: {
+          color: themeColors.background,
+          optionTextColor: themeColors.text, // 未选中状态下的文字颜色
+          optionTextColorActive: themeColors.text, // 选中状态下的文字颜色
+          optionOpacityDisabled: '0.6',
+          optionColorPending: themeColors.hoverBackground, // 悬浮再未选中的选项上的背景色
+          optionColorActive: themeColors.secondary, // 选中的选项背景色
+          optionColorActivePending: themeColors.secondary, // 悬浮在选中的选项上的背景色
+        }
+      }
+    },
+    Menu: {
+      color: themeColors.menuItemBackground,
+      itemColorHover: themeColors.menuItemHover,
+      itemTextColor: themeColors.menuItemTextColor,
+      itemTextColorActive: themeColors.menuItemTextActive,
+      itemTextColorHover: themeColors.menuItemTextHover,
+
+    },
+    Switch: {
+      railColor: themeColors.switchRailColor,
+      railColorActive: themeColors.switchRailColorActive,
+      buttonColor: themeColors.switchButtonColor,
+    },
+    Dialog: {
+      titleTextColor: themeColors.dialogTitleTextColor,
+      textColor: themeColors.dialogTextColor,
+      color: themeColors.dialogColor,
+      iconColor: themeColors.dialogIconColor,
+      closeIconColor: themeColors.dialogCloseIconColor,
+      closeIconColorHover: themeColors.dialogCloseIconColorHover,
+      closeColorHover: themeColors.dialogCloseColorHover,
+    },
+  } as GlobalThemeOverrides;
 });
 
-const locale = computed(() => currentLanguage.value.locale);
+// 计算 Naive UI 的语言配置
+const locale = computed(() => {
+  return currentLanguage.value.locale;
+});
+
+// 计算 Naive UI 的语言配置
+const dateLocale = computed(() => {
+  return currentLanguage.value.dateLocale;
+});
 
 // 窗口组件 map<key:组件唯一标识, value:窗口组件>
 const componentMap: any = {
@@ -44,7 +152,7 @@ const componentMap: any = {
 };
 
 // 当前打开的窗口组件
-const windowType = ref('list');
+const windowType = ref('');
 
 // 当前显示的组件
 const currentComponent = computed(() => {
@@ -65,9 +173,11 @@ onMounted(() => {
 </script>
 
 <template>
-  <ConfigProvider :theme="antdTheme" :locale="locale">
-    <component :is="currentComponent" />
-  </ConfigProvider>
+  <NConfigProvider :theme-overrides="theme" :locale="locale" :date-locale="dateLocale">
+    <NMessageProvider>  
+      <component :is="currentComponent" />
+    </NMessageProvider>
+  </NConfigProvider>
 </template>
 
 <style>

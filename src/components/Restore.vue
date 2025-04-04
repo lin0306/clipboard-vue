@@ -13,12 +13,12 @@
 
             <!-- 恢复步骤条 -->
             <div class="restore-steps">
-                <a-steps :current="currentStep" size="small">
-                    <a-step :title="languageTexts.restore.setp1" />
-                    <a-step :title="languageTexts.restore.setp2" />
-                    <a-step :title="languageTexts.restore.setp3" />
-                    <a-step :title="languageTexts.restore.setp4" />
-                </a-steps>
+                <n-steps vertical  :current="currentStep" size="small">
+                    <n-step :title="languageTexts.restore.setp1" />
+                    <n-step :title="languageTexts.restore.setp2" />
+                    <n-step :title="languageTexts.restore.setp3" />
+                    <n-step :title="languageTexts.restore.setp4" />
+                </n-steps>
             </div>
 
             <!-- 恢复状态信息 -->
@@ -109,6 +109,7 @@ onMounted(() => {
             
             // 删除备份文件
             window.ipcRenderer.invoke('remove-backup').then(() => {
+                currentStep.value =  5
                 statusText.value = languageTexts.restore.toRestart
                 // 开始倒计时
                 startCountdown()
@@ -170,6 +171,7 @@ onUnmounted(() => {
 
 .restore-steps {
     margin: 20px 0;
+    width: 80%;
 }
 
 .restore-status {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { message } from 'ant-design-vue';
+import { useMessage } from 'naive-ui';
 import { computed, nextTick, onMounted, onUnmounted, reactive, ref } from 'vue';
 import DragIcon from '../assets/icons/DragIcon.vue';
 import MoreIcon from '../assets/icons/MoreIcon.vue';
@@ -12,13 +12,14 @@ import { getTextColorForBackground } from '../utils/colorUtils.ts';
 import convertType from '../utils/convert.ts';
 import CustomNavBar from './CustomNavBar.vue';
 import TitleBar from './TitleBar.vue';
-
 import { useLanguage } from '../configs/LanguageConfig.ts';
+import SearchIcon from '../assets/icons/SearchIcon.vue';
 
+const message = useMessage();
 const { languageTexts } = useLanguage();
 
 // 获取主题上下文
-const { currentTheme, setTheme, themeColors } = useTheme();
+const { currentTheme, setTheme } = useTheme();
 
 // 将MenuItems改为计算属性，这样当currentTheme变化时会自动更新
 const MenuItems = computed((): NavBarItem[] => [
@@ -290,7 +291,7 @@ async function onCopy(info: any) {
   if (isSuccess) {
     filterClipboardItems();
     // 如果设置了关闭不会自动杀掉整个程序，则触发主窗口失焦事件，关闭窗口
-    if(settingsConfig.value?.colsingHideToTaskbar) {
+    if (settingsConfig.value?.colsingHideToTaskbar) {
       window.ipcRenderer.invoke('main-blur');
     }
   } else {
@@ -647,22 +648,26 @@ onUnmounted(() => {
   <CustomNavBar :menuItems="MenuItems" />
   <!-- 搜索框 -->
   <div class="search-container" v-show="searchBoxState.visible">
-    <a-input-search id="search-input" v-model:value="searchText" :placeholder="languageTexts.list.searchHint"
-      @pressEnter="filterClipboardItems(true)" @keydown.esc="toggleSearchBox" @search="filterClipboardItems(true)">
-      <template #prefix>
-        <i class="fas fa-search"></i>
-      </template>
-    </a-input-search>
+    <n-input-group>
+      <n-input id="search-input" v-model:value="searchText" :placeholder="languageTexts.list.searchHint" clearable
+        @keydown.enter="filterClipboardItems(true)" @keydown.esc="toggleSearchBox" />
+      <n-button type="primary" ghost @click="filterClipboardItems(true)">
+        <!-- 搜索 -->
+        <n-icon size="20">
+          <SearchIcon />
+        </n-icon>
+      </n-button>
+    </n-input-group>
   </div>
 
   <!-- 标签列表 -->
   <div class="tag-list" :class="{ 'has-selected-tag': selectedTagState.isTopmost }">
     <div v-for="tag in TagItems" :key="tag.id" class="tag-item" :class="{
-    'tag-dragging-over': dragState.draggedOverTagId === tag.id,
-    'tag-disabled': dragState.isDragging && isItemTagged(dragState.dragItemId, tag.id),
-    'tag-expanded': dragState.isDragging && !isItemTagged(dragState.dragItemId, tag.id),
-    'tag-selected': selectedTagState.selectedTagId === tag.id
-  }" :style="{ backgroundColor: tag.color }" @dragenter="handleDragEnterTag(tag.id)"
+      'tag-dragging-over': dragState.draggedOverTagId === tag.id,
+      'tag-disabled': dragState.isDragging && isItemTagged(dragState.dragItemId, tag.id),
+      'tag-expanded': dragState.isDragging && !isItemTagged(dragState.dragItemId, tag.id),
+      'tag-selected': selectedTagState.selectedTagId === tag.id
+    }" :style="{ backgroundColor: tag.color }" @dragenter="handleDragEnterTag(tag.id)"
       @dragleave="handleDragLeaveTag($event)" @dragover.prevent @drop.prevent="handleDropOnTag(tag.id)"
       @click="handleTagClick(tag.id)">
       <span class="tag-name" :style="{ color: getTextColorForBackground(tag.color) }">{{ tag.name }}</span>
@@ -670,17 +675,17 @@ onUnmounted(() => {
   </div>
 
   <div v-if="listLoading" class="loading-indicator">
-    <a-spin />
+    <n-spin />
   </div>
   <div v-else-if="!listLoading && (itemList === null || itemList === undefined || itemList.length <= 0)" class="empty">
-    <a-empty />
+    <n-empty />
   </div>
   <div v-else class="clipboard-list">
     <div v-for="item in itemList" :key="item.id" class="clipboard-item" @dblclick="onCopy(item)">
       <div class="clipboard-card">
         <div class="card-header">
           <div class="card-title">{{ new Date(item.copy_time).toLocaleString() }}</div>
-          <a-tag :color="themeColors.tagColor">{{ convertType(item.type) }}</a-tag>
+          <n-tag size="small" round>{{ convertType(item.type) }}</n-tag>
         </div>
         <div class="card-content">
           <div class="content-wrapper">
@@ -732,7 +737,7 @@ onUnmounted(() => {
     </div>
     <!-- 底部加载状态指示器 -->
     <div class="loading-more-container" v-if="scrollState.isLoading && !listLoading">
-      <a-spin size="small" />
+      <n-spin size="small" />
       <span class="loading-text">加载更多...</span>
     </div>
     <div class="no-more-data" v-if="!scrollState.hasMore && itemList.length > 0 && !scrollState.isLoading">
@@ -958,6 +963,7 @@ onUnmounted(() => {
   z-index: 100;
   transition: left 0.3s ease;
   overflow-y: auto;
+  overflow-x: hidden;
   height: calc(100vh - 57px);
 }
 
@@ -1072,12 +1078,12 @@ onUnmounted(() => {
   transition: all 0.3s ease;
 }
 
-.search-container .ant-input-affix-wrapper {
+.search-container :deep(.n-input) {
   border-radius: 4px;
   border: 1px solid var(--theme-border);
 }
 
-.search-container .ant-input {
+.search-container :deep(.n-input__input) {
   background-color: var(--theme-cardBackground);
   color: var(--theme-text);
 }

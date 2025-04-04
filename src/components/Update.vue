@@ -20,10 +20,10 @@
             </div>
             <!-- 查看更多按钮 -->
             <div class="view-more-container">
-                <a-button class="view-more-btn" type="link" @click="openGitHubReleases">
+                <n-button quaternary @click="openGitHubReleases">
                     {{ languageTexts.update.viewMoreBtn }}
                     <span class="view-more-icon">→</span>
-                </a-button>
+                </n-button>
             </div>
         </div>
 
@@ -59,9 +59,9 @@
             <!-- 初始状态：显示暂不更新和立即下载按钮 -->
             <div class="update-actions">
                 <div class="left-action">
-                    <a-button class="btn btn-secondary" @click="postponeUpdate" v-if="!backupCompleted">
+                    <n-button secondary @click="postponeUpdate" v-if="!backupCompleted">
                         {{ languageTexts.update.notUpdateBtn }}
-                    </a-button>
+                    </n-button>
                     <span class="remind-text" v-if="!backupCompleted">{{ languageTexts.update.reminderText }}</span>
                     <div class="days-selector" v-if="!backupCompleted">
                         <select v-model="remindDays" v-if="!backupCompleted">
@@ -71,13 +71,13 @@
                     </div>
                 </div>
                 <div class="right-action">
-                    <a-button type="primary" @click="downloadUpdate" v-if="!backupCompleted">
+                    <n-button type="primary" @click="downloadUpdate" v-if="!backupCompleted">
                         {{ languageTexts.update.downloadNowBtn }}
-                    </a-button>
+                    </n-button>
                     <!-- 备份完成后显示立即重启按钮 -->
-                    <a-button type="primary" @click="installNow" v-if="backupCompleted">
+                    <n-button type="primary" @click="installNow" v-if="backupCompleted">
                         {{ languageTexts.update.restartImmediatelyBtn }}
-                    </a-button>
+                    </n-button>
                 </div>
             </div>
         </div>
@@ -561,20 +561,13 @@ function openGitHubReleases() {
     margin-bottom: 10px;
 }
 
-.view-more-btn {
-    display: flex;
-    align-items: center;
-    font-size: 14px;
-    color: var(--theme-primary);
-}
-
 .view-more-icon {
     margin-left: 5px;
     font-size: 16px;
     transition: transform 0.3s ease;
 }
 
-.view-more-btn:hover .view-more-icon {
+:deep(.n-button:hover) .view-more-icon {
     transform: translateX(3px);
 }
 

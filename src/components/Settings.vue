@@ -1,17 +1,18 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue';
-import titleBar from './TitleBar.vue';
-import { Menu, Switch, Input, Button, Select, InputNumber, message, Modal } from 'ant-design-vue';
+import { NButton, NInput, NInputNumber, NMenu, NModal, NSelect, NSwitch, useMessage } from 'naive-ui';
+import { computed, onMounted, reactive, ref } from 'vue';
 import EditIcon from '../assets/icons/EditIcon.vue';
-import { useLanguage, languages } from '../configs/LanguageConfig.ts';
+import { languages, useLanguage } from '../configs/LanguageConfig.ts';
+import titleBar from './TitleBar.vue';
 
+const message = useMessage();
 const { languageTexts } = useLanguage();
 
 // 重启确认弹窗状态
 const restartModalVisible = ref(false);
 
 // 菜单相关
-const selectedKeys = ref(['general']);
+const selectedKey = ref<string>('general');
 const menuItems = [
   { key: 'general', label: languageTexts.settings.generalMenu },
   { key: 'storage', label: languageTexts.settings.storageMenu },
@@ -53,7 +54,7 @@ const languageOptions = languages.map(lang => ({
 
 // 是否有修改
 const hasChanges = computed(() => {
-  if (selectedKeys.value[0] === 'shortcut') {
+  if (selectedKey.value === 'shortcut') {
     // 检查是否在编辑快捷键，或者原始快捷键和当前快捷键是否不同
     return JSON.stringify(originalShortcutKeys) !== JSON.stringify(currentShortcutKeys);
   }
@@ -70,7 +71,7 @@ const shortcutModalVisible = ref(false);
 // 开始编辑快捷键
 function startEditShortcut(key: number) {
   editingShortcut.value = key;
-  tempKeys.value = [...currentShortcutKeys[key].key];
+  tempKeys.value = [...(currentShortcutKeys[key]?.key || [])];
   shortcutModalVisible.value = true;
   // 打开弹窗后添加全局按键监听
   document.addEventListener('keydown', handleKeyDown);
@@ -137,7 +138,7 @@ const saveConfig = async () => {
   if (!hasChanges.value) {
     return; // 如果没有修改，不做任何处理
   }
-  if (selectedKeys.value[0] === 'general' || selectedKeys.value[0] === 'storage') {
+  if (selectedKey.value === 'general' || selectedKey.value === 'storage') {
     console.log('保存设置:', currentConfig);
 
     // 是否修改了【固定窗口大小】
@@ -156,6 +157,14 @@ const saveConfig = async () => {
     const isUpdateColsingHideToTaskbar = currentConfig.colsingHideToTaskbar !== originalConfig.colsingHideToTaskbar;
     // 是否修改了【禁用硬件加速】
     const isUpdateDisableHardwareAcceleration = currentConfig.disableHardwareAcceleration !== originalConfig.disableHardwareAcceleration;
+    // 是否修改了【最大存储条数】
+    const isUpdateMaxHistoryItems = currentConfig.maxHistoryItems !== originalConfig.maxHistoryItems;
+    // 是否修改了【最大存储大小】
+    const isUpdateMaxStorageSize = currentConfig.maxStorageSize !== originalConfig.maxStorageSize;
+    // 是否修改了【自动清理天数】
+    const isUpdateAutoCleanupDays = currentConfig.autoCleanupDays !== originalConfig.autoCleanupDays;
+    // 是否修改了【限制每条最大长度】
+    const isUpdateMaxItemSize = currentConfig.maxItemSize !== originalConfig.maxItemSize;
 
     // 创建一个可序列化的配置对象副本
     const configJson = JSON.parse(JSON.stringify(currentConfig));
@@ -171,6 +180,10 @@ const saveConfig = async () => {
         || isUpdateWindowHeight
         || isUpdateColsingHideToTaskbar
         || isUpdateDisableHardwareAcceleration
+        || isUpdateMaxHistoryItems
+        || isUpdateMaxStorageSize
+        || isUpdateAutoCleanupDays
+        || isUpdateMaxItemSize
       ) {
         // 显示重启确认弹窗
         restartModalVisible.value = true;
@@ -183,7 +196,7 @@ const saveConfig = async () => {
       message.error(languageTexts.settings.saveFailedMsg);
     }
   }
-  if (selectedKeys.value[0] === 'shortcut') {
+  if (selectedKey.value === 'shortcut') {
     console.log('保存快捷键设置:', currentShortcutKeys);
 
     // 创建一个可序列化的快捷键配置对象副本
@@ -210,13 +223,13 @@ const saveConfig = async () => {
 
 // 重置配置
 const resetConfig = () => {
-  if (selectedKeys.value[0] === 'shortcut') {
+  if (selectedKey.value === 'shortcut') {
     Object.assign(currentShortcutKeys, originalShortcutKeys);
     // 关闭编辑模式
     editingShortcut.value = null;
     message.info(languageTexts.settings.resetSuccessMsg);
   }
-  if (selectedKeys.value[0] === 'general') {
+  if (selectedKey.value === 'general') {
     Object.assign(currentConfig, originalConfig);
     message.info(languageTexts.settings.resetSuccessMsg);
   }
@@ -229,22 +242,18 @@ const handleRestart = () => {
   window.ipcRenderer.send('restart-app');
 };
 
-// 关闭重启确认弹窗
-const closeRestartModal = () => {
-  restartModalVisible.value = false;
-};
-
 const devtoolConfig = reactive({
   isShow: false,
   isDev: false
 });
 
-// 监听标签加载
+// 监听开发工具是否显示
 window.ipcRenderer.on('show-devtool', (_event, devtool) => {
   Object.assign(devtoolConfig, JSON.parse(devtool));
 });
 
-function updateDevtoolConfigShowStatus(checked: any, _e: Event) {
+// 修改开发工具的显示状态
+function updateDevtoolConfigShowStatus(checked: boolean) {
   devtoolConfig.isShow = checked;
   window.ipcRenderer.invoke('update-devtool-show', checked);
 }
@@ -276,160 +285,147 @@ onMounted(() => {
     <div class="settings-content">
       <!-- 左侧菜单 -->
       <div class="settings-menu">
-        <Menu v-model:selectedKeys="selectedKeys" mode="inline"
-          :style="{ borderRight: '1px solid var(--theme-divider)' }">
-          <Menu.Item v-for="item in menuItems" :key="item.key">
-            {{ item.label }}
-          </Menu.Item>
-        </Menu>
+        <n-menu v-model:value="selectedKey" :options="menuItems" mode="vertical" />
       </div>
 
       <!-- 右侧内容 -->
-      <div class="settings-panel">
+      <div class="settings-form">
         <!-- 通用设置 -->
-        <div v-show="selectedKeys.includes('general')" class="settings-section">
+        <div v-if="selectedKey === 'general'" class="settings-section">
           <h2>{{ languageTexts.settings.generalTitle }}</h2>
-
-          <div class="setting-item">
-            <span class="setting-label">{{ languageTexts.settings.powerOnSelfStart }}</span>
-            <Switch v-model:checked="currentConfig.powerOnSelfStart" />
+          <div class="form-item">
+            <span class="label">{{ languageTexts.settings.powerOnSelfStart }}</span>
+            <n-switch v-model:value="currentConfig.powerOnSelfStart" />
           </div>
           <!-- todo 暂时没有办法替换Windows默认的剪贴板程序 -->
-          <!-- <div class="setting-item">
-            <span class="setting-label">{{ languageTexts.settings.replaceGlobalHotkey }}</span>
-            <Switch v-model:checked="currentConfig.replaceGlobalHotkey" />
+          <!-- <div class="form-item">
+            <span class="label">{{ languageTexts.settings.replaceGlobalHotkey }}</span>
+            <n-switch v-model:value="currentConfig.replaceGlobalHotkey" />
           </div> -->
-
-          <div class="setting-item">
-            <span class="setting-label">{{ languageTexts.settings.colsingHideToTaskbar }}</span>
-            <Switch v-model:checked="currentConfig.colsingHideToTaskbar" />
+          <div class="form-item">
+            <span class="label">{{ languageTexts.settings.colsingHideToTaskbar }}</span>
+            <n-switch v-model:value="currentConfig.colsingHideToTaskbar" />
+          </div>
+          <div class="form-item">
+            <span class="label">{{ languageTexts.settings.fixedWindowSize }}</span>
+            <n-switch v-model:value="currentConfig.fixedWindowSize" />
           </div>
 
-          <div class="setting-item">
-            <span class="setting-label">{{ languageTexts.settings.fixedWindowSize }}</span>
-            <Switch v-model:checked="currentConfig.fixedWindowSize" />
-          </div>
-
-          <div class="setting-item right" v-if="currentConfig.fixedWindowSize">
+          <div class="form-item right" v-if="currentConfig.fixedWindowSize">
             <div class="window-size-inputs">
               <div class="size-input-group">
                 <span class="setting-label sub-label">{{ languageTexts.settings.windowHeight }}</span>
-                <InputNumber v-model:value="currentConfig.windowHeight" :min="300" :max="1000" />
+                <n-input-number size="small" v-model:value="currentConfig.windowHeight" :min="300" :max="1000" width="50px" />
               </div>
               <div class="size-input-group">
                 <span class="setting-label sub-label">{{ languageTexts.settings.windowWidth }}</span>
-                <InputNumber v-model:value="currentConfig.windowWidth" :min="300" :max="1000" />
+                <n-input-number size="small" v-model:value="currentConfig.windowWidth" :min="300" :max="1000" width="100px" />
               </div>
             </div>
           </div>
-
-          <div class="setting-item">
-            <span class="setting-label">{{ languageTexts.settings.languages }}</span>
-            <Select v-model:value="currentConfig.languages" style="width: 120px">
-              <Select.Option v-for="option in languageOptions" :key="option.value" :value="option.value">
-                {{ option.label }}
-              </Select.Option>
-            </Select>
+          <div class="form-item">
+            <span class="label">{{ languageTexts.settings.languages }}</span>
+            <n-select size="small" v-model:value="currentConfig.languages" :options="languageOptions" />
           </div>
-          
-          <div class="setting-item">
-            <span class="setting-label">{{ languageTexts.settings.disableHardwareAcceleration }}</span>
-            <Switch v-model:checked="currentConfig.disableHardwareAcceleration" />
+          <div class="form-item">
+            <span class="label">{{ languageTexts.settings.disableHardwareAcceleration }}</span>
+            <n-switch v-model:value="currentConfig.disableHardwareAcceleration" />
           </div>
-          
-          <div class="setting-item" v-if="!devtoolConfig.isDev">
-            <span class="setting-label">{{ languageTexts.settings.devTools }}</span>
-            <Switch v-model:checked="devtoolConfig.isShow" @change="updateDevtoolConfigShowStatus" />
+                    
+          <div class="form-item">
+            <span class="label">{{ languageTexts.settings.devTools }}</span>
+            <n-switch v-model:value="devtoolConfig.isShow" @update:value="updateDevtoolConfigShowStatus" />
           </div>
         </div>
 
         <!-- 存储设置 -->
-        <div v-show="selectedKeys.includes('storage')" class="settings-section">
+        <div v-if="selectedKey === 'storage'" class="settings-section">
           <h2>{{ languageTexts.settings.storageTitle }}</h2>
-          <div class="setting-item">
-            <span class="setting-label">{{ languageTexts.settings.tempPath }}</span>
-            <Input v-model:value="currentConfig.tempPath" placeholder="请输入临时文件路径" disabled />
+          <div class="form-item">
+            <span class="label">{{ languageTexts.settings.tempPath }}</span>
+            <n-input v-model:value="currentConfig.tempPath" :disabled="true" />
           </div>
-          <div class="setting-item">
-            <span class="setting-label">{{ languageTexts.settings.maxHistoryItems }}</span>
-            <InputNumber v-model:value="currentConfig.maxHistoryItems" :min="10" :max="10000" />
+          <div class="form-item">
+            <span class="label">{{ languageTexts.settings.maxHistoryItems }}</span>
+            <n-input-number v-model:value="currentConfig.maxHistoryItems" :min="10" :max="10000" />
           </div>
-          <div class="setting-item">
-            <span class="setting-label">{{ languageTexts.settings.maxStorageSize }}</span>
-            <InputNumber v-model:value="currentConfig.maxStorageSize" :min="50" :max="10000" />
+          <div class="form-item">
+            <span class="label">{{ languageTexts.settings.maxStorageSize }}</span>
+            <n-input-number v-model:value="currentConfig.maxStorageSize" :min="100" :max="10000" />
           </div>
-          <div class="setting-item">
-            <span class="setting-label">{{ languageTexts.settings.autoCleanupDays }}</span>
-            <InputNumber v-model:value="currentConfig.autoCleanupDays" :min="1" :max="365" />
+          <div class="form-item">
+            <span class="label">{{ languageTexts.settings.autoCleanupDays }}</span>
+            <n-input-number v-model:value="currentConfig.autoCleanupDays" :min="1" :max="365" />
           </div>
-          <div class="setting-item">
-            <span class="setting-label">{{ languageTexts.settings.maxItemSize }}</span>
-            <InputNumber v-model:value="currentConfig.maxItemSize" :min="1" :max="200" />
+          <div class="form-item">
+            <span class="label">{{ languageTexts.settings.maxItemSize }}</span>
+            <n-input-number v-model:value="currentConfig.maxItemSize" :min="1" :max="200" />
           </div>
         </div>
 
         <!-- 快捷键设置 -->
-        <div v-show="selectedKeys.includes('shortcut')" class="settings-section">
+        <div v-if="selectedKey === 'shortcut'" class="settings-section">
           <h2>{{ languageTexts.settings.shortcutTitle }}</h2>
 
-          <div v-for="(shortcut, key) in currentShortcutKeys" :key="key" class="setting-item shortcut-item">
-            <span class="setting-label">{{ languageTexts.settings[key] }}</span>
+          <div v-for="(shortcut, key) in currentShortcutKeys" :key="key" class="form-item shortcut-item">
+            <span class="label">{{ languageTexts.settings[key] }}</span>
             <!-- 显示当前快捷键 -->
-            <div class="shortcut-display" @click="startEditShortcut(key)">
+            <div class="shortcut-display">
               <div class="shortcut-keys">
                 <template v-for="(k, index) in shortcut.key" :key="index">
                   <span class="key-badge">{{ formatKeyDisplay(k) }}</span>
                   <span v-if="index < shortcut.key.length - 1" class="key-plus">+</span>
                 </template>
               </div>
-              <span class="edit-icon">
+              <span class="edit-icon" @click="startEditShortcut(key)">
                 <EditIcon />
               </span>
             </div>
           </div>
-
-          <p v-if="Object.keys(currentShortcutKeys).length === 0" class="setting-description">
-            {{ languageTexts.settings.emptyShortcutConfig }}
-          </p>
         </div>
 
         <!-- 底部按钮 -->
-        <div class="settings-actions">
-          <Button @click="resetConfig" :disabled="!hasChanges">{{ languageTexts.settings.resetBtn }}</Button>
-          <Button type="primary" @click="saveConfig" :disabled="!hasChanges">{{ languageTexts.settings.saveBtn
-            }}</Button>
+        <div class="settings-footer">
+          <n-button @click="resetConfig" :disabled="!hasChanges">
+            {{ languageTexts.settings.resetBtn }}
+          </n-button>
+          <n-button type="primary" :disabled="!hasChanges" @click="saveConfig">
+            {{ languageTexts.settings.saveBtn }}
+          </n-button>
         </div>
       </div>
     </div>
 
     <!-- 重启确认弹窗 -->
-    <Modal v-model:open="restartModalVisible" :title="languageTexts.settings.restartModalTitle" :maskClosable="false"
-      :closable="true">
+    <n-modal v-model:show="restartModalVisible" :title="languageTexts.settings.restartModalTitle" preset="dialog">
       <p>{{ languageTexts.settings.restartModalContent }}</p>
-      <template #footer>
-        <Button @click="closeRestartModal">{{ languageTexts.settings.restartModalCancelBtn }}</Button>
-        <Button type="primary" @click="handleRestart">{{ languageTexts.settings.restartModalConfirmBtn }}</Button>
+      <template #action>
+        <n-button @click="restartModalVisible = false">
+          {{ languageTexts.settings.restartModalCancelBtn }}
+        </n-button>
+        <n-button type="primary" @click="handleRestart">
+          {{ languageTexts.settings.restartModalConfirmBtn }}
+        </n-button>
       </template>
-    </Modal>
+    </n-modal>
 
     <!-- 快捷键编辑弹窗 -->
-    <Modal v-model:open="shortcutModalVisible" :title="languageTexts.settings.editHotkeyModalTitle"
-      :maskClosable="false" :closable="true">
+    <n-modal v-model:show="shortcutModalVisible" :title="languageTexts.settings.editHotkeyModalTitle" preset="dialog">
       <div class="shortcut-modal-content">
-        <div class="shortcut-input" tabindex="0">
+        <p>{{ languageTexts.settings.editHotkeyModalContent }}</p>
+        <div class="shortcut-keys">
           {{ tempKeys.map(k => formatKeyDisplay(k)).join(' + ') || languageTexts.settings.editHotkeyModalHint }}
         </div>
-        <p class="shortcut-hint">{{ languageTexts.settings.editHotkeyModalContent }}</p>
       </div>
-      <template #footer>
-        <Button @click="cancelEditShortcut">
+      <template #action>
+        <n-button @click="cancelEditShortcut">
           {{ languageTexts.settings.editHotkeyModalCancelBtn }}
-        </Button>
-        <Button type="primary" @click="confirmEditShortcut">
+        </n-button>
+        <n-button type="primary" :disabled="tempKeys.length === 0" @click="confirmEditShortcut">
           {{ languageTexts.settings.editHotkeyModalConfirmBtn }}
-        </Button>
+        </n-button>
       </template>
-    </Modal>
+    </n-modal>
   </div>
 </template>
 
@@ -438,147 +434,161 @@ onMounted(() => {
   height: 100vh;
   display: flex;
   flex-direction: column;
-
-  /* 快捷键相关样式 */
-  .shortcut-item {
-    margin-bottom: -5px;
-  }
-
-  .shortcut-display {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    cursor: pointer;
-    padding: 6px 10px;
-    border-radius: 6px;
-    background-color: var(--theme-background-secondary);
-    transition: background-color 0.2s;
-  }
-
-  .shortcut-keys {
-    display: flex;
-    align-items: center;
-  }
-
-  .key-plus {
-    margin: 0 4px;
-    font-weight: bold;
-    opacity: 0.7;
-    font-size: 14px;
-  }
-
-  .shortcut-display:hover {
-    background-color: var(--theme-background-hover);
-  }
-
-  .key-badge {
-    display: inline-block;
-    padding: 4px 10px;
-    margin-right: 8px;
-    background-color: rgba(0, 0, 0, 0.6);
-    border-radius: 6px;
-    font-size: 13px;
-    font-weight: 500;
-    color: #ffffff;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  .edit-icon {
-    width: 16px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    opacity: 0.5;
-  }
-
-  .edit-icon:hover {
-    opacity: 1;
-  }
-
-  .shortcut-edit {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .shortcut-input {
-    padding: 8px 12px;
-    border: 1px solid var(--theme-divider);
-    border-radius: 4px;
-    background-color: var(--theme-background-secondary);
-    cursor: text;
-    min-height: 36px;
-    outline: none;
-  }
-
-  .shortcut-input:focus {
-    border-color: var(--theme-primary);
-  }
-
-  .shortcut-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-  }
-
-  .shortcut-modal-content {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    padding: 10px 0;
-  }
-
-  .shortcut-hint {
-    color: var(--theme-secondary);
-    font-size: 14px;
-    margin: 0;
-  }
-
-  background-color: var(--theme-background);
-  color: var(--theme-text);
 }
 
 .settings-content {
-  display: flex;
   flex: 1;
-  /* 为标题栏留出空间 */
+  display: flex;
   overflow: hidden;
 }
 
 .settings-menu {
   width: 150px;
-  height: 100%;
-  background-color: var(--theme-navBackground);
-  overflow-y: scroll;
+  border-right: 1px solid var(--theme-border);
 }
 
-.settings-menu::-webkit-scrollbar {
-  width: 0px;
-}
-
-.settings-panel {
+.settings-form {
   flex: 1;
   padding: 20px;
   overflow-y: auto;
 }
 
 .settings-section {
-  margin-bottom: 60px;
+  margin-bottom: 20px;
 }
 
 .settings-section h2 {
   margin-bottom: 20px;
-  font-size: 18px;
-  color: var(--theme-text);
+  font-size: 16px;
+  font-weight: 500;
 }
 
-.setting-item {
+.form-item {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
-  padding: 8px 0;
+  margin-bottom: 16px;
+  justify-content: space-between;
+}
+
+.label {
+  width: 200px;
+  margin-right: 16px;
+}
+
+.settings-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--theme-divider);
+  position: fixed;
+  bottom: 0;
+  background-color: var(--theme-background);
+  width: 65%;
+}
+
+.shortcut-modal-content {
+  padding: 16px 0;
+}
+
+.shortcut-keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+
+
+/* 快捷键相关样式 */
+.shortcut-item {
+  margin-bottom: -5px;
+}
+
+.shortcut-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background-color: var(--theme-background-secondary);
+  transition: background-color 0.2s;
+}
+
+
+.key-plus {
+  font-weight: bold;
+  opacity: 0.7;
+  font-size: 14px;
+}
+
+.shortcut-display:hover {
+  background-color: var(--theme-background-hover);
+}
+
+.key-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  background-color: var(--theme-divider);
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--theme-text);
+  /* box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1); */
+}
+
+.edit-icon {
+  width: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0.5;
+  margin-left: 10px;
+  cursor: pointer;
+}
+
+.edit-icon:hover {
+  opacity: 1;
+}
+
+.shortcut-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.shortcut-input {
+  padding: 8px 12px;
+  border: 1px solid var(--theme-divider);
+  border-radius: 4px;
+  background-color: var(--theme-background-secondary);
+  cursor: text;
+  min-height: 36px;
+  outline: none;
+}
+
+.shortcut-input:focus {
+  border-color: var(--theme-primary);
+}
+
+.shortcut-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.shortcut-modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 10px 0;
+}
+
+.shortcut-hint {
+  color: var(--theme-secondary);
+  font-size: 14px;
+  margin: 0;
 }
 
 .right {
@@ -598,6 +608,7 @@ onMounted(() => {
 .window-size-inputs {
   display: flex;
   gap: 16px;
+  width: 70%;
 }
 
 .size-input-group {
@@ -610,27 +621,5 @@ onMounted(() => {
   color: var(--theme-secondary);
   font-size: 14px;
   margin-top: 8px;
-}
-
-.settings-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  padding: 16px 20px;
-  border-top: 1px solid var(--theme-divider);
-  position: fixed;
-  bottom: 0;
-  background-color: var(--theme-background);
-  width: 65%;
-}
-
-.right-arrow-btn {
-  width: 18px;
-  height: 18px;
-  opacity: 0.5;
-}
-
-.right-arrow-btn:hover {
-  opacity: 1;
 }
 </style>

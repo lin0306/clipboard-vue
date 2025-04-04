@@ -1,4 +1,4 @@
-import { ipcMain, shell } from "electron";
+import { ipcMain } from "electron";
 import ClipboardDB from "../db/databases";
 import log from "../configs/log";
 import ClipboardListService from "./list";
